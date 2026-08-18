@@ -1,0 +1,107 @@
+[
+  {
+    "titulo": "Arroz com Feijão Simples",
+    "tempoPreparoMinutos": 30,
+    "dificuldade": "Fácil",
+    "porcoes": 4,
+    "ingredientes": [
+      "2 xícaras de arroz branco",
+      "1 xícara de feijão carioca cozido",
+      "1 cebola picada",
+      "2 dentes de alho picados",
+      "3 colheres de sopa de óleo",
+      "Sal a gosto",
+      "500ml de água"
+    ],
+    "modoPreparo": [
+      "Refogue a cebola e o alho no óleo até dourarem.",
+      "Adicione o arroz e refogue por 2 minutos, mexendo sempre.",
+      "Acrescente a água e o sal, misture bem.",
+      "Cozinhe em fogo baixo por 15 minutos, com a panela tampada, até a água secar.",
+      "Em outra panela, esquente o feijão já cozido com um fio de óleo e sirva junto com o arroz."
+    ]
+  },
+  {
+    "titulo": "Omelete de Queijo",
+    "tempoPreparoMinutos": 10,
+    "dificuldade": "Fácil",
+    "porcoes": 1,
+    "ingredientes": [
+      "2 ovos",
+      "50g de queijo muçarela ralado",
+      "Sal e pimenta a gosto",
+      "1 colher de sopa de manteiga",
+      "Cheiro-verde picado (opcional)"
+    ],
+    "modoPreparo": [
+      "Bata os ovos em uma tigela com sal e pimenta.",
+      "Derreta a manteiga em uma frigideira em fogo médio.",
+      "Despeje os ovos batidos na frigideira e deixe cozinhar por 1 minuto.",
+      "Adicione o queijo ralado sobre metade da omelete.",
+      "Dobre a omelete ao meio e cozinhe por mais 1 minuto de cada lado.",
+      "Finalize com cheiro-verde picado antes de servir."
+    ]
+  },
+  {
+    "titulo": "Macarrão Alho e Óleo",
+    "tempoPreparoMinutos": 20,
+    "dificuldade": "Fácil",
+    "porcoes": 2,
+    "ingredientes": [
+      "200g de macarrão espaguete",
+      "4 dentes de alho fatiados",
+      "4 colheres de sopa de azeite",
+      "Pimenta calabresa a gosto",
+      "Sal a gosto",
+      "Salsinha picada"
+    ],
+    "modoPreparo": [
+      "Cozinhe o macarrão em água fervente com sal até ficar al dente.",
+      "Enquanto isso, aqueça o azeite em uma frigideira e doure o alho fatiado sem queimar.",
+      "Adicione a pimenta calabresa ao azeite com alho.",
+      "Escorra o macarrão e misture com o azeite temperado.",
+      "Finalize com salsinha picada e sirva quente."
+    ]
+  },
+  {
+    "titulo": "Frango Grelhado com Limão",
+    "tempoPreparoMinutos": 25,
+    "dificuldade": "Médio",
+    "porcoes": 2,
+    "ingredientes": [
+      "2 filés de peito de frango",
+      "Suco de 1 limão",
+      "2 dentes de alho amassados",
+      "1 colher de sopa de azeite",
+      "Sal e pimenta do reino a gosto",
+      "Orégano a gosto"
+    ],
+    "modoPreparo": [
+      "Tempere os filés de frango com suco de limão, alho, sal, pimenta e orégano.",
+      "Deixe marinar por 15 minutos na geladeira.",
+      "Aqueça o azeite em uma frigideira em fogo médio-alto.",
+      "Grelhe o frango por cerca de 6 minutos de cada lado, até dourar e cozinhar por completo.",
+      "Deixe descansar por 2 minutos antes de fatiar e servir."
+    ]
+  },
+  {
+    "titulo": "Salada de Tomate e Cebola",
+    "tempoPreparoMinutos": 10,
+    "dificuldade": "Fácil",
+    "porcoes": 4,
+    "ingredientes": [
+      "4 tomates médios cortados em rodelas",
+      "1 cebola roxa fatiada finamente",
+      "2 colheres de sopa de azeite",
+      "1 colher de sopa de vinagre",
+      "Sal a gosto",
+      "Orégano a gosto"
+    ],
+    "modoPreparo": [
+      "Disponha as rodelas de tomate em um prato ou travessa.",
+      "Espalhe a cebola roxa fatiada por cima dos tomates.",
+      "Tempere com azeite, vinagre, sal e orégano.",
+      "Deixe descansar por 5 minutos antes de servir para os sabores se misturarem."
+    ]
+  }
+]

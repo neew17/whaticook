@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "whatcook-dev",
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": [
+        "/c",
+        "set PATH=C:\\Program Files\\nodejs;%PATH% && cd whatcook-app && npm run dev"
+      ],
+      "port": 5173
+    }
+  ]
+}

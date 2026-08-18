@@ -1,0 +1,19 @@
+criar backend simples a fim de segurança
+
+aba para interação em publicação com cadastro de usuário com receitas feitas, receitas favoritadas, ingredientes mais usados, linkado com insta, x, threads. 
+
+criar parte usuário
+
+Fotos suas — você tira/sobe as fotos, eu monto o pipeline de upload (uma imagem por receita/ingrediente, salva local ou em algum storage tipo Cloudflare R2/S3). Mais autêntico, mas trabalho manual pra cada uma das 60 receitas (e cresce conforme o banco cresce).
+
+O que tem aí?
+Pesquise qualquer ingrediente...
+colocar barra de pesquisa funcional
+
+colocar a foto tirada para o usuário visualizar como ficou, na mesma tela que ele já consegue tanto salvar nas próprias, quanto nos botões de compartilhar nas redes sociais 
+
+como aumentar o repertorio de itens em ptbr 
+
+interface e tela dessas informações de perfil bio, receitas feitas, pratos favoritados, etc, uma tela que quando clica no ícone de minha conta já va para essa interface precisamos dessa tela "Minha conta" que durante todas as telas possa ter esse ícone para ir para a parte de minha conta
+
+

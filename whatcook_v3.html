@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>what?cook - Prototype Flow v3</title>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; font-family: 'Inter', -apple-system, sans-serif; }
+  body { background:#EDEDED; padding:40px; display:flex; gap:24px; flex-wrap:wrap; justify-content: center; }
+  .phone {
+    width:320px; height:660px; background:#fff; border-radius:36px;
+    box-shadow:0 20px 40px rgba(0,0,0,0.12); overflow:hidden; position:relative;
+    border:8px solid #111;
+  }
+  .screen { width:100%; height:100%; overflow-y:auto; background:#fff; display:flex; flex-direction:column; }
+  .screen::-webkit-scrollbar { display:none; }
+  .label { text-align:center; font-size:13px; color:#6B6F6C; margin-bottom:8px; font-weight:700; background: #E5E5E5; padding: 6px 12px; border-radius: 999px; }
+  .col { display:flex; flex-direction:column; align-items:center; }
+
+  :root {
+    --primary: #EA1D2C;
+    --primary-light: #FDE8EA;
+    --primary-dark: #B7101F;
+    --secondary: #FFC72C;
+    --text-main: #1C1E1B;
+    --text-muted: #6B6F6C;
+    --bg-gray: #F7F8F7;
+  }
+
+  /* Splash & Basics */
+  .splash { display:flex; align-items:center; justify-content:center; height:100%; background:var(--primary); }
+  .logo { font-size:34px; font-weight:800; color:#fff; letter-spacing:-1px; display:flex; align-items:center;}
+  .logo .q { color:var(--secondary); font-weight:800; position:relative; display:inline-block; }
+  .logo .cook { color:var(--secondary); }
+
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:20px 20px 12px; }
+  .topbar h1 { font-size:20px; font-weight:700; color:var(--text-main); }
+  .icon-btn { width:36px; height:36px; border-radius:50%; background:var(--bg-gray); display:flex; align-items:center; justify-content:center; cursor: pointer; }
+  .icon-btn svg { stroke: var(--text-main); }
+
+  .search { margin:0 20px 16px; background:var(--bg-gray); border-radius:16px; padding:12px 16px; display:flex; align-items:center; gap:10px; color:var(--text-muted); font-size:14px; }
+  .helper-text { padding: 0 20px 16px; font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+
+  /* Slider */
+  .slider-container { padding: 8px 20px 16px; }
+  .slider-labels { display:flex; justify-content:space-between; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:8px; }
+  input[type=range] { width:100%; accent-color:var(--primary); }
+
+  .tempo-list { padding:0 20px 20px; display:flex; flex-direction:column; gap:14px; }
+  .tempo-card { display:flex; align-items:center; gap:14px; background:var(--bg-gray); border-radius:20px; padding:18px; cursor:pointer;}
+  .tempo-card.selected { background:var(--primary-light); border:1.5px solid var(--primary); }
+  .tempo-icon { font-size:24px; }
+  .tempo-card h4 { font-size:15px; font-weight:700; color:var(--text-main); }
+  .tempo-card p { font-size:12px; color:var(--text-muted); }
+  .cta-fixed { margin:auto 20px 20px; background:var(--primary); color:#fff; border-radius:999px; padding:16px; text-align:center; font-weight:700; font-size:15px; cursor:pointer;}
+
+  /* Classes Grid (Screen 3) */
+  .class-grid { display:grid; grid-template-columns:1fr; gap:12px; padding:0 20px 20px; }
+  .class-card { background:var(--bg-gray); border-radius:20px; padding:20px; display:flex; align-items:center; gap:16px; cursor:pointer; }
+  .class-icon { font-size:32px; background:#fff; width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.05);}
+  .class-info h3 { font-size:16px; font-weight:700; color:var(--text-main); margin-bottom:4px;}
+  .class-info p { font-size:12px; color:var(--text-muted); }
+
+  /* Tabs & Grid Items */
+  .tabs { display:flex; gap:8px; padding:0 20px 12px; overflow-x:auto; }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab { flex-shrink:0; padding:8px 16px; border-radius:999px; background:var(--bg-gray); font-size:12px; font-weight:600; color:var(--text-muted); cursor:pointer; }
+  .tab.active { background:var(--primary); color:#fff; }
+  
+  .sub-tabs { display:flex; gap:8px; padding:0 20px 12px; overflow-x:auto; }
+  .sub-tabs::-webkit-scrollbar { display:none; }
+  .sub-tab { flex-shrink:0; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:600; color:var(--text-muted); border:1px solid #E7E9E6; cursor:pointer;}
+  .sub-tab.active { background:var(--primary-light); color:var(--primary); border-color:var(--primary); }
+
+  .ing-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; padding:8px 20px 90px; }
+  .ing-card { background:var(--bg-gray); border-radius:18px; padding:12px 6px; display:flex; flex-direction:column; align-items:center; gap:6px; position:relative; font-size:24px; cursor:pointer; }
+  .ing-card.selected { background:var(--primary-light); border:1.5px solid var(--primary); }
+  .ing-card span { font-size:11px; font-weight:600; color:var(--text-main); text-align:center; }
+  
+  .check { position:absolute; top:6px; right:6px; width:16px; height:16px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; }
+  
+  /* List items for Condiments/Spices/Sauces */
+  .pantry-list { padding: 0 20px 90px; display: flex; flex-direction: column; gap: 10px; }
+  .pantry-item { display: flex; align-items: center; justify-content: space-between; background: var(--bg-gray); padding: 16px; border-radius: 16px; cursor:pointer;}
+  .pantry-item.selected { background: var(--primary-light); border: 1.5px solid var(--primary); }
+  .pantry-left { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 14px; color: var(--text-main); }
+  .pantry-icon { font-size: 24px; }
+  .checkbox { width: 22px; height: 22px; border: 2px solid #ccc; border-radius: 6px; display:flex; align-items:center; justify-content:center;}
+  .pantry-item.selected .checkbox { background: var(--primary); border-color: var(--primary); }
+
+  /* FAB */
+  .fab-container { position: sticky; bottom: 0; padding: 16px 20px 24px; background: linear-gradient(to top, rgba(255,255,255,1) 60%, rgba(255,255,255,0)); z-index: 10; margin-top: auto;}
+  .fab { background:var(--secondary); color:#111; border-radius:999px; padding:16px; text-align:center; font-weight:800; font-size:15px; box-shadow:0 8px 20px rgba(255,199,44,0.35); cursor:pointer;}
+
+  /* Results */
+  .result-list { padding:8px 20px 20px; display:flex; flex-direction:column; gap:14px; }
+  .result-card { display:flex; gap:12px; background:#fff; border-radius:20px; padding:10px; box-shadow:0 4px 20px rgba(0,0,0,0.06); position: relative; cursor:pointer; border: 1px solid transparent;}
+  .result-card.featured { border: 1.5px solid var(--secondary); background: #FFFCF2;}
+  .result-thumb { width:80px; height:80px; border-radius:16px; background:linear-gradient(135deg,#FFD8B0,#FF7A3D); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:32px;}
+  .result-info h4 { font-size:14px; font-weight:700; color:var(--text-main); margin-bottom:4px; margin-top:4px;}
+  .result-info p { font-size:11px; color:var(--text-muted); margin-bottom:6px; }
+  .badge { display:inline-block; background:var(--primary-light); color:var(--primary-dark); font-size:10px; font-weight:700; padding:3px 8px; border-radius:999px; }
+  .top-badge { position: absolute; top: -10px; right: 10px; background: var(--secondary); color: #111; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 999px; box-shadow: 0 4px 10px rgba(255,199,44,0.4); display: flex; align-items: center; gap: 4px;}
+
+  /* Recipe Details */
+  .hero { height:220px; background:linear-gradient(135deg,var(--secondary),#F2A900); position:relative; display:flex; align-items:center; justify-content:center; font-size:72px;}
+  .hero .back { position:absolute; top:16px; left:16px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.9); display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .hero .fav { position:absolute; top:16px; right:16px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.9); display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .recipe-body { padding:20px; }
+  .recipe-body h2 { font-size:20px; font-weight:800; color:var(--text-main); margin-bottom:12px; }
+  .meta-row { display:flex; gap:20px; margin-bottom:18px; }
+  .meta-item { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .meta-item span { font-size:11px; color:var(--text-muted); font-weight:600; text-align:center;}
+  .meta-item b { font-size:13px; color:var(--text-main); }
+  .ing-chip { display:inline-block; background:var(--bg-gray); border-radius:999px; padding:6px 12px; font-size:11px; font-weight:600; color:var(--text-main); margin:0 6px 6px 0; }
+  .step { display:flex; gap:10px; margin-bottom:12px; align-items:flex-start; }
+  .step-num { width:22px; height:22px; border-radius:50%; background:var(--primary-light); color:var(--primary-dark); font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .step p { font-size:12px; color:var(--text-main); line-height:1.5; }
+
+  /* Social Share Screen */
+  .social-grid { display:flex; flex-direction:column; gap:12px; padding:20px; margin-top:20px; }
+  .social-btn { display:flex; align-items:center; gap:12px; background:var(--bg-gray); border-radius:20px; padding:18px; font-weight:700; font-size:14px; color:var(--text-main); cursor:pointer; border:1px solid #E7E9E6; }
+  .social-icon { font-size:24px; width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#fff; box-shadow:0 4px 10px rgba(0,0,0,0.05); }
+</style>
+</head>
+<body>
+
+<!-- 1. SPLASH -->
+<div class="col"><div class="label">1. Splash</div>
+<div class="phone"><div class="screen splash">
+  <div class="logo">what<span class="q">?</span><span class="cook">cook</span></div>
+</div></div></div>
+
+<!-- 2. TEMPO -->
+<div class="col"><div class="label">2. Tempo</div>
+<div class="phone"><div class="screen">
+  <div class="topbar">
+    <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <h1>Quanto tempo?</h1>
+    <div style="width:36px;"></div>
+  </div>
+  <p class="helper-text" style="text-align:center;">Ajuste o tempo que você tem disponível para cozinhar agora.</p>
+  
+  <div class="slider-container" style="padding-bottom: 24px;">
+    <div class="slider-labels">
+      <span>5 min</span><span>30 min</span><span>2h+</span>
+    </div>
+    <input type="range" min="5" max="120" value="30">
+  </div>
+
+  <div class="tempo-list">
+    <div class="tempo-card selected"><div class="tempo-icon">⚡</div><div><h4>15 minutos</h4><p>Receitas super rápidas</p></div></div>
+    <div class="tempo-card"><div class="tempo-icon">⏱️</div><div><h4>30 minutos</h4><p>Equilíbrio perfeito</p></div></div>
+    <div class="tempo-card"><div class="tempo-icon">⏳</div><div><h4>1 hora</h4><p>Pratos elaborados</p></div></div>
+    <div class="tempo-card"><div class="tempo-icon">🧘‍♂️</div><div><h4>Sem pressa</h4><p>Cozinhar com calma</p></div></div>
+  </div>
+  <div class="cta-fixed">Continuar</div>
+</div></div></div>
+
+<!-- 3. CLASSES GERAIS -->
+<div class="col"><div class="label">3. Seleção de Classes</div>
+<div class="phone"><div class="screen">
+  <div class="topbar">
+    <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <h1>O que tem aí?</h1>
+    <div style="width:36px;"></div>
+  </div>
+  
+  <div class="search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    Pesquise qualquer ingrediente...
+  </div>
+  
+  <p class="helper-text">Selecione as categorias para adicionar o que você tem disponível.</p>
+  
+  <div class="class-grid">
+    <div class="class-card">
+      <div class="class-icon">🥩</div>
+      <div class="class-info">
+        <h3>Alimentos</h3>
+        <p>Carnes, Frutas, Legumes, Enlatados...</p>
+      </div>
+    </div>
+    
+    <div class="class-card">
+      <div class="class-icon">🧈</div>
+      <div class="class-info">
+        <h3>Condimentos</h3>
+        <p>Farinha, Óleo, Azeite, Leite em pó, Ovo...</p>
+      </div>
+    </div>
+
+    <div class="class-card">
+      <div class="class-icon">🌿</div>
+      <div class="class-info">
+        <h3>Temperos</h3>
+        <p>Sal, Pimenta, Colorau, Orégano...</p>
+      </div>
+    </div>
+    
+    <div class="class-card">
+      <div class="class-icon">🥫</div>
+      <div class="class-info">
+        <h3>Molhos</h3>
+        <p>Molho de Tomate, Ketchup, Barbecue...</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="fab-container">
+    <div class="fab">Buscar 32 receitas ✨</div>
+  </div>
+</div></div></div>
+
+<!-- 4. ALIMENTOS -->
+<div class="col"><div class="label">4. Alimentos</div>
+<div class="phone"><div class="screen">
+  <div class="topbar">
+    <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <h1>Alimentos</h1>
+    <div style="width:36px;"></div>
+  </div>
+  
+  <div class="tabs">
+    <div class="tab active">Carnes</div><div class="tab">Frutas</div><div class="tab">Legumes</div><div class="tab">Verduras</div><div class="tab">Vegetais</div><div class="tab">Enlatados</div>
+  </div>
+  
+  <div class="ing-grid">
+    <div class="ing-card selected"><div class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>🍗<span>Frango</span></div>
+    <div class="ing-card">🥩<span>Alcatra</span></div>
+    <div class="ing-card">🥩<span>Picanha</span></div>
+    <div class="ing-card selected"><div class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>🥓<span>Bacon</span></div>
+    <div class="ing-card">🐟<span>Peixe</span></div>
+    <div class="ing-card">🦐<span>Camarão</span></div>
+    <div class="ing-card">🌭<span>Salsicha</span></div>
+    <div class="ing-card">🍖<span>Costela</span></div>
+  </div>
+  
+  <div class="fab-container"><div class="fab">Adicionar (2) →</div></div>
+</div></div></div>
+
+<!-- 5. CONDIMENTOS -->
+<div class="col"><div class="label">5. Condimentos</div>
+<div class="phone"><div class="screen">
+  <div class="topbar">
+    <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <h1>Condimentos</h1>
+    <div style="width:36px;"></div>
+  </div>
+  
+  <div class="pantry-list">
+    <div class="pantry-item">
+      <div class="pantry-left"><span class="pantry-icon">🌾</span>Farinha de Trigo</div>
+      <div class="checkbox"></div>
+    </div>
+    <div class="pantry-item">
+      <div class="pantry-left"><span class="pantry-icon">🛢️</span>Óleo</div>
+      <div class="checkbox"></div>
+    </div>
+    <div class="pantry-item selected">
+      <div class="pantry-left"><span class="pantry-icon">🥚</span>Ovo</div>
+      <div class="checkbox"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+    </div>
+    <div class="pantry-item selected">
+      <div class="pantry-left"><span class="pantry-icon">🍾</span>Azeite</div>
+      <div class="checkbox"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+    </div>
+    <div class="pantry-item">
+      <div class="pantry-left"><span class="pantry-icon">🥛</span>Leite em pó</div>
+      <div class="checkbox"></div>
+    </div>
+  </div>
+  
+  <div class="fab-container"><div class="fab">Adicionar (2) →</div></div>
+</div></div></div>
+
+<!-- 6. TEMPEROS (INGREDIENTES) -->
+<div class="col"><div class="label">6. Temperos</div>
+<div class="phone"><div class="screen">
+  <div class="topbar">
+    <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <h1>Temperos</h1>
+    <div style="width:36px;"></div>
+  </div>
+  
+  <div class="pantry-list">
+    <div class="pantry-item selected">
+      <div class="pantry-left"><span class="pantry-icon">🧂</span>Sal</div>
+      <div class="checkbox"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+    </div>
+    <div class="pantry-item">
+      <div class="pantry-left"><span class="pantry-icon">🌶️</span>Pimenta do Reino</div>
+      <div class="checkbox"></div>
+    </div>
+    <div class="pantry-item">
+      <div class="pantry-left"><span class="pantry-icon">🔴</span>Colorau</div>
+      <div class="checkbox"></div>
+    </div>
+    <div class="pantry-item selected">
+      <div class="pantry-left"><span class="pantry-icon">🌿</span>Orégano</div>
+      <div class="checkbox"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+    </div>
+  </div>
+  
+  <div class="fab-container"><div class="fab">Adicionar (2) →</div></div>
+</div></div></div>
+
+<!-- 7. MOLHOS -->
+<div class="col"><div class="label">7. Molhos</div>
+<div class="phone"><div class="screen">
+  <div class="topbar">
+    <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <h1>Molhos</h1>
+    <div style="width:36px;"></div>
+  </div>
+  
+  <div class="pantry-list">
+    <div class="pantry-item selected">
+      <div class="pantry-left"><span class="pantry-icon">🥫</span>Molho de Tomate</div>
+      <div class="checkbox"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+    </div>
+    <div class="pantry-item">
+      <div class="pantry-left"><span class="pantry-icon">🍅</span>Ketchup</div>
+      <div class="checkbox"></div>
+    </div>
+    <div class="pantry-item">
+      <div class="pantry-left"><span class="pantry-icon">🌭</span>Mostarda</div>
+      <div class="checkbox"></div>
+    </div>
+    <div class="pantry-item">
+      <div class="pantry-left"><span class="pantry-icon">🍖</span>Barbecue</div>
+      <div class="checkbox"></div>
+    </div>
+    <div class="pantry-item">
+      <div class="pantry-left"><span class="pantry-icon">🥚</span>Maionese</div>
+      <div class="checkbox"></div>
+    </div>
+  </div>
+  
+  <div class="fab-container"><div class="fab">Adicionar (1) →</div></div>
+</div></div></div>
+
+<!-- 8. RESULTADOS -->
+<div class="col"><div class="label">8. Resultados</div>
+<div class="phone"><div class="screen">
+  <div class="topbar">
+    <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <h1>32 receitas</h1>
+    <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></div>
+  </div>
+  <div class="result-list">
+    <div class="result-card featured" style="padding: 16px; flex-direction: column; margin-top: 10px;">
+      <div class="top-badge">⭐ Top escolha da semana</div>
+      <div style="display:flex; gap:12px;">
+        <div class="result-thumb" style="width: 100px; height: 100px; font-size: 40px;">🍛</div>
+        <div class="result-info" style="justify-content: center; display: flex; flex-direction: column;">
+          <h4 style="font-size: 16px;">Frango ao Curry</h4>
+          <p>20 a 35 min · Fácil</p>
+          <div><span class="badge" style="font-size: 11px;">100% match</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="result-card"><div class="result-thumb" style="background:var(--primary-light);">🥗</div><div class="result-info"><h4>Salada de Bacon</h4><p>15 min · Fácil</p><span class="badge">90% match</span></div></div>
+    <div class="result-card"><div class="result-thumb" style="background:var(--secondary);">🍳</div><div class="result-info"><h4>Omelete Completo</h4><p>10 min · Fácil</p><span class="badge">88% match</span></div></div>
+  </div>
+</div></div></div>
+
+<!-- 9. DETALHE DA RECEITA -->
+<div class="col"><div class="label">9. Detalhes da Receita</div>
+<div class="phone"><div class="screen">
+  <div class="hero">🍛
+    <div class="back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <div class="fav"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 10-7.8 7.8l8.8 8.8 8.8-8.8a5.5 5.5 0 000-7.8z"/></svg></div>
+  </div>
+  <div class="recipe-body">
+    <h2>Frango ao Curry</h2>
+    <div class="meta-row" style="gap:10px;">
+      <div class="meta-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><b>20 a 35 min*</b><span>Tempo estimado</span></div>
+      <div class="meta-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M4 20l4-12 4 12M12 20l4-16 4 16"/></svg><b>Fácil</b><span>Dificuldade</span></div>
+      <div class="meta-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg><b>420 kcal</b><span>Calorias</span></div>
+    </div>
+    <p style="font-size:10px; color:var(--text-muted); margin-top:-10px; margin-bottom:16px;">*Pode variar a depender do ponto da carne</p>
+    
+    <div style="font-size:13px; font-weight:700; margin-bottom:8px;">Ingredientes</div>
+    <div style="margin-bottom:16px;"><span class="ing-chip">🍗 Frango</span><span class="ing-chip">🥓 Bacon</span><span class="ing-chip">🧂 Curry</span><span class="ing-chip">🥥 Leite de coco</span><span class="ing-chip">🧂 Sal</span><span class="ing-chip">🍾 Azeite</span></div>
+    <div style="font-size:13px; font-weight:700; margin-bottom:8px;">Modo de preparo</div>
+    <div class="step"><div class="step-num">1</div><p>Corte o frango em cubos e tempere com sal e pimenta.</p></div>
+    <div class="step"><div class="step-num">2</div><p>Doure o bacon e reserve a gordura na panela.</p></div>
+    <div class="step"><div class="step-num">3</div><p>Adicione o curry e o leite de coco, cozinhe por 10 min.</p></div>
+  </div>
+  <div class="fab-container" style="padding-bottom: 20px;">
+    <div class="fab">Começar a cozinhar 👨‍🍳</div>
+  </div>
+</div></div></div>
+
+<!-- 10. PASSO 1 -->
+<div class="col"><div class="label">10. Passo 1</div>
+<div class="phone"><div class="screen" style="background:var(--primary); color:#fff; justify-content: space-between;">
+  <div class="topbar">
+    <div class="icon-btn" style="background:rgba(255,255,255,0.2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <h1 style="color:#fff; font-size: 16px;">Cozinhando</h1>
+    <div style="width:36px;"></div>
+  </div>
+  <div style="padding:20px; text-align:center; display:flex; flex-direction:column; align-items:center;">
+    <div style="background:rgba(255,255,255,0.2); padding:6px 14px; border-radius:999px; font-size:12px; font-weight:700; margin-bottom:24px;">Passo 1 de 3</div>
+    <div style="font-size:72px; margin-bottom:24px;">🔪</div>
+    <h2 style="font-size:22px; font-weight:800; line-height:1.4; margin-bottom:16px;">Corte o frango em cubos e tempere com sal.</h2>
+    <p style="font-size:14px; opacity:0.9; line-height:1.5;">Dica: Cortar em pedaços do mesmo tamanho garante que eles cozinhem por igual.</p>
+  </div>
+  <div style="padding:20px; display:flex; gap:12px;">
+    <div style="flex:2; background:var(--secondary); color:#111; border-radius:999px; padding:16px; text-align:center; font-weight:800; font-size:15px; cursor: pointer; box-shadow:0 8px 20px rgba(255,199,44,0.35); margin-left: auto;">Próximo →</div>
+  </div>
+</div></div></div>
+
+<!-- 11. PASSO 2 -->
+<div class="col"><div class="label">11. Passo 2</div>
+<div class="phone"><div class="screen" style="background:var(--primary); color:#fff; justify-content: space-between;">
+  <div class="topbar">
+    <div class="icon-btn" style="background:rgba(255,255,255,0.2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <h1 style="color:#fff; font-size: 16px;">Cozinhando</h1>
+    <div style="width:36px;"></div>
+  </div>
+  <div style="padding:20px; text-align:center; display:flex; flex-direction:column; align-items:center;">
+    <div style="background:rgba(255,255,255,0.2); padding:6px 14px; border-radius:999px; font-size:12px; font-weight:700; margin-bottom:24px;">Passo 2 de 3</div>
+    <div style="font-size:72px; margin-bottom:24px;">🥓</div>
+    <h2 style="font-size:22px; font-weight:800; line-height:1.4; margin-bottom:16px;">Doure o bacon e reserve a gordura na panela.</h2>
+    <p style="font-size:14px; opacity:0.9; line-height:1.5;">O óleo que soltar do bacon será perfeito para fritar o frango a seguir!</p>
+  </div>
+  <div style="padding:20px; display:flex; gap:12px;">
+    <div style="flex:1; background:rgba(255,255,255,0.1); color:#fff; border-radius:999px; padding:16px; text-align:center; font-weight:700; font-size:15px; cursor: pointer;">Voltar</div>
+    <div style="flex:2; background:var(--secondary); color:#111; border-radius:999px; padding:16px; text-align:center; font-weight:800; font-size:15px; cursor: pointer; box-shadow:0 8px 20px rgba(255,199,44,0.35);">Próximo →</div>
+  </div>
+</div></div></div>
+
+<!-- 12. PASSO 3 -->
+<div class="col"><div class="label">12. Passo 3</div>
+<div class="phone"><div class="screen" style="background:var(--primary); color:#fff; justify-content: space-between;">
+  <div class="topbar">
+    <div class="icon-btn" style="background:rgba(255,255,255,0.2);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <h1 style="color:#fff; font-size: 16px;">Cozinhando</h1>
+    <div style="width:36px;"></div>
+  </div>
+  <div style="padding:20px; text-align:center; display:flex; flex-direction:column; align-items:center;">
+    <div style="background:rgba(255,255,255,0.2); padding:6px 14px; border-radius:999px; font-size:12px; font-weight:700; margin-bottom:24px;">Passo 3 de 3</div>
+    <div style="font-size:72px; margin-bottom:24px;">🥥</div>
+    <h2 style="font-size:22px; font-weight:800; line-height:1.4; margin-bottom:16px;">Adicione o curry e o leite de coco, cozinhe por 10 min.</h2>
+    <p style="font-size:14px; opacity:0.9; line-height:1.5;">Deixe em fogo médio até o molho encorpar e ficar bem cremoso.</p>
+  </div>
+  <div style="padding:20px; display:flex; gap:12px;">
+    <div style="flex:1; background:rgba(255,255,255,0.1); color:#fff; border-radius:999px; padding:16px; text-align:center; font-weight:700; font-size:15px; cursor: pointer;">Voltar</div>
+    <div style="flex:2; background:#4CAF7D; color:#fff; border-radius:999px; padding:16px; text-align:center; font-weight:800; font-size:15px; cursor: pointer; box-shadow:0 8px 20px rgba(76,175,125,0.4);">Finalizar ✅</div>
+  </div>
+</div></div></div>
+
+<!-- 13. CONCLUSÃO -->
+<div class="col"><div class="label">13. Conclusão</div>
+<div class="phone"><div class="screen" style="justify-content: center; align-items: center; padding: 30px; text-align: center;">
+  <div style="font-size: 80px; margin-bottom: 16px;">🎉</div>
+  <h2 style="font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 12px;">Prato Finalizado!</h2>
+  <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 40px;">Você concluiu o <b>Frango ao Curry</b> com sucesso. O aroma deve estar incrível!</p>
+  <div class="fab" style="width: 100%;">Compartilhar conquista →</div>
+</div></div></div>
+
+<!-- 14. COMPARTILHAR / REDES SOCIAIS -->
+<div class="col"><div class="label">14. Redes Sociais</div>
+<div class="phone"><div class="screen">
+  <div class="topbar">
+    <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <div style="width:36px;"></div>
+  </div>
+  <div style="padding:0 20px;">
+    <h1 style="font-size:24px; font-weight:800; color:var(--text-main); margin-bottom:8px;">Espalhe a palavra! 📸</h1>
+    <p style="font-size:14px; color:var(--text-muted); line-height:1.4;">Apoie o what?cook compartilhando sua obra prima ou acompanhando a gente nas redes sociais.</p>
+  </div>
+  
+  <div class="social-grid">
+    <!-- Botao Instagram -->
+    <div class="social-btn">
+      <div class="social-icon">📷</div>
+      <span>Posta a gente no Instagram</span>
+    </div>
+    <!-- Botao X -->
+    <div class="social-btn">
+      <div class="social-icon">🐦</div>
+      <span>Fala sobre a gente no X</span>
+    </div>
+    <!-- Botao Threads -->
+    <div class="social-btn">
+      <div class="social-icon">🧵</div>
+      <span>Fale sobre a gente no Threads</span>
+    </div>
+    <!-- Botao Seguir -->
+    <div class="social-btn" style="border: 2px solid var(--secondary); background: #FFFCF2;">
+      <div class="social-icon" style="background:var(--secondary);">✨</div>
+      <span>Nos siga no insta</span>
+    </div>
+  </div>
+  
+  <div style="margin:auto 20px 24px; text-align:center; color:var(--primary); font-weight:700; font-size:14px; cursor:pointer;">
+    Voltar para o início
+  </div>
+</div></div></div>
+
+</body>
+</html>

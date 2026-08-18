@@ -1,0 +1,96 @@
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import type { User } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabaseClient';
+
+export interface Profile {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  favorite_dish: string | null;
+  bio: string | null;
+  xp: number;
+  is_admin: boolean;
+}
+
+interface AuthState {
+  user: User | null;
+  profile: Profile | null;
+  loading: boolean;
+  signUp: (email: string, password: string, displayName: string, favoriteDish: string) => Promise<string | null>;
+  signIn: (email: string, password: string) => Promise<string | null>;
+  signInWithGoogle: () => Promise<void>;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthState | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+      setLoading(false);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  const fetchProfile = useCallback(async (userId: string) => {
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    setProfile((data as Profile) ?? null);
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setProfile(null);
+      return;
+    }
+    fetchProfile(user.id);
+  }, [user, fetchProfile]);
+
+  const refreshProfile = useCallback(async () => {
+    if (user) await fetchProfile(user.id);
+  }, [user, fetchProfile]);
+
+  const signUp = async (email: string, password: string, displayName: string, favoriteDish: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { display_name: displayName, favorite_dish: favoriteDish || null } },
+    });
+    return error?.message ?? null;
+  };
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return error?.message ?? null;
+  };
+
+  const signInWithGoogle = async () => {
+    await supabase.auth.signInWithOAuth({ provider: 'google' });
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{ user, profile, loading, signUp, signIn, signInWithGoogle, signOut, refreshProfile }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth(): AuthState {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+}

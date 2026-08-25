@@ -2046,6 +2046,13 @@ input[type=range] {
   padding-top: 10px;
 }
 
+.auth-success {
+  color: var(--success);
+  font-size: 13px;
+  padding-top: 10px;
+  line-height: 1.5;
+}
+
 .auth-switch {
   text-align: center;
   margin-top: 16px;

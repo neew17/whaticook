@@ -84,6 +84,12 @@ export default function Login() {
           </>
         )}
 
+        {mode === 'signin' && (
+          <p className="auth-switch" onClick={() => navigate('/esqueci-senha')}>
+            Esqueci minha senha
+          </p>
+        )}
+
         {error && <p className="auth-error">{error}</p>}
       </div>
 

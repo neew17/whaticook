@@ -16,11 +16,14 @@ interface AuthState {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  passwordRecovery: boolean;
   signUp: (email: string, password: string, displayName: string, favoriteDish: string) => Promise<string | null>;
   signIn: (email: string, password: string) => Promise<string | null>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  resetPasswordForEmail: (email: string) => Promise<string | null>;
+  updatePassword: (newPassword: string) => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -29,14 +32,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
       setLoading(false);
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
     });
     return () => listener.subscription.unsubscribe();
   }, []);
@@ -80,9 +85,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const resetPasswordForEmail = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/redefinir-senha`,
+    });
+    return error?.message ?? null;
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (!error) setPasswordRecovery(false);
+    return error?.message ?? null;
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, signUp, signIn, signInWithGoogle, signOut, refreshProfile }}
+      value={{
+        user,
+        profile,
+        loading,
+        passwordRecovery,
+        signUp,
+        signIn,
+        signInWithGoogle,
+        signOut,
+        refreshProfile,
+        resetPasswordForEmail,
+        updatePassword,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -15,11 +15,14 @@ import CookingStep from './pages/CookingStep';
 import Conclusao from './pages/Conclusao';
 import Social from './pages/Social';
 import Login from './pages/Login';
+import EsqueciSenha from './pages/EsqueciSenha';
+import RedefinirSenha from './pages/RedefinirSenha';
 import Profile from './pages/Profile';
 import CookerProfile from './pages/CookerProfile';
 import Search from './pages/Search';
 import FollowList from './pages/FollowList';
 import PostDetail from './pages/PostDetail';
+import NotFound from './pages/NotFound';
 import { playClickSound } from './utils/sound';
 
 const CLICKABLE_SELECTOR =
@@ -70,11 +73,14 @@ function App() {
       <Route path="/receita/:id/concluido" element={<Conclusao />} />
       <Route path="/social" element={<Social />} />
       <Route path="/entrar" element={<Login />} />
+      <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+      <Route path="/redefinir-senha" element={<RedefinirSenha />} />
       <Route path="/perfil" element={<Profile />} />
       <Route path="/buscar" element={<Search />} />
       <Route path="/cooker/:id" element={<CookerProfile />} />
       <Route path="/rede/:id/:type" element={<FollowList />} />
       <Route path="/publicacao/:dishId" element={<PostDetail />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

@@ -1,0 +1,8 @@
+Avaliação de dificuldade da receita — depois que a pessoa termina de cozinhar, o app já pergunta e salva "essa receita foi fácil/média/difícil pra você?" no banco de dados... mas isso nunca aparece em lugar nenhum depois. Seria simples mostrar, por exemplo, "a galera achou isso Médio" na tela da receita — usando dado real dos usuários, em vez de só a dificuldade que eu defini na hora de escrever a receita.
+Receitas criadas por usuários somem no vazio — tem uma tela pra qualquer usuário criar sua própria receita, e uma tela de admin pra aprovar ou rejeitar. Só que depois de aprovada, essa receita não aparece em lugar nenhum — não entra nos resultados de busca, não aparece no perfil de quem criou. É um recurso "pela metade": coleta, mas não devolve nada pra ninguém.
+Outras ideias (não testei o código, são sugestões novas)
+Notificação de segurança: como acabamos de configurar recuperação de senha, dava pra também mandar um aviso quando alguém troca a senha ("sua senha foi alterada") — proteção extra contra troca indevida.
+Melhorar a busca por nome de receita: hoje só funciona apertando Enter no campo (nem tem um botão de buscar visível) — um detalhezinho de usabilidade fácil de resolver.
+Mais receitas salgadas variadas: já equilibramos doces, mas dá pra olhar se algum equipamento (tipo airfryer ou panela de pressão) está sub-representado também.
+
+Qual dessas direções te interessa mais? Posso entrar em qualquer uma delas.

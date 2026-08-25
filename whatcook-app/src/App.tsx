@@ -31,7 +31,7 @@ const CLICKABLE_SELECTOR =
   '.camera-shutter-btn, .auth-switch, .auth-google-btn, .result-card, .back, .fav, .profile-badge, ' +
   '.btn-ghost, .btn-next, .btn-finish, .dish-photo-retake, .tipo-prato-half, ' +
   '.profile-bio-edit-btn, .profile-feed-tile, .follow-btn, .post-like-btn, .comment-send-btn, ' +
-  '.profile-follow-stat';
+  '.profile-follow-stat, .name-search-submit';
 
 function App() {
   useEffect(() => {

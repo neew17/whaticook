@@ -162,6 +162,15 @@ export default function Categorias() {
                 if (e.key === 'Enter') handleNameSearch();
               }}
             />
+            <div
+              className="name-search-submit"
+              style={{ color: nameQuery.trim() ? 'var(--primary)' : 'var(--text-muted)' }}
+              onClick={handleNameSearch}
+              role="button"
+              aria-label="Buscar receita"
+            >
+              <SearchIcon />
+            </div>
           </div>
 
           {allSelectedEntries.length > 0 && (

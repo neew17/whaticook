@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { CheckIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
+import { useAppState } from '../context/AppStateContext';
 import { supabase } from '../lib/supabaseClient';
+import type { TipoPrato } from '../data/recipes';
 import {
   ALIMENTOS_TABS,
   CATEGORY_META,
@@ -34,8 +36,10 @@ interface SelectedItem {
 export default function CriarReceita() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { tipoPrato } = useAppState();
 
   const [title, setTitle] = useState('');
+  const [tipo, setTipo] = useState<TipoPrato>(tipoPrato ?? 'salgado');
   const [minutes, setMinutes] = useState(30);
   const [stepCount, setStepCount] = useState(4);
   const [stepTexts, setStepTexts] = useState<string[]>(['', '', '', '']);
@@ -113,6 +117,7 @@ export default function CriarReceita() {
     const { error: dbError } = await supabase.from('user_recipes').insert({
       user_id: user.id,
       title: title.trim(),
+      tipo,
       ingredients,
       steps,
     });
@@ -156,6 +161,18 @@ export default function CriarReceita() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
+        </div>
+
+        <div>
+          <label className="auth-label">Tipo de prato</label>
+          <div className="tabs" style={{ padding: 0 }}>
+            <div className={`tab${tipo === 'salgado' ? ' active' : ''}`} onClick={() => setTipo('salgado')}>
+              Salgado
+            </div>
+            <div className={`tab${tipo === 'doce' ? ' active' : ''}`} onClick={() => setTipo('doce')}>
+              Doce
+            </div>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: 12 }}>

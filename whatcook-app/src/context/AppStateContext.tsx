@@ -1,7 +1,45 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { IngredientOption, CategoryKey } from '../data/ingredients';
 import { RECIPES, type LocalRecipe, type Difficulty, type TipoPrato } from '../data/recipes';
 import { normalize } from '../utils/text';
+import { supabase } from '../lib/supabaseClient';
+
+interface UserRecipeRow {
+  id: string;
+  title: string;
+  tipo: TipoPrato;
+  ingredients: { category: CategoryKey; query: string; display: string }[];
+  steps: { tempoPreparoMinutos: number; items: string[] };
+}
+
+/** Mesma régua que já usávamos com a Spoonacular, antes de virar banco local. */
+function deriveDifficulty(minutes: number, stepCount: number): Difficulty {
+  if (minutes <= 25 && stepCount <= 6) return 'Fácil';
+  if (minutes <= 60 && stepCount <= 10) return 'Médio';
+  return 'Difícil';
+}
+
+/** Converte uma receita de usuário aprovada para o mesmo formato das receitas locais, para entrar no motor de busca. */
+function userRecipeToLocal(row: UserRecipeRow): LocalRecipe {
+  const equipamento = row.ingredients.filter((i) => i.category === 'equipamentos').map((i) => i.query);
+  const ingredientes = row.ingredients
+    .filter((i) => i.category !== 'equipamentos')
+    .map((i) => ({ query: i.query, display: i.display }));
+  return {
+    id: row.id,
+    titulo: row.title,
+    emoji: '🍽️',
+    tipo: row.tipo,
+    tempoPreparoMinutos: row.steps.tempoPreparoMinutos,
+    dificuldade: deriveDifficulty(row.steps.tempoPreparoMinutos, row.steps.items.length),
+    porcoes: 4,
+    // Sem dado real de calorias pra receita de usuário — estimativa genérica só pra não mostrar "0 kcal".
+    calorias: row.tipo === 'doce' ? 250 : 300,
+    ingredientes,
+    modoPreparo: row.steps.items,
+    equipamento,
+  };
+}
 
 export interface SelectedIngredientEntry {
   category: CategoryKey;
@@ -120,6 +158,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [completedDish, setCompletedDish] = useState<CompletedDish | null>(null);
   const [cookingTimer, setCookingTimer] = useState<CookingTimer | null>(null);
   const [cookingDurationSeconds, setCookingDurationSeconds] = useState<number | null>(null);
+  const [userRecipes, setUserRecipes] = useState<LocalRecipe[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from('user_recipes')
+      .select('id, title, tipo, ingredients, steps')
+      .eq('status', 'approved')
+      .then(({ data }) => {
+        setUserRecipes(((data as UserRecipeRow[]) ?? []).map(userRecipeToLocal));
+      });
+  }, []);
+
+  const allRecipes = useMemo(() => [...RECIPES, ...userRecipes], [userRecipes]);
 
   const toggleIngredient = useCallback((category: CategoryKey, option: IngredientOption) => {
     setSelected((prev) => {
@@ -169,9 +220,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     try {
       const timeTolerance = timeMinutes >= 120 ? Infinity : timeMinutes + 15;
 
-      const merged = RECIPES.filter(
-        (recipe) => (!tipoPrato || recipe.tipo === tipoPrato) && isEquipmentCompatible(recipe, selectedEquipmentQueries)
-      )
+      const merged = allRecipes
+        .filter(
+          (recipe) => (!tipoPrato || recipe.tipo === tipoPrato) && isEquipmentCompatible(recipe, selectedEquipmentQueries)
+        )
         .map((recipe) => toSummary(recipe, allSelectedQueries))
         .filter((r) => isMeaningfulMatch(r) && r.readyInMinutes <= timeTolerance)
         .sort(
@@ -183,7 +235,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsSearching(false);
     }
-  }, [allSelectedQueries, selectedEquipmentQueries, timeMinutes, tipoPrato]);
+  }, [allRecipes, allSelectedQueries, selectedEquipmentQueries, timeMinutes, tipoPrato]);
 
   const searchByName = useCallback(
     (query: string) => {
@@ -194,33 +246,38 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setResults([]);
         return;
       }
-      const matches = RECIPES.filter(
-        (r) =>
-          (!tipoPrato || r.tipo === tipoPrato) &&
-          isEquipmentCompatible(r, selectedEquipmentQueries) &&
-          normalize(r.titulo).includes(q)
-      ).map((recipe) => ({
-        ...toSummary(recipe, allSelectedQueries),
-        viaSearch: true,
-      }));
+      const matches = allRecipes
+        .filter(
+          (r) =>
+            (!tipoPrato || r.tipo === tipoPrato) &&
+            isEquipmentCompatible(r, selectedEquipmentQueries) &&
+            normalize(r.titulo).includes(q)
+        )
+        .map((recipe) => ({
+          ...toSummary(recipe, allSelectedQueries),
+          viaSearch: true,
+        }));
       if (matches.length === 0) {
         setSearchError(`Nenhuma receita encontrada para "${query}".`);
       }
       setResults(matches);
     },
-    [allSelectedQueries, selectedEquipmentQueries, tipoPrato]
+    [allRecipes, allSelectedQueries, selectedEquipmentQueries, tipoPrato]
   );
 
-  const getCachedRecipe = useCallback((id: string) => RECIPES.find((r) => r.id === id), []);
+  const getCachedRecipe = useCallback((id: string) => allRecipes.find((r) => r.id === id), [allRecipes]);
 
-  const fetchRecipe = useCallback(async (id: string) => {
-    const recipe = RECIPES.find((r) => r.id === id);
-    if (!recipe) {
-      throw new Error('Receita não encontrada.');
-    }
-    setLastRecipeTitle(recipe.titulo);
-    return recipe;
-  }, []);
+  const fetchRecipe = useCallback(
+    async (id: string) => {
+      const recipe = allRecipes.find((r) => r.id === id);
+      if (!recipe) {
+        throw new Error('Receita não encontrada.');
+      }
+      setLastRecipeTitle(recipe.titulo);
+      return recipe;
+    },
+    [allRecipes]
+  );
 
   const value: AppState = {
     tipoPrato,

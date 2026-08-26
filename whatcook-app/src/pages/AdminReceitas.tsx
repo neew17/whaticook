@@ -24,7 +24,7 @@ interface UserRecipeRow {
   photo_url: string | null;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
-  profiles: { display_name: string | null } | null;
+  authorName: string | null;
 }
 
 export default function AdminReceitas() {
@@ -35,7 +35,7 @@ export default function AdminReceitas() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || (user && profile === null)) return;
     if (!user || !profile?.is_admin) navigate('/tempo');
   }, [loading, user, profile, navigate]);
 
@@ -43,22 +43,39 @@ export default function AdminReceitas() {
     if (!profile?.is_admin) return;
     supabase
       .from('user_recipes')
-      .select('*, profiles(display_name)')
+      .select('*')
       .eq('status', 'pending')
       .order('created_at', { ascending: true })
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
         if (error) {
           setLoadError(error.message);
           setRecipes([]);
           return;
         }
-        setRecipes((data as unknown as UserRecipeRow[]) ?? []);
+        const rows = (data as unknown as Omit<UserRecipeRow, 'authorName'>[]) ?? [];
+        const userIds = [...new Set(rows.map((r) => r.user_id))];
+        const nameById = new Map<string, string | null>();
+        if (userIds.length > 0) {
+          const { data: profiles } = await supabase.from('profiles').select('id, display_name').in('id', userIds);
+          (profiles ?? []).forEach((p: { id: string; display_name: string | null }) => nameById.set(p.id, p.display_name));
+        }
+        setRecipes(rows.map((r) => ({ ...r, authorName: nameById.get(r.user_id) ?? null })));
       });
   }, [profile?.is_admin]);
 
   const handleDecision = async (id: string, status: 'approved' | 'rejected') => {
     setBusyId(id);
     const { error } = await supabase.from('user_recipes').update({ status }).eq('id', id);
+    setBusyId(null);
+    if (!error) {
+      setRecipes((prev) => (prev ? prev.filter((r) => r.id !== id) : prev));
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Apagar essa receita definitivamente? Essa ação não pode ser desfeita.')) return;
+    setBusyId(id);
+    const { error } = await supabase.from('user_recipes').delete().eq('id', id);
     setBusyId(null);
     if (!error) {
       setRecipes((prev) => (prev ? prev.filter((r) => r.id !== id) : prev));
@@ -92,7 +109,7 @@ export default function AdminReceitas() {
               <div className="admin-recipe-header">
                 <h4>{r.title}</h4>
                 <span>
-                  por {r.profiles?.display_name ?? 'usuário'} · {new Date(r.created_at).toLocaleDateString('pt-BR')}
+                  por {r.authorName ?? 'usuário'} · {new Date(r.created_at).toLocaleDateString('pt-BR')}
                 </span>
               </div>
 
@@ -136,6 +153,14 @@ export default function AdminReceitas() {
                   onClick={busyId === r.id ? undefined : () => handleDecision(r.id, 'approved')}
                 >
                   {busyId === r.id ? '...' : 'Aprovar ✓'}
+                </div>
+                <div
+                  className="icon-btn"
+                  onClick={busyId === r.id ? undefined : () => handleDelete(r.id)}
+                  role="button"
+                  aria-label="Apagar receita"
+                >
+                  🗑️
                 </div>
               </div>
             </div>

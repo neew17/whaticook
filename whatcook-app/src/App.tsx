@@ -24,6 +24,7 @@ import FollowList from './pages/FollowList';
 import PostDetail from './pages/PostDetail';
 import StoryViewer from './pages/StoryViewer';
 import StoryEditor from './pages/StoryEditor';
+import StoriesExplore from './pages/StoriesExplore';
 import NotFound from './pages/NotFound';
 import { playClickSound } from './utils/sound';
 
@@ -35,7 +36,7 @@ const CLICKABLE_SELECTOR =
   '.profile-bio-edit-btn, .profile-feed-tile, .follow-btn, .post-like-btn, .comment-send-btn, ' +
   '.profile-follow-stat, .comment-like-btn, .comment-reply-btn, .story-avatar-item, .story-add-badge, ' +
   '.story-tap-zone, .story-viewer-close, .cooker-profile-story-ring, .story-editor-tool-btn, ' +
-  '.story-editor-publish-btn';
+  '.story-editor-publish-btn, .explore-story-row, .story-viewer-viewers-bar, .explore-stories-link';
 
 function App() {
   useEffect(() => {
@@ -86,6 +87,7 @@ function App() {
       <Route path="/publicacao/:dishId" element={<PostDetail />} />
       <Route path="/story/:userId" element={<StoryViewer />} />
       <Route path="/story-editor" element={<StoryEditor />} />
+      <Route path="/stories" element={<StoriesExplore />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

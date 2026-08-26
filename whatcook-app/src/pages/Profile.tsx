@@ -200,6 +200,9 @@ export default function Profile() {
       </div>
 
       <StoryBar />
+      <div className="explore-stories-link" onClick={() => navigate('/stories')}>
+        🔎 Explorar stories de todos os cookers
+      </div>
 
       <div className="tabs">
         <div className={`tab${tab === 'bio' ? ' active' : ''}`} onClick={() => setTab('bio')}>

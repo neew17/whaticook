@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { RECIPES } from '../data/recipes';
 import { RECIPE_IMAGES } from '../data/recipe-images';
+import { amIBlockedBy, blockUser, isBlockedByMe, unblockUser } from '../utils/blocks';
 
 interface CookerProfileRow {
   id: string;
@@ -32,6 +33,10 @@ export default function CookerProfile() {
   const [followingCount, setFollowingCount] = useState(0);
   const [activeStoryCount, setActiveStoryCount] = useState(0);
   const [hasUnseenStory, setHasUnseenStory] = useState(false);
+  const [blockedByMe, setBlockedByMe] = useState(false);
+  const [blockingMe, setBlockingMe] = useState(false);
+  const [blockChecked, setBlockChecked] = useState(false);
+  const [blockBusy, setBlockBusy] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -40,6 +45,17 @@ export default function CookerProfile() {
       return;
     }
     setCooker(undefined);
+    setBlockChecked(false);
+    const viewerId = user?.id;
+    if (viewerId) {
+      Promise.all([isBlockedByMe(viewerId, id), amIBlockedBy(id)]).then(([byMe, ofMe]) => {
+        setBlockedByMe(byMe);
+        setBlockingMe(ofMe);
+        setBlockChecked(true);
+      });
+    } else {
+      setBlockChecked(true);
+    }
     supabase
       .from('profiles')
       .select('id, display_name, avatar_url, bio, favorite_dish')
@@ -63,7 +79,6 @@ export default function CookerProfile() {
       .select('following_id', { count: 'exact', head: true })
       .eq('follower_id', id)
       .then(({ count }) => setFollowingCount(count ?? 0));
-    const viewerId = user?.id;
     supabase
       .from('stories')
       .select('id')
@@ -85,6 +100,23 @@ export default function CookerProfile() {
         setHasUnseenStory(ids.some((storyId: string) => !seen.has(storyId)));
       });
   }, [id, user?.id, navigate]);
+
+  const handleToggleBlock = async () => {
+    if (!user || !id || blockBusy) return;
+    setBlockBusy(true);
+    if (blockedByMe) {
+      await unblockUser(user.id, id);
+      setBlockedByMe(false);
+    } else {
+      if (!window.confirm(`Bloquear ${cooker?.display_name ?? 'esse cooker'}? Vocês deixam de ver o conteúdo um do outro.`)) {
+        setBlockBusy(false);
+        return;
+      }
+      await blockUser(user.id, id);
+      setBlockedByMe(true);
+    }
+    setBlockBusy(false);
+  };
 
   if (cooker === undefined) {
     return (
@@ -108,9 +140,28 @@ export default function CookerProfile() {
     );
   }
 
+  if (blockChecked && blockingMe) {
+    return (
+      <div className="screen">
+        <TopBar title="Perfil" onBack={() => navigate(-1)} />
+        <div className="state-block">
+          <p>Esse perfil não está disponível.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="screen">
-      <TopBar title={cooker.display_name ?? 'Cooker'} onBack={() => navigate(-1)} />
+      <TopBar
+        title={cooker.display_name ?? 'Cooker'}
+        onBack={() => navigate(-1)}
+        rightSlot={
+          <div className="icon-btn" onClick={blockBusy ? undefined : handleToggleBlock} role="button" aria-label="Bloquear cooker">
+            {blockedByMe ? '🔓' : '🚫'}
+          </div>
+        }
+      />
 
       <div className="profile-header">
         {activeStoryCount > 0 ? (
@@ -149,37 +200,47 @@ export default function CookerProfile() {
           </div>
         </div>
 
-        <div style={{ marginTop: 12 }}>
-          <FollowButton targetUserId={id} onChange={(f) => setFollowerCount((c) => (f ? c + 1 : Math.max(0, c - 1)))} />
-        </div>
+        {!blockedByMe && (
+          <div style={{ marginTop: 12 }}>
+            <FollowButton targetUserId={id} onChange={(f) => setFollowerCount((c) => (f ? c + 1 : Math.max(0, c - 1)))} />
+          </div>
+        )}
 
-        {cooker.bio && <p className="profile-bio-readonly">{cooker.bio}</p>}
+        {!blockedByMe && cooker.bio && <p className="profile-bio-readonly">{cooker.bio}</p>}
       </div>
 
-      <div className="profile-feed-header" style={{ padding: '0 20px' }}>
-        <span className="profile-feed-title">📸 Feed</span>
-      </div>
-      {dishes.length === 0 ? (
+      {blockedByMe ? (
         <div className="state-block">
-          <p>Esse cooker ainda não postou nenhum prato.</p>
+          <p>Você bloqueou esse cooker. Toque em 🔓 para desbloquear e ver o conteúdo dele de novo.</p>
         </div>
       ) : (
-        <div className="profile-feed-grid" style={{ padding: '0 20px 20px' }}>
-          {dishes.map((d) => {
-            const url = d.photo_url ?? RECIPE_IMAGES[d.recipe_id]?.url ?? null;
-            const emoji = RECIPES.find((r) => r.id === d.recipe_id)?.emoji ?? '🍽️';
-            return (
-              <div
-                key={d.id}
-                className="profile-feed-tile"
-                style={url ? { backgroundImage: `url(${url})` } : undefined}
-                onClick={() => navigate(`/publicacao/${d.id}`)}
-              >
-                {!url && <span className="profile-feed-tile-emoji">{emoji}</span>}
-              </div>
-            );
-          })}
-        </div>
+        <>
+          <div className="profile-feed-header" style={{ padding: '0 20px' }}>
+            <span className="profile-feed-title">📸 Feed</span>
+          </div>
+          {dishes.length === 0 ? (
+            <div className="state-block">
+              <p>Esse cooker ainda não postou nenhum prato.</p>
+            </div>
+          ) : (
+            <div className="profile-feed-grid" style={{ padding: '0 20px 20px' }}>
+              {dishes.map((d) => {
+                const url = d.photo_url ?? RECIPE_IMAGES[d.recipe_id]?.url ?? null;
+                const emoji = RECIPES.find((r) => r.id === d.recipe_id)?.emoji ?? '🍽️';
+                return (
+                  <div
+                    key={d.id}
+                    className="profile-feed-tile"
+                    style={url ? { backgroundImage: `url(${url})` } : undefined}
+                    onClick={() => navigate(`/publicacao/${d.id}`)}
+                  >
+                    {!url && <span className="profile-feed-tile-emoji">{emoji}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

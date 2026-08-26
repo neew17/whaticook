@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { getBlockedByMeIds, getWhoBlockedMeIds } from '../utils/blocks';
 
 interface StoryGroup {
   userId: string;
@@ -28,7 +29,10 @@ export default function StoryBar() {
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })
       .limit(200);
-    const rows = (storyRows as { id: string; user_id: string; created_at: string }[]) ?? [];
+    const [blockedByMe, blockedMe] = await Promise.all([getBlockedByMeIds(user.id), getWhoBlockedMeIds()]);
+    const rows = ((storyRows as { id: string; user_id: string; created_at: string }[]) ?? []).filter(
+      (r) => !blockedByMe.has(r.user_id) && !blockedMe.has(r.user_id)
+    );
 
     const storyIds = rows.map((r) => r.id);
     const seenIds = new Set<string>();
@@ -108,7 +112,8 @@ export default function StoryBar() {
       fileInputRef.current?.click();
       return;
     }
-    navigate(`/story/${g.userId}`);
+    const queue = groups.filter((x) => x.storyCount > 0).map((x) => x.userId);
+    navigate(`/story/${g.userId}`, { state: { queue } });
   };
 
   return (

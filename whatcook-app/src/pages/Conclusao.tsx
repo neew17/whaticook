@@ -40,6 +40,14 @@ export default function Conclusao() {
   const [difficultyRating, setDifficultyRating] = useState<Difficulty | null>(null);
   const [ratingSaving, setRatingSaving] = useState(false);
   const [ratingSaved, setRatingSaved] = useState(false);
+  const goToStoryEditor = () => {
+    if (!user) {
+      navigate('/entrar');
+      return;
+    }
+    if (!dishPhoto) return;
+    navigate('/story-editor', { state: { imageSrc: dishPhoto } });
+  };
 
   const rateDifficulty = async (difficulty: Difficulty) => {
     if (!user || !recipe || ratingSaving) return;
@@ -249,7 +257,13 @@ export default function Conclusao() {
         </div>
       )}
 
-      <div className="fab" style={{ width: '100%', marginTop: 20 }} onClick={() => navigate('/social')}>
+      {dishPhoto && (
+        <div className="cta-secondary" style={{ width: '100%', margin: '10px 0 0' }} onClick={goToStoryEditor}>
+          📖 Postar no Story
+        </div>
+      )}
+
+      <div className="fab" style={{ width: '100%', marginTop: 10 }} onClick={() => navigate('/social')}>
         Compartilhar conquista →
       </div>
     </div>

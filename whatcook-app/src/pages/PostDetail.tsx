@@ -26,7 +26,11 @@ interface CommentRow {
   user_id: string;
   content: string;
   created_at: string;
+  parent_comment_id: string | null;
   author?: AuthorRow;
+  likeCount: number;
+  isLiked: boolean;
+  replies: CommentRow[];
 }
 
 export default function PostDetail() {
@@ -41,6 +45,10 @@ export default function PostDetail() {
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [commentText, setCommentText] = useState('');
   const [postingComment, setPostingComment] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [postingReply, setPostingReply] = useState(false);
+  const [commentLikeBusy, setCommentLikeBusy] = useState<string | null>(null);
 
   useEffect(() => {
     if (!dishId) return;
@@ -81,11 +89,17 @@ export default function PostDetail() {
     if (!dishId) return;
     supabase
       .from('dish_comments')
-      .select('id, user_id, content, created_at')
+      .select('id, user_id, content, created_at, parent_comment_id')
       .eq('dish_id', dishId)
       .order('created_at', { ascending: true })
       .then(async ({ data }) => {
-        const rows = (data as CommentRow[]) ?? [];
+        const rows = ((data as Omit<CommentRow, 'likeCount' | 'isLiked' | 'replies'>[]) ?? []).map((r) => ({
+          ...r,
+          likeCount: 0,
+          isLiked: false,
+          replies: [] as CommentRow[],
+        }));
+
         const userIds = [...new Set(rows.map((r) => r.user_id))];
         if (userIds.length > 0) {
           const { data: profiles } = await supabase
@@ -95,7 +109,35 @@ export default function PostDetail() {
           const byId = new Map((profiles ?? []).map((p: { id: string } & AuthorRow) => [p.id, p]));
           rows.forEach((r) => (r.author = byId.get(r.user_id)));
         }
-        setComments(rows);
+
+        const commentIds = rows.map((r) => r.id);
+        if (commentIds.length > 0) {
+          const { data: likeRows } = await supabase
+            .from('comment_likes')
+            .select('user_id, comment_id')
+            .in('comment_id', commentIds);
+          const byComment = new Map<string, string[]>();
+          (likeRows ?? []).forEach((l: { user_id: string; comment_id: string }) => {
+            byComment.set(l.comment_id, [...(byComment.get(l.comment_id) ?? []), l.user_id]);
+          });
+          rows.forEach((r) => {
+            const likers = byComment.get(r.id) ?? [];
+            r.likeCount = likers.length;
+            r.isLiked = !!user && likers.includes(user.id);
+          });
+        }
+
+        const byId = new Map(rows.map((r) => [r.id, r]));
+        const roots: CommentRow[] = [];
+        rows.forEach((r) => {
+          if (r.parent_comment_id && byId.has(r.parent_comment_id)) {
+            byId.get(r.parent_comment_id)!.replies.push(r);
+          } else {
+            roots.push(r);
+          }
+        });
+
+        setComments(roots);
       });
   };
 
@@ -115,6 +157,22 @@ export default function PostDetail() {
     setLikeBusy(false);
   };
 
+  const toggleCommentLike = async (comment: CommentRow) => {
+    if (!user) {
+      navigate('/entrar');
+      return;
+    }
+    if (commentLikeBusy) return;
+    setCommentLikeBusy(comment.id);
+    if (comment.isLiked) {
+      await supabase.from('comment_likes').delete().eq('user_id', user.id).eq('comment_id', comment.id);
+    } else {
+      await supabase.from('comment_likes').insert({ user_id: user.id, comment_id: comment.id });
+    }
+    refreshComments();
+    setCommentLikeBusy(null);
+  };
+
   const submitComment = async () => {
     if (!user) {
       navigate('/entrar');
@@ -126,6 +184,22 @@ export default function PostDetail() {
     setCommentText('');
     refreshComments();
     setPostingComment(false);
+  };
+
+  const submitReply = async (parentId: string) => {
+    if (!user) {
+      navigate('/entrar');
+      return;
+    }
+    if (!dishId || !replyText.trim() || postingReply) return;
+    setPostingReply(true);
+    await supabase
+      .from('dish_comments')
+      .insert({ dish_id: dishId, user_id: user.id, content: replyText.trim(), parent_comment_id: parentId });
+    setReplyText('');
+    setReplyingTo(null);
+    refreshComments();
+    setPostingReply(false);
   };
 
   if (dish === undefined) {
@@ -149,6 +223,60 @@ export default function PostDetail() {
       </div>
     );
   }
+
+  const renderComment = (c: CommentRow, isReply: boolean) => (
+    <div key={c.id} className={isReply ? 'comment-row comment-reply-row' : 'comment-row'}>
+      <span className="cooker-row-avatar">
+        {c.author?.avatar_url ? <img src={c.author.avatar_url} alt="" /> : (c.author?.display_name?.[0]?.toUpperCase() ?? '?')}
+      </span>
+      <div style={{ flex: 1 }}>
+        <b>{c.author?.display_name ?? 'Cooker'}</b>
+        <p>{c.content}</p>
+        <div className="comment-actions">
+          <span
+            className={`comment-like-btn${c.isLiked ? ' liked' : ''}`}
+            onClick={() => toggleCommentLike(c)}
+          >
+            <HeartIcon color={c.isLiked ? 'var(--primary)' : 'var(--text-main)'} size={13} />
+            {c.likeCount > 0 && <span>{c.likeCount}</span>}
+          </span>
+          {!isReply && (
+            <span
+              className="comment-reply-btn"
+              onClick={() => {
+                setReplyingTo(replyingTo === c.id ? null : c.id);
+                setReplyText('');
+              }}
+            >
+              Responder
+            </span>
+          )}
+        </div>
+
+        {replyingTo === c.id && (
+          <div className="comment-input-bar comment-reply-input-bar">
+            <input
+              type="text"
+              autoFocus
+              placeholder={`Responder ${c.author?.display_name ?? 'Cooker'}...`}
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') submitReply(c.id);
+              }}
+            />
+            <div className="comment-send-btn" onClick={postingReply ? undefined : () => submitReply(c.id)}>
+              Enviar
+            </div>
+          </div>
+        )}
+
+        {c.replies.length > 0 && (
+          <div className="comment-replies">{c.replies.map((r) => renderComment(r, true))}</div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="screen">
@@ -187,17 +315,7 @@ export default function PostDetail() {
         {comments.length === 0 ? (
           <p className="helper-text">Nenhum comentário ainda. Seja o primeiro!</p>
         ) : (
-          comments.map((c) => (
-            <div key={c.id} className="comment-row">
-              <span className="cooker-row-avatar">
-                {c.author?.avatar_url ? <img src={c.author.avatar_url} alt="" /> : (c.author?.display_name?.[0]?.toUpperCase() ?? '?')}
-              </span>
-              <div>
-                <b>{c.author?.display_name ?? 'Cooker'}</b>
-                <p>{c.content}</p>
-              </div>
-            </div>
-          ))
+          comments.map((c) => renderComment(c, false))
         )}
       </div>
 

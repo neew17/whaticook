@@ -22,6 +22,8 @@ import CookerProfile from './pages/CookerProfile';
 import Search from './pages/Search';
 import FollowList from './pages/FollowList';
 import PostDetail from './pages/PostDetail';
+import StoryViewer from './pages/StoryViewer';
+import StoryEditor from './pages/StoryEditor';
 import NotFound from './pages/NotFound';
 import { playClickSound } from './utils/sound';
 
@@ -31,7 +33,9 @@ const CLICKABLE_SELECTOR =
   '.camera-shutter-btn, .auth-switch, .auth-google-btn, .result-card, .back, .fav, .profile-badge, ' +
   '.btn-ghost, .btn-next, .btn-finish, .dish-photo-retake, .tipo-prato-half, ' +
   '.profile-bio-edit-btn, .profile-feed-tile, .follow-btn, .post-like-btn, .comment-send-btn, ' +
-  '.profile-follow-stat';
+  '.profile-follow-stat, .comment-like-btn, .comment-reply-btn, .story-avatar-item, .story-add-badge, ' +
+  '.story-tap-zone, .story-viewer-close, .cooker-profile-story-ring, .story-editor-tool-btn, ' +
+  '.story-editor-publish-btn';
 
 function App() {
   useEffect(() => {
@@ -80,6 +84,8 @@ function App() {
       <Route path="/cooker/:id" element={<CookerProfile />} />
       <Route path="/rede/:id/:type" element={<FollowList />} />
       <Route path="/publicacao/:dishId" element={<PostDetail />} />
+      <Route path="/story/:userId" element={<StoryViewer />} />
+      <Route path="/story-editor" element={<StoryEditor />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

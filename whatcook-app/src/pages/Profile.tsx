@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
+import StoryBar from '../components/StoryBar';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { RECIPES } from '../data/recipes';
@@ -197,6 +198,8 @@ export default function Profile() {
 
         {avatarError && <p className="auth-error">{avatarError}</p>}
       </div>
+
+      <StoryBar />
 
       <div className="tabs">
         <div className={`tab${tab === 'bio' ? ' active' : ''}`} onClick={() => setTab('bio')}>

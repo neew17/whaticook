@@ -30,6 +30,8 @@ export default function CookerProfile() {
   const [dishes, setDishes] = useState<DishRow[]>([]);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [activeStoryCount, setActiveStoryCount] = useState(0);
+  const [hasUnseenStory, setHasUnseenStory] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -61,6 +63,27 @@ export default function CookerProfile() {
       .select('following_id', { count: 'exact', head: true })
       .eq('follower_id', id)
       .then(({ count }) => setFollowingCount(count ?? 0));
+    const viewerId = user?.id;
+    supabase
+      .from('stories')
+      .select('id')
+      .eq('user_id', id)
+      .gt('expires_at', new Date().toISOString())
+      .then(async ({ data: storyRows }) => {
+        const ids = (storyRows ?? []).map((s: { id: string }) => s.id);
+        setActiveStoryCount(ids.length);
+        if (ids.length === 0 || !viewerId) {
+          setHasUnseenStory(ids.length > 0);
+          return;
+        }
+        const { data: viewRows } = await supabase
+          .from('story_views')
+          .select('story_id')
+          .eq('user_id', viewerId)
+          .in('story_id', ids);
+        const seen = new Set((viewRows ?? []).map((v: { story_id: string }) => v.story_id));
+        setHasUnseenStory(ids.some((storyId: string) => !seen.has(storyId)));
+      });
   }, [id, user?.id, navigate]);
 
   if (cooker === undefined) {
@@ -90,13 +113,28 @@ export default function CookerProfile() {
       <TopBar title={cooker.display_name ?? 'Cooker'} onBack={() => navigate(-1)} />
 
       <div className="profile-header">
-        <div className="profile-avatar-wrap" style={{ cursor: 'default' }}>
-          {cooker.avatar_url ? (
-            <img src={cooker.avatar_url} alt={cooker.display_name ?? 'Cooker'} />
-          ) : (
-            <span>{cooker.display_name?.[0]?.toUpperCase() ?? '?'}</span>
-          )}
-        </div>
+        {activeStoryCount > 0 ? (
+          <div
+            className={`story-ring cooker-profile-story-ring${hasUnseenStory ? ' unseen' : ' seen'}`}
+            onClick={() => navigate(`/story/${id}`)}
+          >
+            <div className="profile-avatar-wrap" style={{ cursor: 'pointer', margin: 0 }}>
+              {cooker.avatar_url ? (
+                <img src={cooker.avatar_url} alt={cooker.display_name ?? 'Cooker'} />
+              ) : (
+                <span>{cooker.display_name?.[0]?.toUpperCase() ?? '?'}</span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="profile-avatar-wrap" style={{ cursor: 'default' }}>
+            {cooker.avatar_url ? (
+              <img src={cooker.avatar_url} alt={cooker.display_name ?? 'Cooker'} />
+            ) : (
+              <span>{cooker.display_name?.[0]?.toUpperCase() ?? '?'}</span>
+            )}
+          </div>
+        )}
         <div className="profile-name">{cooker.display_name ?? 'Sem nome'}</div>
         {cooker.favorite_dish && <div className="profile-favorite-dish">🍽️ Prato favorito: {cooker.favorite_dish}</div>}
 

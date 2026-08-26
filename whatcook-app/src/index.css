@@ -2407,6 +2407,424 @@ input[type=range] {
   padding: 8px 4px;
 }
 
+.comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.comment-like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.comment-like-btn.liked {
+  color: var(--primary);
+}
+
+.comment-reply-btn {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.comment-replies {
+  margin-top: 8px;
+  padding-left: 16px;
+  border-left: 2px solid var(--bg-gray);
+}
+
+.comment-reply-row {
+  border-bottom: none;
+  padding: 8px 0;
+}
+
+.comment-reply-input-bar {
+  border-top: none;
+  padding: 8px 0 0;
+  background: transparent;
+}
+
+.story-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
+  padding: 4px 20px 16px;
+}
+
+.story-avatar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  width: 64px;
+}
+
+.story-avatar-item .story-ring {
+  flex-shrink: 0;
+}
+
+.story-ring {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  padding: 2.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.story-ring.unseen {
+  background: linear-gradient(45deg, #2563eb, #38bdf8);
+}
+
+.story-ring.seen {
+  background: var(--border-color);
+}
+
+.story-ring.empty {
+  background: var(--bg-gray);
+  border: 1.5px dashed var(--text-muted);
+  padding: 2px;
+}
+
+.story-ring-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+  overflow: hidden;
+  border: 2px solid var(--bg-page);
+}
+
+.story-ring-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.story-add-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--secondary);
+  color: var(--bg-page);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  border: 2px solid var(--bg-page);
+}
+
+.story-avatar-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  max-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.story-viewer {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: #000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.story-viewer-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.story-progress-row {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 4px;
+  padding: 10px 10px 0;
+}
+
+.story-progress-segment {
+  flex: 1;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.story-progress-fill {
+  height: 100%;
+  background: #fff;
+  width: 0%;
+}
+
+.story-progress-fill.filling {
+  animation: story-fill-anim 5000ms linear forwards;
+}
+
+@keyframes story-fill-anim {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.story-viewer-header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  color: #fff;
+}
+
+.story-viewer-header b {
+  font-size: 13px;
+}
+
+.story-viewer-time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.story-viewer-close {
+  margin-left: auto;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.story-viewer-tap-zones {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+}
+
+.story-tap-zone {
+  height: 100%;
+  cursor: pointer;
+}
+
+.story-tap-prev {
+  width: 30%;
+}
+
+.story-tap-next {
+  width: 70%;
+}
+
+.story-viewer-empty {
+  color: #fff;
+  text-align: center;
+  margin: auto;
+  padding: 20px;
+}
+
+.cooker-profile-story-ring {
+  width: 104px;
+  height: 104px;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.cooker-profile-story-ring .profile-avatar-wrap {
+  border: 3px solid var(--bg-page);
+}
+
+.story-editor {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.story-editor-canvas-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.story-editor-photo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+
+.story-editor-layer {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-weight: 800;
+  font-size: 20px;
+  padding: 4px 10px;
+  cursor: grab;
+  touch-action: none;
+  white-space: nowrap;
+  max-width: 80vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.story-editor-layer.location {
+  font-size: 15px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 999px;
+  text-shadow: none;
+}
+
+.story-editor-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+}
+
+.story-editor-tools {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.story-editor-tool-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.story-editor-publish-btn {
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Unbounded', 'Geist', sans-serif;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.story-editor-composer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.story-editor-composer-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.story-editor-composer input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  border-radius: 20px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #fff;
+  outline: none;
+}
+
+.story-editor-color-row {
+  display: flex;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.story-editor-color-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+}
+
+.story-editor-color-swatch.selected {
+  border-color: var(--secondary);
+}
+
+.story-editor-trash {
+  position: absolute;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.story-editor-trash.active {
+  background: var(--primary);
+  transform: translateX(-50%) scale(1.15);
+}
+
 .saved-dish-item {
   display: flex;
   align-items: center;

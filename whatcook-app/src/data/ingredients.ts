@@ -231,6 +231,7 @@ export const CONDIMENTOS: IngredientOption[] = [
   { label: 'Coco ralado', icon: '🥥', query: 'shredded coconut' },
   { label: 'Leite de coco', icon: '🥥', query: 'coconut milk' },
   { label: 'Biscoito maisena', icon: '🍪', query: 'maria cookies' },
+  { label: 'Amendoim', icon: '🥜', query: 'peanut' },
   { label: 'Açúcar', icon: '🍬', query: 'sugar' },
   { label: 'Mel', icon: '🍯', query: 'honey' },
   { label: 'Fermento', icon: '🫧', query: 'baking powder' },

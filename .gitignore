@@ -1,8 +1,9 @@
 # Leftover installer, not part of the project
 node-v24.18.0-x64.msi
+GitHubDesktopSetup-x64.exe
 
 # Local-only Claude Code settings (machine-specific permissions)
 .claude/settings.local.json
 
-# Environment variables (contains the Spoonacular API key)
+# Environment variables
 .env

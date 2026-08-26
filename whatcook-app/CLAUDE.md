@@ -29,8 +29,8 @@ PEXELS_API_KEY=xxx node scripts/fetch-tipo-prato-images.mjs   # regenerates src/
 
 **what?cook** is a pt-BR, mobile-only (max-width 480px frame, see `#root` in `index.css`) recipe-matching app: the
 user says what ingredients/equipment they have and how much time, and gets locally-sourced recipes ranked by match.
-It briefly used the Spoonacular API; that was fully replaced by a hand-authored local database for language/quality
-reasons (see "Dead code" below) but the pivot shows up in a few places.
+It briefly used the Spoonacular API; that integration was fully removed in favor of the hand-authored local
+database for language/quality reasons.
 
 ### Screen flow
 
@@ -148,8 +148,3 @@ Click feedback is wired globally in `App.tsx` via a single capturing document cl
 `CLICKABLE_SELECTOR` CSS list, not per-component handlers — add a new interactive class there rather than calling
 `playClickSound()` inline.
 
-### Dead code kept intentionally
-
-`src/api/spoonacular.ts`, `src/utils/recipe.ts`, `src/utils/language.ts` are unused by any current import path.
-They're the leftover Spoonacular integration, kept on purpose for possible future re-introduction — don't delete
-them as "unused code" without checking with the user first.

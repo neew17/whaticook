@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",
-    "franc-min": "^6.2.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.2"

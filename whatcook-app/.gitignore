@@ -12,7 +12,7 @@ dist
 dist-ssr
 *.local
 
-# Environment variables (contains the Spoonacular API key)
+# Environment variables (contains the Supabase keys)
 .env
 
 # Editor directories and files

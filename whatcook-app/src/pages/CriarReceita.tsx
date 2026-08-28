@@ -153,6 +153,9 @@ export default function CriarReceita() {
             <div className={`tab${tipo === 'doce' ? ' active' : ''}`} onClick={() => setTipo('doce')}>
               Doce
             </div>
+            <div className={`tab${tipo === 'drink' ? ' active' : ''}`} onClick={() => setTipo('drink')}>
+              Drink
+            </div>
           </div>
         </div>
 

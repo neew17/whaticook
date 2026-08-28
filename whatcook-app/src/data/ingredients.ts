@@ -326,6 +326,48 @@ export const INGREDIENTS: IngredientOption[] = [
   { label: 'Molho de alho', icon: '🧄', query: 'garlic sauce', category: 'molhos-condimentos' },
   { label: 'Molho agridoce', icon: '🍯', query: 'sweet and sour sauce', category: 'molhos-condimentos' },
   { label: 'Vinagrete', icon: '🍅', query: 'vinaigrette', category: 'molhos-condimentos' },
+
+  // ── Bebidas com álcool (bar) ────────────────────────────────────────────
+  { label: 'Cachaça', icon: '🍶', query: 'cachaca', category: 'bebidas-com-alcool' },
+  { label: 'Vodka', icon: '🍸', query: 'vodka', category: 'bebidas-com-alcool' },
+  { label: 'Gin', icon: '🍸', query: 'gin', category: 'bebidas-com-alcool' },
+  { label: 'Rum branco', icon: '🥃', query: 'white rum', category: 'bebidas-com-alcool' },
+  { label: 'Rum escuro', icon: '🥃', query: 'dark rum', category: 'bebidas-com-alcool' },
+  { label: 'Tequila', icon: '🥃', query: 'tequila', category: 'bebidas-com-alcool' },
+  { label: 'Whisky', icon: '🥃', query: 'whiskey', category: 'bebidas-com-alcool' },
+  { label: 'Conhaque', icon: '🥃', query: 'brandy', category: 'bebidas-com-alcool' },
+  { label: 'Triple sec', icon: '🍊', query: 'triple sec', category: 'bebidas-com-alcool' },
+  { label: 'Aperol', icon: '🧡', query: 'aperol', category: 'bebidas-com-alcool' },
+  { label: 'Campari', icon: '❤️', query: 'campari', category: 'bebidas-com-alcool' },
+  { label: 'Vermute seco', icon: '🍷', query: 'dry vermouth', category: 'bebidas-com-alcool' },
+  { label: 'Vermute tinto', icon: '🍷', query: 'sweet vermouth', category: 'bebidas-com-alcool' },
+  { label: 'Vinho tinto', icon: '🍷', query: 'red wine', category: 'bebidas-com-alcool' },
+  { label: 'Vinho branco', icon: '🥂', query: 'white wine', category: 'bebidas-com-alcool' },
+  { label: 'Espumante', icon: '🍾', query: 'sparkling wine', category: 'bebidas-com-alcool' },
+  { label: 'Cerveja', icon: '🍺', query: 'beer', category: 'bebidas-com-alcool' },
+  { label: 'Licor de café', icon: '☕', query: 'coffee liqueur', category: 'bebidas-com-alcool' },
+  { label: 'Licor de cassis', icon: '🫐', query: 'cassis liqueur', category: 'bebidas-com-alcool' },
+  { label: 'Saquê', icon: '🍶', query: 'sake', category: 'bebidas-com-alcool' },
+
+  // ── Bebidas sem álcool (bar) ────────────────────────────────────────────
+  { label: 'Água com gás', icon: '💧', query: 'sparkling water', category: 'bebidas-sem-alcool' },
+  { label: 'Água tônica', icon: '🫧', query: 'tonic water', category: 'bebidas-sem-alcool' },
+  { label: 'Refrigerante de cola', icon: '🥤', query: 'cola', category: 'bebidas-sem-alcool' },
+  { label: 'Refrigerante de limão', icon: '🥤', query: 'lemon-lime soda', category: 'bebidas-sem-alcool' },
+  { label: 'Ginger ale', icon: '🫚', query: 'ginger ale', category: 'bebidas-sem-alcool' },
+  { label: 'Ginger beer', icon: '🫚', query: 'ginger beer', category: 'bebidas-sem-alcool' },
+  { label: 'Energético', icon: '⚡', query: 'energy drink', category: 'bebidas-sem-alcool' },
+  { label: 'Água de coco', icon: '🥥', query: 'coconut water', category: 'bebidas-sem-alcool' },
+  { label: 'Suco de laranja', icon: '🧃', query: 'orange juice', category: 'bebidas-sem-alcool' },
+  { label: 'Suco de cranberry', icon: '🧃', query: 'cranberry juice', category: 'bebidas-sem-alcool' },
+  { label: 'Suco de abacaxi', icon: '🧃', query: 'pineapple juice', category: 'bebidas-sem-alcool' },
+  { label: 'Suco de uva', icon: '🧃', query: 'grape juice', category: 'bebidas-sem-alcool' },
+  { label: 'Xarope de açúcar', icon: '🍯', query: 'simple syrup', category: 'bebidas-sem-alcool' },
+  { label: 'Granadina', icon: '🔴', query: 'grenadine', category: 'bebidas-sem-alcool' },
+  { label: 'Café', icon: '☕', query: 'coffee', category: 'bebidas-sem-alcool' },
+  { label: 'Chá preto', icon: '🍵', query: 'black tea', category: 'bebidas-sem-alcool' },
+  { label: 'Chá de hibisco', icon: '🌺', query: 'hibiscus tea', category: 'bebidas-sem-alcool' },
+  { label: 'Espumante sem álcool', icon: '🍾', query: 'sparkling grape juice', category: 'bebidas-sem-alcool' },
 ];
 
 export const EQUIPAMENTOS: IngredientOption[] = [
@@ -338,6 +380,7 @@ export const EQUIPAMENTOS: IngredientOption[] = [
   { label: 'Chapa', icon: '🥘', query: 'griddle', category: 'equipamentos' },
   { label: 'Liquidificador', icon: '🥤', query: 'blender', category: 'equipamentos' },
   { label: 'Panela de pressão', icon: '🍲', query: 'pressure cooker', category: 'equipamentos' },
+  { label: 'Coqueteleira', icon: '🍸', query: 'cocktail shaker', category: 'equipamentos' },
 ];
 
 /** Todos os itens selecionáveis (ingredientes + equipamentos), lista única. */

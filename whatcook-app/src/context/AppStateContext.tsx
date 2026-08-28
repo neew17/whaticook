@@ -34,7 +34,7 @@ function userRecipeToLocal(row: UserRecipeRow): LocalRecipe {
     dificuldade: deriveDifficulty(row.steps.tempoPreparoMinutos, row.steps.items.length),
     porcoes: 4,
     // Sem dado real de calorias pra receita de usuário — estimativa genérica só pra não mostrar "0 kcal".
-    calorias: row.tipo === 'doce' ? 250 : 300,
+    calorias: row.tipo === 'doce' ? 250 : row.tipo === 'drink' ? 180 : 300,
     ingredientes,
     modoPreparo: row.steps.items,
     equipamento,

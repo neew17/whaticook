@@ -53,6 +53,18 @@ export default function TipoPrato() {
               <p className="tipo-prato-card-subtitle">Pratos principais, temperos e guarnições</p>
             </div>
           </div>
+          <div
+            className={`tipo-prato-card drink${stateClass('drink')}`}
+            onClick={() => choose('drink')}
+          >
+            <div className="tipo-prato-photo tipo-prato-photo--drink" />
+            <div className="tipo-prato-photo-overlay" />
+            <div className="tipo-prato-accent-bar" />
+            <div className="tipo-prato-card-content">
+              <p className="tipo-prato-card-title">Drinks</p>
+              <p className="tipo-prato-card-subtitle">Coquetéis, mocktails, vitaminas e sucos</p>
+            </div>
+          </div>
         </div>
         <div className="pillar-decoration">
           <span />

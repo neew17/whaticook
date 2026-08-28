@@ -392,13 +392,18 @@ Pendências da fase A (não bloqueantes):
 - Ícones PNG `src/assets/category-icons/*` órfãos
 - `flores` / `bebidas-*` ficam ocultas (0 itens) até a fase B
 
-**B — Drinks**
-6. `TipoPrato` += `drink`; `TipoPrato.tsx` 3º card; `ingredientRelevance` map; faixa de passos
-7. Itens de bar (38 novos) nas categorias `bebidas-com-alcool` / `bebidas-sem-alcool`;
-   `ice` como staple; `cocktail shaker` em `EQUIPAMENTOS`
-8. **100 receitas de drink** em `recipes.ts`, em lotes por bloco (30/15/25/15/15). Cada lote:
-   escrever → `tsc` → script de verificação de órfãos e de "≥ 2 receitas por item"
-9. `fetch-tipo-prato-images.mjs`: fundo "drink"
+**B — Drinks — DONE 2026-08-27**
+6. ✅ `TipoPrato` += `drink`; `TipoPrato.tsx` 3º card (fundo em gradiente, sem foto dedicada);
+   `ingredientRelevance` map; `AppStateContext` calorias fallback; `CriarReceita` aba Drink
+7. ✅ 38 itens de bar em `INGREDIENTS` (`bebidas-com-alcool` 20 / `bebidas-sem-alcool` 18);
+   `ice` usado como staple nas receitas; `cocktail shaker` (Coqueteleira) em `EQUIPAMENTOS`
+8. ✅ **100 receitas de drink** em `recipes.ts` (blocos 30/15/25/15/15). Verificado com
+   `scratchpad/verify-drinks.mjs`: 100 receitas, todos os 38 itens de bar com ≥ 2 usos,
+   0 órfãos, 0 ids duplicados, todas com 3 passos. `tsc` + lint limpos. Fluxo
+   TipoPrato(drink) → Categorias → selecionar Cachaça → 8 receitas verificado no preview.
+9. ⏭️ Fundo "drink" para `TipoPrato.tsx` — hoje é um gradiente CSS (`.tipo-prato-photo--drink`).
+   `TIPO_PRATO_IMAGES` / `fetch-tipo-prato-images.mjs` são código morto (nada importa). Se quiser
+   foto real, adicionar `src/assets/tipo-prato/drinks.jpg` e trocar o `<div>` por `<img>`.
 
 **C — Imagens**
 10. `fetch-ingredient-images.mjs`: alinhar `CATEGORIES` à nova taxonomia (inclui itens de bar);

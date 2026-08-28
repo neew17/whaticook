@@ -127,11 +127,6 @@ input[type=range] {
   border-color: #3AA5C4;
 }
 
-/* Sem foto dedicada para drinks ainda — fundo em gradiente */
-.tipo-prato-photo--drink {
-  background: linear-gradient(135deg, #0E4A5C 0%, #1E7A94 45%, #38B6C9 100%);
-}
-
 .tipo-prato-card.drink .tipo-prato-accent-bar {
   background: #3AA5C4;
 }

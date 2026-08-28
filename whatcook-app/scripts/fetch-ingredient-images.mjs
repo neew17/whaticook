@@ -363,7 +363,9 @@ function checkCoverage() {
   if (extra.length) console.warn(`AVISO: subject sem item em ingredients.ts: ${extra.join(', ')}`);
 }
 
-async function generateImage(prompt) {
+// 503/429/500 do modelo são picos de demanda transitórios — tenta de novo com backoff.
+async function generateImage(prompt, attempt = 1) {
+  const MAX_ATTEMPTS = 5;
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`,
     {
@@ -376,18 +378,28 @@ async function generateImage(prompt) {
   );
   const raw = await res.text();
   if (!res.ok) {
-    throw new Error(`Gemini error ${res.status}: ${raw.slice(0, 500)}`);
+    if ([429, 500, 503].includes(res.status) && attempt < MAX_ATTEMPTS) {
+      const wait = 2000 * 2 ** (attempt - 1);
+      console.log(`  ...${res.status}, retry ${attempt + 1}/${MAX_ATTEMPTS} em ${wait / 1000}s`);
+      await sleep(wait);
+      return generateImage(prompt, attempt + 1);
+    }
+    throw new Error(`Gemini error ${res.status}: ${raw.slice(0, 300)}`);
   }
   let data;
   try {
     data = JSON.parse(raw);
   } catch {
-    throw new Error(`Non-JSON response: ${raw.slice(0, 500)}`);
+    throw new Error(`Non-JSON response: ${raw.slice(0, 300)}`);
   }
   const parts = data.candidates?.[0]?.content?.parts ?? [];
   const imagePart = parts.find((p) => p.inlineData?.data);
   if (!imagePart) {
-    throw new Error(`No image in response: ${raw.slice(0, 500)}`);
+    if (attempt < MAX_ATTEMPTS) {
+      await sleep(2000 * attempt);
+      return generateImage(prompt, attempt + 1);
+    }
+    throw new Error(`No image in response: ${raw.slice(0, 300)}`);
   }
   return Buffer.from(imagePart.inlineData.data, 'base64');
 }

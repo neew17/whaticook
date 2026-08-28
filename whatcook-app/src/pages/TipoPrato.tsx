@@ -5,6 +5,7 @@ import { useAppState } from '../context/AppStateContext';
 import type { TipoPrato as TipoPratoValue } from '../data/recipes';
 import imgDoces from '../assets/tipo-prato/doces.jpg';
 import imgSalgados from '../assets/tipo-prato/salgados.jpg';
+import imgDrinks from '../assets/tipo-prato/drinks.jpg';
 
 export default function TipoPrato() {
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ export default function TipoPrato() {
             className={`tipo-prato-card drink${stateClass('drink')}`}
             onClick={() => choose('drink')}
           >
-            <div className="tipo-prato-photo tipo-prato-photo--drink" />
+            <img className="tipo-prato-photo" src={imgDrinks} alt="Drinks" />
             <div className="tipo-prato-photo-overlay" />
             <div className="tipo-prato-accent-bar" />
             <div className="tipo-prato-card-content">

@@ -7,30 +7,21 @@ import { useAppState } from '../context/AppStateContext';
 import { supabase } from '../lib/supabaseClient';
 import type { TipoPrato } from '../data/recipes';
 import {
-  ALIMENTOS_TABS,
-  CATEGORY_META,
-  CONDIMENTOS,
   EQUIPAMENTOS,
-  MOLHOS,
-  TEMPEROS,
+  INGREDIENT_CATEGORIES,
+  INGREDIENTS,
   type CategoryKey,
   type IngredientOption,
 } from '../data/ingredients';
 import { INGREDIENT_IMAGES } from '../data/ingredientImages';
 
-const CATEGORY_ORDER: CategoryKey[] = ['alimentos', 'condimentos', 'temperos', 'molhos', 'equipamentos'];
+const CATEGORY_TABS: { key: CategoryKey; label: string }[] = [
+  ...INGREDIENT_CATEGORIES.map((c) => ({ key: c.key, label: c.label })),
+  { key: 'equipamentos', label: 'Equipamentos' },
+];
 
-const FLAT_ITEMS: Record<CategoryKey, IngredientOption[] | null> = {
-  alimentos: null, // usa sub-abas (ALIMENTOS_TABS) em vez de lista única
-  condimentos: CONDIMENTOS,
-  temperos: TEMPEROS,
-  molhos: MOLHOS,
-  equipamentos: EQUIPAMENTOS,
-};
-
-interface SelectedItem {
-  category: CategoryKey;
-  option: IngredientOption;
+function itemsFor(category: CategoryKey): IngredientOption[] {
+  return category === 'equipamentos' ? EQUIPAMENTOS : INGREDIENTS.filter((i) => i.category === category);
 }
 
 export default function CriarReceita() {
@@ -43,9 +34,8 @@ export default function CriarReceita() {
   const [minutes, setMinutes] = useState(30);
   const [stepCount, setStepCount] = useState(4);
   const [stepTexts, setStepTexts] = useState<string[]>(['', '', '', '']);
-  const [activeCategory, setActiveCategory] = useState<CategoryKey>('alimentos');
-  const [activeAlimentosTab, setActiveAlimentosTab] = useState(ALIMENTOS_TABS[0].key);
-  const [selected, setSelected] = useState<Record<string, SelectedItem>>({});
+  const [activeCategory, setActiveCategory] = useState<CategoryKey>(CATEGORY_TABS[0].key);
+  const [selected, setSelected] = useState<Record<string, IngredientOption>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -54,22 +44,13 @@ export default function CriarReceita() {
     if (!loading && !user) navigate('/entrar');
   }, [loading, user, navigate]);
 
-  const activeItems = useMemo(() => {
-    if (activeCategory === 'alimentos') {
-      return ALIMENTOS_TABS.find((t) => t.key === activeAlimentosTab)?.items ?? [];
-    }
-    return FLAT_ITEMS[activeCategory] ?? [];
-  }, [activeCategory, activeAlimentosTab]);
+  const activeItems = useMemo(() => itemsFor(activeCategory), [activeCategory]);
 
-  const toggleItem = (category: CategoryKey, option: IngredientOption) => {
+  const toggleItem = (option: IngredientOption) => {
     setSelected((prev) => {
-      const key = `${category}:${option.query}`;
       const next = { ...prev };
-      if (next[key]) {
-        delete next[key];
-      } else {
-        next[key] = { category, option };
-      }
+      if (next[option.query]) delete next[option.query];
+      else next[option.query] = option;
       return next;
     });
   };
@@ -84,7 +65,7 @@ export default function CriarReceita() {
     });
   };
 
-  const selectedEntries = Object.entries(selected);
+  const selectedItems = Object.values(selected);
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -93,7 +74,7 @@ export default function CriarReceita() {
       setError('Digite um título para a receita.');
       return;
     }
-    if (selectedEntries.length === 0) {
+    if (selectedItems.length === 0) {
       setError('Selecione pelo menos um ingrediente.');
       return;
     }
@@ -107,8 +88,8 @@ export default function CriarReceita() {
     }
 
     setSubmitting(true);
-    const ingredients = selectedEntries.map(([, { category, option }]) => ({
-      category,
+    const ingredients = selectedItems.map((option) => ({
+      category: option.category,
       query: option.query,
       display: option.label,
     }));
@@ -202,40 +183,25 @@ export default function CriarReceita() {
 
       <div className="name-search-label">Selecione os ingredientes e equipamentos</div>
       <div className="tabs">
-        {CATEGORY_ORDER.map((key) => (
+        {CATEGORY_TABS.map((t) => (
           <div
-            key={key}
-            className={`tab${activeCategory === key ? ' active' : ''}`}
-            onClick={() => setActiveCategory(key)}
+            key={t.key}
+            className={`tab${activeCategory === t.key ? ' active' : ''}`}
+            onClick={() => setActiveCategory(t.key)}
           >
-            {CATEGORY_META[key].label}
+            {t.label}
           </div>
         ))}
       </div>
 
-      {activeCategory === 'alimentos' && (
-        <div className="tabs" style={{ paddingTop: 0 }}>
-          {ALIMENTOS_TABS.map((t) => (
-            <div
-              key={t.key}
-              className={`tab${activeAlimentosTab === t.key ? ' active' : ''}`}
-              onClick={() => setActiveAlimentosTab(t.key)}
-            >
-              {t.label}
-            </div>
-          ))}
-        </div>
-      )}
-
       <div className="ing-grid" style={{ paddingBottom: 16 }}>
         {activeItems.map((option) => {
-          const key = `${activeCategory}:${option.query}`;
-          const isSelected = Boolean(selected[key]);
+          const isSelected = Boolean(selected[option.query]);
           return (
             <div
               key={option.query}
               className={`ing-card${isSelected ? ' selected' : ''}`}
-              onClick={() => toggleItem(activeCategory, option)}
+              onClick={() => toggleItem(option)}
             >
               <div className="tile-icon-box">
                 {INGREDIENT_IMAGES[option.query] ? <img src={INGREDIENT_IMAGES[option.query]} alt="" /> : option.icon}
@@ -251,12 +217,12 @@ export default function CriarReceita() {
         })}
       </div>
 
-      {selectedEntries.length > 0 && (
+      {selectedItems.length > 0 && (
         <div className="selected-section">
-          <div className="selected-section-title">Selecionados ({selectedEntries.length})</div>
+          <div className="selected-section-title">Selecionados ({selectedItems.length})</div>
           <div className="selected-chips">
-            {selectedEntries.map(([key, { category, option }]) => (
-              <div key={key} className="selected-chip" onClick={() => toggleItem(category, option)}>
+            {selectedItems.map((option) => (
+              <div key={option.query} className="selected-chip" onClick={() => toggleItem(option)}>
                 <span>{option.icon}</span>
                 <span>{option.label}</span>
                 <span className="selected-chip-remove">×</span>

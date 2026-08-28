@@ -8,10 +8,8 @@ import { RECIPE_IMAGES } from '../data/recipe-images';
 
 const INSTAGRAM_URL = 'https://www.instagram.com/whatcook.app/';
 
-const SOCIAL_BUTTONS = [
-  { icon: '🐦', label: 'Fala sobre a gente no X', sub: 'Compartilhe a receita' },
-  { icon: '🧵', label: 'Fale sobre a gente no Threads', sub: 'Comunidade culinária' },
-];
+const canNativeShare =
+  typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
 export default function Social() {
   const navigate = useNavigate();
@@ -19,6 +17,33 @@ export default function Social() {
   const { user } = useAuth();
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
+
+  const shareText = completedDish
+    ? `Acabei de fazer "${completedDish.title}" no what?cook 🍳`
+    : 'Cozinhando com o what?cook 🍳';
+
+  // Sobe a foto local pro bucket público uma única vez e devolve a URL pública.
+  // Reaproveitada por "salvar no perfil" e pelo botão do Pinterest.
+  const ensurePhotoUrl = async (): Promise<string | null> => {
+    if (photoUrl) return photoUrl;
+    if (!dishPhoto || !completedDish) return null;
+    try {
+      const blob = await (await fetch(dishPhoto)).blob();
+      const owner = user?.id ?? 'anon';
+      const path = `${owner}/${completedDish.recipeId}-${Date.now()}.jpg`;
+      const { error } = await supabase.storage
+        .from('recipe-photos')
+        .upload(path, blob, { contentType: 'image/jpeg' });
+      if (error) return null;
+      const url = supabase.storage.from('recipe-photos').getPublicUrl(path).data.publicUrl;
+      setPhotoUrl(url);
+      return url;
+    } catch {
+      return null;
+    }
+  };
 
   const handleSave = async () => {
     if (!completedDish || saved || saving) return;
@@ -27,29 +52,56 @@ export default function Social() {
       return;
     }
     setSaving(true);
-    let photoUrl: string | null = null;
-    if (dishPhoto) {
-      try {
-        const blob = await (await fetch(dishPhoto)).blob();
-        const path = `${user.id}/${completedDish.recipeId}-${Date.now()}.jpg`;
-        const { error: uploadError } = await supabase.storage
-          .from('recipe-photos')
-          .upload(path, blob, { contentType: 'image/jpeg' });
-        if (!uploadError) {
-          photoUrl = supabase.storage.from('recipe-photos').getPublicUrl(path).data.publicUrl;
-        }
-      } catch {
-        // segue sem foto se o upload falhar
-      }
-    }
+    const url = await ensurePhotoUrl();
     await supabase.from('saved_dishes').insert({
       user_id: user.id,
       recipe_id: completedDish.recipeId,
       title: completedDish.title,
-      photo_url: photoUrl,
+      photo_url: url,
     });
     setSaving(false);
     setSaved(true);
+  };
+
+  // 1. Web Share API — abre o share sheet do celular com a foto anexada;
+  // o usuário escolhe Instagram (Story/Feed), Threads, X, WhatsApp, etc.
+  const handleNativeShare = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      let files: File[] = [];
+      if (dishPhoto) {
+        const blob = await (await fetch(dishPhoto)).blob();
+        files = [new File([blob], 'whatcook.jpg', { type: blob.type || 'image/jpeg' })];
+      }
+      const data: ShareData =
+        files.length && navigator.canShare?.({ files })
+          ? { files, text: shareText }
+          : { text: shareText, url: window.location.origin };
+      await navigator.share(data);
+    } catch {
+      // usuário cancelou ou plataforma não suporta — sem ação
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  // 2. Pinterest — precisa de uma URL pública da imagem. Usa a foto do usuário
+  // se houver upload, senão cai na foto da receita (Pexels, já pública).
+  const handlePinterest = async () => {
+    const media =
+      (await ensurePhotoUrl()) ??
+      (completedDish ? RECIPE_IMAGES[completedDish.recipeId]?.url : undefined);
+    const params = new URLSearchParams({
+      url: window.location.origin,
+      description: shareText,
+    });
+    if (media) params.set('media', media);
+    window.open(
+      `https://www.pinterest.com/pin/create/button/?${params.toString()}`,
+      '_blank',
+      'noopener,noreferrer',
+    );
   };
 
   const thumb = dishPhoto ? (
@@ -106,6 +158,27 @@ export default function Social() {
               <span className="social-btn-chevron">›</span>
             </div>
           )}
+
+          {canNativeShare && (
+            <div className="social-btn" onClick={handleNativeShare}>
+              <span className="social-icon">{sharing ? '⏳' : '📤'}</span>
+              <div className="social-btn-text">
+                <span>Compartilhar foto do prato</span>
+                <span>Instagram, Threads, X, WhatsApp…</span>
+              </div>
+              <span className="social-btn-chevron">›</span>
+            </div>
+          )}
+
+          <div className="social-btn" onClick={handlePinterest}>
+            <span className="social-icon">📍</span>
+            <div className="social-btn-text">
+              <span>Salvar no Pinterest</span>
+              <span>Fixe o prato num board</span>
+            </div>
+            <span className="social-btn-chevron">›</span>
+          </div>
+
           <a className="social-btn" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
             <span className="social-icon">📷</span>
             <div className="social-btn-text">
@@ -114,16 +187,6 @@ export default function Social() {
             </div>
             <span className="social-btn-chevron">›</span>
           </a>
-          {SOCIAL_BUTTONS.map((b) => (
-            <div className="social-btn" key={b.label}>
-              <span className="social-icon">{b.icon}</span>
-              <div className="social-btn-text">
-                <span>{b.label}</span>
-                <span>{b.sub}</span>
-              </div>
-              <span className="social-btn-chevron">›</span>
-            </div>
-          ))}
         </div>
 
         <a className="instagram-cta" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">

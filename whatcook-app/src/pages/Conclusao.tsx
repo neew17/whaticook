@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import AccountBadge from '../components/AccountBadge';
 import { RECIPE_IMAGES } from '../data/recipe-images';
-import celebrationImg from '../assets/misc/celebration.png';
 import type { Difficulty } from '../data/recipes';
 
 const DIFFICULTY_OPTIONS: Difficulty[] = ['Fácil', 'Médio', 'Difícil'];
@@ -134,35 +133,10 @@ export default function Conclusao() {
 
       <div className="conclusao-header-label">Prato pronto</div>
 
-      <img className="celebration-image" src={celebrationImg} alt="" />
-
-      <h2 style={{ fontFamily: "'Unbounded','Geist',sans-serif", fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
-        Prato Finalizado!
-      </h2>
-      <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 20 }}>
-        Você concluiu {recipe ? <b style={{ color: '#fff' }}>{recipe.titulo}</b> : 'o prato'} com sucesso. O aroma deve
-        estar incrível!
-      </p>
-
-      {cookingDurationSeconds !== null && (
-        <div className="cooking-stats-row">
-          <div className="stat-simple">
-            <span>Tempo</span>
-            <span>{formatMMSSLabel(cookingDurationSeconds)}</span>
-          </div>
-          <div className="stat-simple">
-            <span>Etapas</span>
-            <span>
-              {totalSteps}/{totalSteps}
-            </span>
-          </div>
-        </div>
-      )}
-
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
       <div
-        className={`dish-photo-box${dishPhoto ? ' has-photo' : ''}${cameraState === 'live' || cameraState === 'connecting' ? ' camera-live' : ''}`}
+        className={`dish-photo-box conclusao-hero-photo${dishPhoto ? ' has-photo' : ''}${cameraState === 'live' || cameraState === 'connecting' ? ' camera-live' : ''}`}
         onClick={cameraState === 'idle' && !dishPhoto ? startCamera : undefined}
       >
         {dishPhoto ? (
@@ -215,6 +189,29 @@ export default function Conclusao() {
           </>
         )}
       </div>
+
+      <h2 style={{ fontFamily: "'Unbounded','Geist',sans-serif", fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
+        Prato Finalizado!
+      </h2>
+      <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 20 }}>
+        Você concluiu {recipe ? <b style={{ color: '#fff' }}>{recipe.titulo}</b> : 'o prato'} com sucesso. O aroma deve
+        estar incrível!
+      </p>
+
+      {cookingDurationSeconds !== null && (
+        <div className="cooking-stats-row">
+          <div className="stat-simple">
+            <span>Tempo</span>
+            <span>{formatMMSSLabel(cookingDurationSeconds)}</span>
+          </div>
+          <div className="stat-simple">
+            <span>Etapas</span>
+            <span>
+              {totalSteps}/{totalSteps}
+            </span>
+          </div>
+        </div>
+      )}
 
       {cookingDurationSeconds !== null && (
         <div className="achievement-card">

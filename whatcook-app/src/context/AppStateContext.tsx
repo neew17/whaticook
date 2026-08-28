@@ -41,11 +41,6 @@ function userRecipeToLocal(row: UserRecipeRow): LocalRecipe {
   };
 }
 
-export interface SelectedIngredientEntry {
-  category: CategoryKey;
-  option: IngredientOption;
-}
-
 export interface RecipeSummary {
   id: string;
   title: string;
@@ -59,15 +54,10 @@ export interface RecipeSummary {
   viaSearch?: boolean;
 }
 
-type SelectedMap = Record<CategoryKey, Record<string, IngredientOption>>;
+/** Itens selecionados, lista única keyed por `query`. Equipamento é distinguido por `option.category`. */
+type SelectedMap = Record<string, IngredientOption>;
 
-const EMPTY_SELECTED: SelectedMap = {
-  alimentos: {},
-  condimentos: {},
-  temperos: {},
-  molhos: {},
-  equipamentos: {},
-};
+const EMPTY_SELECTED: SelectedMap = {};
 
 function toSummary(recipe: LocalRecipe, selectedQueries: Set<string>): RecipeSummary {
   const relevant = recipe.ingredientes.filter((i) => !i.staple);
@@ -122,10 +112,10 @@ interface AppState {
   timeMinutes: number;
   setTimeMinutes: (minutes: number) => void;
   selected: SelectedMap;
-  toggleIngredient: (category: CategoryKey, option: IngredientOption) => void;
+  toggleIngredient: (option: IngredientOption) => void;
   countFor: (category: CategoryKey) => number;
   totalSelectedCount: number;
-  allSelectedEntries: SelectedIngredientEntry[];
+  allSelectedEntries: IngredientOption[];
   results: RecipeSummary[] | null;
   isSearching: boolean;
   searchError: string | null;
@@ -172,42 +162,36 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const allRecipes = useMemo(() => [...RECIPES, ...userRecipes], [userRecipes]);
 
-  const toggleIngredient = useCallback((category: CategoryKey, option: IngredientOption) => {
+  const toggleIngredient = useCallback((option: IngredientOption) => {
     setSelected((prev) => {
-      const bucket = { ...prev[category] };
-      if (bucket[option.query]) {
-        delete bucket[option.query];
+      const next = { ...prev };
+      if (next[option.query]) {
+        delete next[option.query];
       } else {
-        bucket[option.query] = option;
+        next[option.query] = option;
       }
-      return { ...prev, [category]: bucket };
+      return next;
     });
   }, []);
 
-  const countFor = useCallback((category: CategoryKey) => Object.keys(selected[category]).length, [selected]);
-
-  const totalSelectedCount = useMemo(
-    () => (Object.keys(selected) as CategoryKey[]).reduce((sum, key) => sum + Object.keys(selected[key]).length, 0),
+  const countFor = useCallback(
+    (category: CategoryKey) => Object.values(selected).filter((o) => o.category === category).length,
     [selected]
   );
 
-  const allSelectedEntries = useMemo(() => {
-    const entries: SelectedIngredientEntry[] = [];
-    (Object.keys(selected) as CategoryKey[]).forEach((category) => {
-      Object.values(selected[category]).forEach((option) => {
-        entries.push({ category, option });
-      });
-    });
-    return entries;
-  }, [selected]);
+  const totalSelectedCount = useMemo(() => Object.keys(selected).length, [selected]);
+
+  const allSelectedEntries = useMemo(() => Object.values(selected), [selected]);
 
   const allSelectedQueries = useMemo(
-    () =>
-      new Set(allSelectedEntries.filter((e) => e.category !== 'equipamentos').map((e) => e.option.query)),
+    () => new Set(allSelectedEntries.filter((o) => o.category !== 'equipamentos').map((o) => o.query)),
     [allSelectedEntries]
   );
 
-  const selectedEquipmentQueries = useMemo(() => new Set(Object.keys(selected.equipamentos)), [selected.equipamentos]);
+  const selectedEquipmentQueries = useMemo(
+    () => new Set(allSelectedEntries.filter((o) => o.category === 'equipamentos').map((o) => o.query)),
+    [allSelectedEntries]
+  );
 
   const runSearch = useCallback(async () => {
     setSearchError(null);

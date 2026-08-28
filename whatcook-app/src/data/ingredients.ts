@@ -1,309 +1,352 @@
+// Taxonomia de itens do what?cook.
+//
+// Um item = { label (pt-BR, exibição), icon (emoji fallback), query (chave EN, único vínculo
+// com recipes.ts — NUNCA renomear sem migrar as receitas), category, essential? }.
+//
+// `essential: true` faz o item aparecer TAMBÉM na seção "Ingredientes essenciais" no topo da
+// tela, além da sua categoria real. A seção é montada por filtro, não é lista manual.
+//
+// Equipamentos vivem em `EQUIPAMENTOS` (category: 'equipamentos') e são tratados à parte no
+// motor de busca (filtro "basta ter um"), não contam como ingrediente.
+
+export type CategoryKey =
+  | 'hortalicas'
+  | 'cogumelos'
+  | 'frutas'
+  | 'geleias-conserva-fruta'
+  | 'frutas-secas-nozes'
+  | 'queijos'
+  | 'laticinios-ovos'
+  | 'veganos-vegetarianos'
+  | 'frios'
+  | 'carnes'
+  | 'aves'
+  | 'pescados'
+  | 'especiarias'
+  | 'acucar-adocantes'
+  | 'pimentas'
+  | 'flores'
+  | 'farinhas-fermentos'
+  | 'graos-cereais'
+  | 'massas'
+  | 'oleos-gorduras-vinagres'
+  | 'conservas-vegetais'
+  | 'molhos-condimentos'
+  | 'sopas-caldos'
+  | 'sobremesas-guloseimas'
+  | 'bebidas-sem-alcool'
+  | 'bebidas-com-alcool'
+  | 'padaria'
+  | 'equipamentos';
+
 export interface IngredientOption {
   label: string;
   icon: string;
-  /** Unique key for this ingredient (kept in English for future integrations) */
+  /** Chave única em inglês, casada 1:1 com recipes.ts. */
   query: string;
+  category: CategoryKey;
+  /** Também listado na seção "Ingredientes essenciais". */
+  essential?: boolean;
 }
 
-export interface IngredientTab {
-  key: string;
+export interface IngredientCategory {
+  key: CategoryKey;
   label: string;
-  items: IngredientOption[];
+  icon: string;
 }
 
-export const ALIMENTOS_TABS: IngredientTab[] = [
-  {
-    key: 'frango',
-    label: 'Frango',
-    items: [
-      { label: 'Frango inteiro', icon: '🍗', query: 'chicken' },
-      { label: 'Filé de frango', icon: '🍗', query: 'chicken breast' },
-      { label: 'Coxa de frango', icon: '🍗', query: 'chicken thigh' },
-      { label: 'Sobrecoxa', icon: '🍗', query: 'chicken drumstick' },
-      { label: 'Asa de frango', icon: '🍗', query: 'chicken wings' },
-      { label: 'Coração de frango', icon: '🍗', query: 'chicken heart' },
-    ],
-  },
-  {
-    key: 'bovinos',
-    label: 'Bovinos',
-    items: [
-      { label: 'Picanha', icon: '🥩', query: 'picanha' },
-      { label: 'Alcatra', icon: '🥩', query: 'top sirloin' },
-      { label: 'Filé mignon', icon: '🥩', query: 'beef tenderloin' },
-      { label: 'Contrafilé', icon: '🥩', query: 'ribeye' },
-      { label: 'Patinho', icon: '🥩', query: 'patinho' },
-      { label: 'Maminha', icon: '🥩', query: 'maminha' },
-      { label: 'Fraldinha', icon: '🥩', query: 'flank steak' },
-      { label: 'Cupim', icon: '🥩', query: 'cupim' },
-      { label: 'Lagarto', icon: '🥩', query: 'lagarto' },
-      { label: 'Acém', icon: '🍖', query: 'chuck roast' },
-      { label: 'Músculo', icon: '🍖', query: 'beef shank' },
-      { label: 'Costela bovina', icon: '🍖', query: 'beef ribs' },
-      { label: 'Carne moída', icon: '🍔', query: 'ground beef' },
-      { label: 'Carne seca', icon: '🥩', query: 'dried beef' },
-      { label: 'Carne de sol', icon: '🥩', query: 'sun-dried beef' },
-      { label: 'Fígado', icon: '🍖', query: 'liver' },
-    ],
-  },
-  {
-    key: 'suinos',
-    label: 'Suínos',
-    items: [
-      { label: 'Carne de porco', icon: '🍖', query: 'pork' },
-      { label: 'Lombo suíno', icon: '🍖', query: 'pork loin' },
-      { label: 'Pernil', icon: '🍖', query: 'pork leg' },
-      { label: 'Bisteca', icon: '🥩', query: 'pork chop' },
-      { label: 'Costela suína', icon: '🍖', query: 'pork ribs' },
-      { label: 'Panceta (barriga)', icon: '🥓', query: 'pork belly' },
-    ],
-  },
-  {
-    key: 'peixes',
-    label: 'Peixes',
-    items: [
-      { label: 'Peixe', icon: '🐟', query: 'fish' },
-      { label: 'Tilápia', icon: '🐟', query: 'tilapia' },
-      { label: 'Salmão', icon: '🐟', query: 'salmon' },
-      { label: 'Atum', icon: '🐟', query: 'tuna' },
-      { label: 'Sardinha', icon: '🐟', query: 'sardine' },
-      { label: 'Camarão', icon: '🦐', query: 'shrimp' },
-    ],
-  },
-  {
-    key: 'embutidos',
-    label: 'Embutidos',
-    items: [
-      { label: 'Bacon', icon: '🥓', query: 'bacon' },
-      { label: 'Linguiça', icon: '🌭', query: 'pork sausage' },
-      { label: 'Salsicha', icon: '🌭', query: 'sausage' },
-      { label: 'Mortadela', icon: '🥓', query: 'mortadella' },
-      { label: 'Presunto', icon: '🥓', query: 'ham' },
-      { label: 'Peru', icon: '🦃', query: 'turkey' },
-    ],
-  },
-  {
-    key: 'graos',
-    label: 'Grãos',
-    items: [
-      { label: 'Arroz', icon: '🍚', query: 'rice' },
-      { label: 'Arroz integral', icon: '🍚', query: 'brown rice' },
-      { label: 'Feijão carioca', icon: '🫘', query: 'pinto beans' },
-      { label: 'Feijão preto', icon: '🫘', query: 'black beans' },
-      { label: 'Feijão fradinho', icon: '🫘', query: 'black-eyed peas' },
-      { label: 'Lentilha', icon: '🫘', query: 'lentils' },
-      { label: 'Grão de bico', icon: '🫘', query: 'chickpeas' },
-      { label: 'Macarrão', icon: '🍝', query: 'pasta' },
-      { label: 'Quinoa', icon: '🌾', query: 'quinoa' },
-      { label: 'Aveia', icon: '🌾', query: 'oats' },
-      { label: 'Milho de pipoca', icon: '🌽', query: 'popcorn' },
-      { label: 'Pão', icon: '🍞', query: 'bread' },
-    ],
-  },
-  {
-    key: 'frutas',
-    label: 'Frutas',
-    items: [
-      { label: 'Banana', icon: '🍌', query: 'banana' },
-      { label: 'Maçã', icon: '🍎', query: 'apple' },
-      { label: 'Limão', icon: '🍋', query: 'lemon' },
-      { label: 'Laranja', icon: '🍊', query: 'orange' },
-      { label: 'Tangerina', icon: '🍊', query: 'tangerine' },
-      { label: 'Abacaxi', icon: '🍍', query: 'pineapple' },
-      { label: 'Manga', icon: '🥭', query: 'mango' },
-      { label: 'Morango', icon: '🍓', query: 'strawberry' },
-      { label: 'Uva', icon: '🍇', query: 'grape' },
-      { label: 'Abacate', icon: '🥑', query: 'avocado' },
-      { label: 'Coco', icon: '🥥', query: 'coconut' },
-      { label: 'Melancia', icon: '🍉', query: 'watermelon' },
-      { label: 'Melão', icon: '🍈', query: 'melon' },
-      { label: 'Mamão', icon: '🟠', query: 'papaya' },
-      { label: 'Maracujá', icon: '🟣', query: 'passion fruit' },
-      { label: 'Goiaba', icon: '🍐', query: 'guava' },
-      { label: 'Pêssego', icon: '🍑', query: 'peach' },
-      { label: 'Pera', icon: '🍐', query: 'pear' },
-      { label: 'Kiwi', icon: '🥝', query: 'kiwi' },
-      { label: 'Cereja', icon: '🍒', query: 'cherry' },
-      { label: 'Ameixa', icon: '🟣', query: 'plum' },
-      { label: 'Caju', icon: '🟠', query: 'cashew fruit' },
-      { label: 'Acerola', icon: '🔴', query: 'acerola' },
-      { label: 'Lichia', icon: '⚪', query: 'lychee' },
-    ],
-  },
-  {
-    key: 'legumes',
-    label: 'Legumes',
-    items: [
-      { label: 'Batata', icon: '🥔', query: 'potato' },
-      { label: 'Batata doce', icon: '🍠', query: 'sweet potato' },
-      { label: 'Batata baroa', icon: '🥔', query: 'arracacha' },
-      { label: 'Cenoura', icon: '🥕', query: 'carrot' },
-      { label: 'Cebola', icon: '🧅', query: 'onion' },
-      { label: 'Alho', icon: '🧄', query: 'garlic' },
-      { label: 'Beterraba', icon: '🍠', query: 'beet' },
-      { label: 'Mandioca', icon: '🥔', query: 'cassava' },
-      { label: 'Chuchu', icon: '🥒', query: 'chayote' },
-      { label: 'Inhame', icon: '🍠', query: 'yam' },
-      { label: 'Cará', icon: '🍠', query: 'taro' },
-      { label: 'Nabo', icon: '⚪', query: 'turnip' },
-      { label: 'Rabanete', icon: '🔴', query: 'radish' },
-      { label: 'Gengibre', icon: '🫚', query: 'ginger' },
-    ],
-  },
-  {
-    key: 'verduras',
-    label: 'Verduras',
-    items: [
-      { label: 'Alface', icon: '🥬', query: 'lettuce' },
-      { label: 'Couve', icon: '🥬', query: 'collard greens' },
-      { label: 'Espinafre', icon: '🥬', query: 'spinach' },
-      { label: 'Rúcula', icon: '🥬', query: 'arugula' },
-      { label: 'Repolho', icon: '🥬', query: 'cabbage' },
-      { label: 'Brócolis', icon: '🥦', query: 'broccoli' },
-      { label: 'Couve-flor', icon: '🥦', query: 'cauliflower' },
-      { label: 'Agrião', icon: '🥬', query: 'watercress' },
-      { label: 'Acelga', icon: '🥬', query: 'chard' },
-      { label: 'Almeirão', icon: '🥬', query: 'escarole' },
-      { label: 'Escarola', icon: '🥬', query: 'batavia lettuce' },
-      { label: 'Chicória', icon: '🥬', query: 'chicory' },
-      { label: 'Mostarda (folha)', icon: '🥬', query: 'mustard greens' },
-      { label: 'Taioba', icon: '🥬', query: 'taioba' },
-    ],
-  },
-  {
-    key: 'vegetais',
-    label: 'Vegetais',
-    items: [
-      { label: 'Tomate', icon: '🍅', query: 'tomato' },
-      { label: 'Pimentão', icon: '🫑', query: 'bell pepper' },
-      { label: 'Abobrinha', icon: '🥒', query: 'zucchini' },
-      { label: 'Berinjela', icon: '🍆', query: 'eggplant' },
-      { label: 'Pepino', icon: '🥒', query: 'cucumber' },
-      { label: 'Milho', icon: '🌽', query: 'corn' },
-      { label: 'Ervilha', icon: '🟢', query: 'peas' },
-      { label: 'Vagem', icon: '🫛', query: 'green beans' },
-      { label: 'Abóbora', icon: '🎃', query: 'pumpkin' },
-      { label: 'Quiabo', icon: '🫛', query: 'okra' },
-      { label: 'Jiló', icon: '🟢', query: 'scarlet eggplant' },
-      { label: 'Aspargo', icon: '🌱', query: 'asparagus' },
-      { label: 'Alho-poró', icon: '🧅', query: 'leek' },
-      { label: 'Cogumelo', icon: '🍄', query: 'mushroom' },
-      { label: 'Aipo', icon: '🌿', query: 'celery' },
-    ],
-  },
-  {
-    key: 'enlatados',
-    label: 'Enlatados',
-    items: [
-      { label: 'Milho enlatado', icon: '🥫', query: 'canned corn' },
-      { label: 'Ervilha enlatada', icon: '🥫', query: 'canned peas' },
-      { label: 'Atum enlatado', icon: '🥫', query: 'canned tuna' },
-      { label: 'Sardinha enlatada', icon: '🥫', query: 'canned sardine' },
-      { label: 'Feijão enlatado', icon: '🥫', query: 'canned beans' },
-      { label: 'Grão de bico enlatado', icon: '🥫', query: 'canned chickpeas' },
-      { label: 'Palmito', icon: '🥫', query: 'heart of palm' },
-      { label: 'Azeitona', icon: '🫒', query: 'olives' },
-      { label: 'Seleta de legumes', icon: '🥫', query: 'mixed vegetables' },
-      { label: 'Champignon enlatado', icon: '🍄', query: 'canned mushroom' },
-      { label: 'Pêssego em calda', icon: '🥫', query: 'canned peach' },
-    ],
-  },
+/** Categorias de ingrediente na ordem de exibição da tela (equipamentos é tratado à parte). */
+export const INGREDIENT_CATEGORIES: IngredientCategory[] = [
+  { key: 'hortalicas', label: 'Hortaliças e verduras', icon: '🥬' },
+  { key: 'cogumelos', label: 'Cogumelos e fungos', icon: '🍄' },
+  { key: 'frutas', label: 'Frutas', icon: '🍎' },
+  { key: 'geleias-conserva-fruta', label: 'Geleias e frutas em conserva', icon: '🍯' },
+  { key: 'frutas-secas-nozes', label: 'Frutas secas e nozes', icon: '🥜' },
+  { key: 'queijos', label: 'Queijos', icon: '🧀' },
+  { key: 'laticinios-ovos', label: 'Laticínios e ovos', icon: '🥛' },
+  { key: 'veganos-vegetarianos', label: 'Veganos e vegetarianos', icon: '🌱' },
+  { key: 'frios', label: 'Cortes frios', icon: '🥓' },
+  { key: 'carnes', label: 'Carnes', icon: '🥩' },
+  { key: 'aves', label: 'Aves', icon: '🍗' },
+  { key: 'pescados', label: 'Pescados e frutos do mar', icon: '🐟' },
+  { key: 'especiarias', label: 'Especiarias', icon: '🌿' },
+  { key: 'acucar-adocantes', label: 'Açúcar, adoçantes e aditivos', icon: '🍬' },
+  { key: 'pimentas', label: 'Pimentas quentes', icon: '🌶️' },
+  { key: 'flores', label: 'Flores comestíveis', icon: '🌸' },
+  { key: 'farinhas-fermentos', label: 'Farinhas, fermentos e leveduras', icon: '🌾' },
+  { key: 'graos-cereais', label: 'Sementes, grãos, cereais e leguminosas', icon: '🫘' },
+  { key: 'massas', label: 'Massas', icon: '🍝' },
+  { key: 'oleos-gorduras-vinagres', label: 'Óleos, gorduras e vinagres', icon: '🫒' },
+  { key: 'conservas-vegetais', label: 'Conservas vegetais', icon: '🥫' },
+  { key: 'molhos-condimentos', label: 'Molhos e condimentos', icon: '🍶' },
+  { key: 'sopas-caldos', label: 'Sopas e caldos', icon: '🍲' },
+  { key: 'sobremesas-guloseimas', label: 'Sobremesas, salgadinhos e guloseimas', icon: '🍫' },
+  { key: 'bebidas-sem-alcool', label: 'Bebidas sem álcool', icon: '🥤' },
+  { key: 'bebidas-com-alcool', label: 'Bebidas com álcool', icon: '🍸' },
+  { key: 'padaria', label: 'Padaria', icon: '🍞' },
 ];
 
-export const CONDIMENTOS: IngredientOption[] = [
-  { label: 'Farinha de Trigo', icon: '🌾', query: 'flour' },
-  { label: 'Farinha de rosca', icon: '🌾', query: 'breadcrumbs' },
-  { label: 'Farinha de mandioca', icon: '🌾', query: 'cassava flour' },
-  { label: 'Fubá', icon: '🌽', query: 'corn flour' },
-  { label: 'Maisena', icon: '🌽', query: 'cornstarch' },
-  { label: 'Óleo', icon: '🛢️', query: 'vegetable oil' },
-  { label: 'Azeite', icon: '🍾', query: 'olive oil' },
-  { label: 'Ovo', icon: '🥚', query: 'egg' },
-  { label: 'Leite', icon: '🥛', query: 'milk' },
-  { label: 'Leite em pó', icon: '🥛', query: 'powdered milk' },
-  { label: 'Leite condensado', icon: '🥫', query: 'condensed milk' },
-  { label: 'Creme de leite', icon: '🥛', query: 'heavy cream' },
-  { label: 'Iogurte', icon: '🥛', query: 'yogurt' },
-  { label: 'Manteiga', icon: '🧈', query: 'butter' },
-  { label: 'Margarina', icon: '🧈', query: 'margarine' },
-  { label: 'Queijo', icon: '🧀', query: 'cheese' },
-  { label: 'Requeijão', icon: '🧀', query: 'cream cheese' },
-  { label: 'Coco ralado', icon: '🥥', query: 'shredded coconut' },
-  { label: 'Leite de coco', icon: '🥥', query: 'coconut milk' },
-  { label: 'Biscoito maisena', icon: '🍪', query: 'maria cookies' },
-  { label: 'Amendoim', icon: '🥜', query: 'peanut' },
-  { label: 'Açúcar', icon: '🍬', query: 'sugar' },
-  { label: 'Mel', icon: '🍯', query: 'honey' },
-  { label: 'Fermento', icon: '🫧', query: 'baking powder' },
-  { label: 'Vinagre', icon: '🍶', query: 'vinegar' },
-  { label: 'Chocolate em pó', icon: '🍫', query: 'cocoa powder' },
-  { label: 'Chocolate (barra ou gotas)', icon: '🍫', query: 'chocolate' },
-  { label: 'Polvilho', icon: '🌾', query: 'tapioca starch' },
-];
+export const INGREDIENTS: IngredientOption[] = [
+  // ── Aves ────────────────────────────────────────────────────────────────
+  { label: 'Frango inteiro', icon: '🍗', query: 'chicken', category: 'aves' },
+  { label: 'Filé de frango', icon: '🍗', query: 'chicken breast', category: 'aves' },
+  { label: 'Coxa de frango', icon: '🍗', query: 'chicken thigh', category: 'aves' },
+  { label: 'Sobrecoxa', icon: '🍗', query: 'chicken drumstick', category: 'aves' },
+  { label: 'Asa de frango', icon: '🍗', query: 'chicken wings', category: 'aves' },
+  { label: 'Coração de frango', icon: '🍗', query: 'chicken heart', category: 'aves' },
 
-export const TEMPEROS: IngredientOption[] = [
-  { label: 'Pimenta do Reino', icon: '🌶️', query: 'black pepper' },
-  { label: 'Pimenta calabresa', icon: '🌶️', query: 'calabrian pepper' },
-  { label: 'Colorau', icon: '🔴', query: 'paprika' },
-  { label: 'Páprica', icon: '🌶️', query: 'sweet paprika' },
-  { label: 'Açafrão', icon: '🟡', query: 'turmeric' },
-  { label: 'Orégano', icon: '🌿', query: 'oregano' },
-  { label: 'Manjericão', icon: '🌿', query: 'basil' },
-  { label: 'Tomilho', icon: '🌿', query: 'thyme' },
-  { label: 'Alecrim', icon: '🌿', query: 'rosemary' },
-  { label: 'Louro', icon: '🌿', query: 'bay leaf' },
-  { label: 'Coentro', icon: '🌿', query: 'cilantro' },
-  { label: 'Hortelã', icon: '🌿', query: 'mint' },
-  { label: 'Cheiro verde', icon: '🌿', query: 'parsley' },
-  { label: 'Cominho', icon: '🌿', query: 'cumin' },
-  { label: 'Alho em pó', icon: '🧄', query: 'garlic powder' },
-  { label: 'Canela', icon: '🟤', query: 'cinnamon' },
-  { label: 'Cravo', icon: '🟤', query: 'cloves' },
-  { label: 'Noz-moscada', icon: '🌰', query: 'nutmeg' },
-  { label: 'Curry', icon: '🍛', query: 'curry powder' },
-  { label: 'Caldo de legumes', icon: '🧂', query: 'vegetable bouillon' },
-];
+  // ── Carnes ──────────────────────────────────────────────────────────────
+  { label: 'Picanha', icon: '🥩', query: 'picanha', category: 'carnes' },
+  { label: 'Alcatra', icon: '🥩', query: 'top sirloin', category: 'carnes' },
+  { label: 'Filé mignon', icon: '🥩', query: 'beef tenderloin', category: 'carnes' },
+  { label: 'Contrafilé', icon: '🥩', query: 'ribeye', category: 'carnes' },
+  { label: 'Patinho', icon: '🥩', query: 'patinho', category: 'carnes' },
+  { label: 'Maminha', icon: '🥩', query: 'maminha', category: 'carnes' },
+  { label: 'Fraldinha', icon: '🥩', query: 'flank steak', category: 'carnes' },
+  { label: 'Cupim', icon: '🥩', query: 'cupim', category: 'carnes' },
+  { label: 'Lagarto', icon: '🥩', query: 'lagarto', category: 'carnes' },
+  { label: 'Acém', icon: '🍖', query: 'chuck roast', category: 'carnes' },
+  { label: 'Músculo', icon: '🍖', query: 'beef shank', category: 'carnes' },
+  { label: 'Costela bovina', icon: '🍖', query: 'beef ribs', category: 'carnes' },
+  { label: 'Carne moída', icon: '🍔', query: 'ground beef', category: 'carnes' },
+  { label: 'Carne seca', icon: '🥩', query: 'dried beef', category: 'carnes' },
+  { label: 'Carne de sol', icon: '🥩', query: 'sun-dried beef', category: 'carnes' },
+  { label: 'Fígado', icon: '🍖', query: 'liver', category: 'carnes' },
+  { label: 'Carne de porco', icon: '🍖', query: 'pork', category: 'carnes' },
+  { label: 'Lombo suíno', icon: '🍖', query: 'pork loin', category: 'carnes' },
+  { label: 'Pernil', icon: '🍖', query: 'pork leg', category: 'carnes' },
+  { label: 'Bisteca', icon: '🥩', query: 'pork chop', category: 'carnes' },
+  { label: 'Costela suína', icon: '🍖', query: 'pork ribs', category: 'carnes' },
+  { label: 'Panceta (barriga)', icon: '🥓', query: 'pork belly', category: 'carnes' },
+  { label: 'Bacon', icon: '🥓', query: 'bacon', category: 'carnes' },
+  { label: 'Linguiça', icon: '🌭', query: 'pork sausage', category: 'carnes' },
+  { label: 'Salsicha', icon: '🌭', query: 'sausage', category: 'carnes' },
 
-export const MOLHOS: IngredientOption[] = [
-  { label: 'Molho de Tomate', icon: '🥫', query: 'tomato sauce' },
-  { label: 'Molho rosé', icon: '🍅', query: 'rose sauce' },
-  { label: 'Molho branco', icon: '🥛', query: 'white sauce' },
-  { label: 'Molho pesto', icon: '🌿', query: 'pesto sauce' },
-  { label: 'Ketchup', icon: '🍅', query: 'ketchup' },
-  { label: 'Mostarda', icon: '🌭', query: 'mustard' },
-  { label: 'Maionese', icon: '🥚', query: 'mayonnaise' },
-  { label: 'Barbecue', icon: '🍖', query: 'barbecue sauce' },
-  { label: 'Molho de soja', icon: '🍶', query: 'soy sauce' },
-  { label: 'Molho inglês', icon: '🍶', query: 'worcestershire sauce' },
-  { label: 'Molho de pimenta', icon: '🌶️', query: 'hot sauce' },
-  { label: 'Molho de alho', icon: '🧄', query: 'garlic sauce' },
-  { label: 'Molho agridoce', icon: '🍯', query: 'sweet and sour sauce' },
-  { label: 'Vinagrete', icon: '🍅', query: 'vinaigrette' },
+  // ── Cortes frios ────────────────────────────────────────────────────────
+  { label: 'Mortadela', icon: '🥓', query: 'mortadella', category: 'frios' },
+  { label: 'Presunto', icon: '🥓', query: 'ham', category: 'frios' },
+  { label: 'Peru', icon: '🦃', query: 'turkey', category: 'frios' },
+
+  // ── Pescados e frutos do mar ────────────────────────────────────────────
+  { label: 'Peixe', icon: '🐟', query: 'fish', category: 'pescados' },
+  { label: 'Tilápia', icon: '🐟', query: 'tilapia', category: 'pescados' },
+  { label: 'Salmão', icon: '🐟', query: 'salmon', category: 'pescados' },
+  { label: 'Atum', icon: '🐟', query: 'tuna', category: 'pescados' },
+  { label: 'Sardinha', icon: '🐟', query: 'sardine', category: 'pescados' },
+  { label: 'Camarão', icon: '🦐', query: 'shrimp', category: 'pescados' },
+  { label: 'Atum enlatado', icon: '🥫', query: 'canned tuna', category: 'pescados' },
+  { label: 'Sardinha enlatada', icon: '🥫', query: 'canned sardine', category: 'pescados' },
+
+  // ── Hortaliças e verduras ───────────────────────────────────────────────
+  { label: 'Batata', icon: '🥔', query: 'potato', category: 'hortalicas' },
+  { label: 'Batata doce', icon: '🍠', query: 'sweet potato', category: 'hortalicas' },
+  { label: 'Batata baroa', icon: '🥔', query: 'arracacha', category: 'hortalicas' },
+  { label: 'Cenoura', icon: '🥕', query: 'carrot', category: 'hortalicas' },
+  { label: 'Cebola', icon: '🧅', query: 'onion', category: 'hortalicas', essential: true },
+  { label: 'Alho', icon: '🧄', query: 'garlic', category: 'hortalicas', essential: true },
+  { label: 'Beterraba', icon: '🍠', query: 'beet', category: 'hortalicas' },
+  { label: 'Mandioca', icon: '🥔', query: 'cassava', category: 'hortalicas' },
+  { label: 'Chuchu', icon: '🥒', query: 'chayote', category: 'hortalicas' },
+  { label: 'Inhame', icon: '🍠', query: 'yam', category: 'hortalicas' },
+  { label: 'Cará', icon: '🍠', query: 'taro', category: 'hortalicas' },
+  { label: 'Nabo', icon: '⚪', query: 'turnip', category: 'hortalicas' },
+  { label: 'Rabanete', icon: '🔴', query: 'radish', category: 'hortalicas' },
+  { label: 'Alface', icon: '🥬', query: 'lettuce', category: 'hortalicas' },
+  { label: 'Couve', icon: '🥬', query: 'collard greens', category: 'hortalicas' },
+  { label: 'Espinafre', icon: '🥬', query: 'spinach', category: 'hortalicas' },
+  { label: 'Rúcula', icon: '🥬', query: 'arugula', category: 'hortalicas' },
+  { label: 'Repolho', icon: '🥬', query: 'cabbage', category: 'hortalicas' },
+  { label: 'Brócolis', icon: '🥦', query: 'broccoli', category: 'hortalicas' },
+  { label: 'Couve-flor', icon: '🥦', query: 'cauliflower', category: 'hortalicas' },
+  { label: 'Agrião', icon: '🥬', query: 'watercress', category: 'hortalicas' },
+  { label: 'Acelga', icon: '🥬', query: 'chard', category: 'hortalicas' },
+  { label: 'Almeirão', icon: '🥬', query: 'escarole', category: 'hortalicas' },
+  { label: 'Escarola', icon: '🥬', query: 'batavia lettuce', category: 'hortalicas' },
+  { label: 'Chicória', icon: '🥬', query: 'chicory', category: 'hortalicas' },
+  { label: 'Mostarda (folha)', icon: '🥬', query: 'mustard greens', category: 'hortalicas' },
+  { label: 'Taioba', icon: '🥬', query: 'taioba', category: 'hortalicas' },
+  { label: 'Tomate', icon: '🍅', query: 'tomato', category: 'hortalicas', essential: true },
+  { label: 'Pimentão', icon: '🫑', query: 'bell pepper', category: 'hortalicas' },
+  { label: 'Abobrinha', icon: '🥒', query: 'zucchini', category: 'hortalicas' },
+  { label: 'Berinjela', icon: '🍆', query: 'eggplant', category: 'hortalicas' },
+  { label: 'Pepino', icon: '🥒', query: 'cucumber', category: 'hortalicas' },
+  { label: 'Milho', icon: '🌽', query: 'corn', category: 'hortalicas' },
+  { label: 'Ervilha', icon: '🟢', query: 'peas', category: 'hortalicas' },
+  { label: 'Vagem', icon: '🫛', query: 'green beans', category: 'hortalicas' },
+  { label: 'Abóbora', icon: '🎃', query: 'pumpkin', category: 'hortalicas' },
+  { label: 'Quiabo', icon: '🫛', query: 'okra', category: 'hortalicas' },
+  { label: 'Jiló', icon: '🟢', query: 'scarlet eggplant', category: 'hortalicas' },
+  { label: 'Aspargo', icon: '🌱', query: 'asparagus', category: 'hortalicas' },
+  { label: 'Alho-poró', icon: '🧅', query: 'leek', category: 'hortalicas' },
+  { label: 'Aipo', icon: '🌿', query: 'celery', category: 'hortalicas' },
+
+  // ── Cogumelos e fungos ──────────────────────────────────────────────────
+  { label: 'Cogumelo', icon: '🍄', query: 'mushroom', category: 'cogumelos' },
+
+  // ── Frutas ──────────────────────────────────────────────────────────────
+  { label: 'Banana', icon: '🍌', query: 'banana', category: 'frutas' },
+  { label: 'Maçã', icon: '🍎', query: 'apple', category: 'frutas' },
+  { label: 'Limão', icon: '🍋', query: 'lemon', category: 'frutas' },
+  { label: 'Laranja', icon: '🍊', query: 'orange', category: 'frutas' },
+  { label: 'Tangerina', icon: '🍊', query: 'tangerine', category: 'frutas' },
+  { label: 'Abacaxi', icon: '🍍', query: 'pineapple', category: 'frutas' },
+  { label: 'Manga', icon: '🥭', query: 'mango', category: 'frutas' },
+  { label: 'Morango', icon: '🍓', query: 'strawberry', category: 'frutas' },
+  { label: 'Uva', icon: '🍇', query: 'grape', category: 'frutas' },
+  { label: 'Abacate', icon: '🥑', query: 'avocado', category: 'frutas' },
+  { label: 'Coco', icon: '🥥', query: 'coconut', category: 'frutas' },
+  { label: 'Melancia', icon: '🍉', query: 'watermelon', category: 'frutas' },
+  { label: 'Melão', icon: '🍈', query: 'melon', category: 'frutas' },
+  { label: 'Mamão', icon: '🟠', query: 'papaya', category: 'frutas' },
+  { label: 'Maracujá', icon: '🟣', query: 'passion fruit', category: 'frutas' },
+  { label: 'Goiaba', icon: '🍐', query: 'guava', category: 'frutas' },
+  { label: 'Pêssego', icon: '🍑', query: 'peach', category: 'frutas' },
+  { label: 'Pera', icon: '🍐', query: 'pear', category: 'frutas' },
+  { label: 'Kiwi', icon: '🥝', query: 'kiwi', category: 'frutas' },
+  { label: 'Cereja', icon: '🍒', query: 'cherry', category: 'frutas' },
+  { label: 'Ameixa', icon: '🟣', query: 'plum', category: 'frutas' },
+  { label: 'Caju', icon: '🟠', query: 'cashew fruit', category: 'frutas' },
+  { label: 'Acerola', icon: '🔴', query: 'acerola', category: 'frutas' },
+  { label: 'Lichia', icon: '⚪', query: 'lychee', category: 'frutas' },
+
+  // ── Geleias e frutas em conserva ────────────────────────────────────────
+  { label: 'Pêssego em calda', icon: '🥫', query: 'canned peach', category: 'geleias-conserva-fruta' },
+
+  // ── Frutas secas e nozes ────────────────────────────────────────────────
+  { label: 'Amendoim', icon: '🥜', query: 'peanut', category: 'frutas-secas-nozes' },
+  { label: 'Coco ralado', icon: '🥥', query: 'shredded coconut', category: 'frutas-secas-nozes' },
+
+  // ── Queijos ─────────────────────────────────────────────────────────────
+  { label: 'Queijo', icon: '🧀', query: 'cheese', category: 'queijos' },
+  { label: 'Requeijão', icon: '🧀', query: 'cream cheese', category: 'queijos' },
+
+  // ── Laticínios e ovos ───────────────────────────────────────────────────
+  { label: 'Ovo', icon: '🥚', query: 'egg', category: 'laticinios-ovos', essential: true },
+  { label: 'Leite', icon: '🥛', query: 'milk', category: 'laticinios-ovos', essential: true },
+  { label: 'Leite em pó', icon: '🥛', query: 'powdered milk', category: 'laticinios-ovos' },
+  { label: 'Leite condensado', icon: '🥫', query: 'condensed milk', category: 'laticinios-ovos' },
+  { label: 'Creme de leite', icon: '🥛', query: 'heavy cream', category: 'laticinios-ovos' },
+  { label: 'Iogurte', icon: '🥛', query: 'yogurt', category: 'laticinios-ovos' },
+  { label: 'Manteiga', icon: '🧈', query: 'butter', category: 'laticinios-ovos', essential: true },
+
+  // ── Veganos e vegetarianos ──────────────────────────────────────────────
+  { label: 'Leite de coco', icon: '🥥', query: 'coconut milk', category: 'veganos-vegetarianos' },
+
+  // ── Óleos, gorduras e vinagres ──────────────────────────────────────────
+  { label: 'Óleo', icon: '🛢️', query: 'vegetable oil', category: 'oleos-gorduras-vinagres', essential: true },
+  { label: 'Azeite', icon: '🫒', query: 'olive oil', category: 'oleos-gorduras-vinagres', essential: true },
+  { label: 'Margarina', icon: '🧈', query: 'margarine', category: 'oleos-gorduras-vinagres' },
+  { label: 'Vinagre', icon: '🍶', query: 'vinegar', category: 'oleos-gorduras-vinagres' },
+
+  // ── Farinhas, fermentos e leveduras ─────────────────────────────────────
+  { label: 'Farinha de Trigo', icon: '🌾', query: 'flour', category: 'farinhas-fermentos', essential: true },
+  { label: 'Farinha de rosca', icon: '🌾', query: 'breadcrumbs', category: 'farinhas-fermentos' },
+  { label: 'Farinha de mandioca', icon: '🌾', query: 'cassava flour', category: 'farinhas-fermentos' },
+  { label: 'Fubá', icon: '🌽', query: 'corn flour', category: 'farinhas-fermentos' },
+  { label: 'Maisena', icon: '🌽', query: 'cornstarch', category: 'farinhas-fermentos' },
+  { label: 'Polvilho', icon: '🌾', query: 'tapioca starch', category: 'farinhas-fermentos' },
+  { label: 'Fermento', icon: '🫧', query: 'baking powder', category: 'farinhas-fermentos', essential: true },
+
+  // ── Sementes, grãos, cereais e leguminosas ──────────────────────────────
+  { label: 'Arroz', icon: '🍚', query: 'rice', category: 'graos-cereais' },
+  { label: 'Arroz integral', icon: '🍚', query: 'brown rice', category: 'graos-cereais' },
+  { label: 'Feijão carioca', icon: '🫘', query: 'pinto beans', category: 'graos-cereais' },
+  { label: 'Feijão preto', icon: '🫘', query: 'black beans', category: 'graos-cereais' },
+  { label: 'Feijão fradinho', icon: '🫘', query: 'black-eyed peas', category: 'graos-cereais' },
+  { label: 'Lentilha', icon: '🫘', query: 'lentils', category: 'graos-cereais' },
+  { label: 'Grão de bico', icon: '🫘', query: 'chickpeas', category: 'graos-cereais' },
+  { label: 'Quinoa', icon: '🌾', query: 'quinoa', category: 'graos-cereais' },
+  { label: 'Aveia', icon: '🌾', query: 'oats', category: 'graos-cereais' },
+  { label: 'Milho de pipoca', icon: '🌽', query: 'popcorn', category: 'graos-cereais' },
+
+  // ── Massas ──────────────────────────────────────────────────────────────
+  { label: 'Macarrão', icon: '🍝', query: 'pasta', category: 'massas' },
+
+  // ── Padaria ─────────────────────────────────────────────────────────────
+  { label: 'Pão', icon: '🍞', query: 'bread', category: 'padaria' },
+  { label: 'Biscoito maisena', icon: '🍪', query: 'maria cookies', category: 'padaria' },
+
+  // ── Conservas vegetais ──────────────────────────────────────────────────
+  { label: 'Milho enlatado', icon: '🥫', query: 'canned corn', category: 'conservas-vegetais' },
+  { label: 'Ervilha enlatada', icon: '🥫', query: 'canned peas', category: 'conservas-vegetais' },
+  { label: 'Feijão enlatado', icon: '🥫', query: 'canned beans', category: 'conservas-vegetais' },
+  { label: 'Grão de bico enlatado', icon: '🥫', query: 'canned chickpeas', category: 'conservas-vegetais' },
+  { label: 'Palmito', icon: '🥫', query: 'heart of palm', category: 'conservas-vegetais' },
+  { label: 'Azeitona', icon: '🫒', query: 'olives', category: 'conservas-vegetais' },
+  { label: 'Seleta de legumes', icon: '🥫', query: 'mixed vegetables', category: 'conservas-vegetais' },
+  { label: 'Champignon enlatado', icon: '🍄', query: 'canned mushroom', category: 'conservas-vegetais' },
+
+  // ── Açúcar, adoçantes e aditivos ────────────────────────────────────────
+  { label: 'Açúcar', icon: '🍬', query: 'sugar', category: 'acucar-adocantes', essential: true },
+  { label: 'Mel', icon: '🍯', query: 'honey', category: 'acucar-adocantes' },
+
+  // ── Sobremesas, salgadinhos e guloseimas ────────────────────────────────
+  { label: 'Chocolate em pó', icon: '🍫', query: 'cocoa powder', category: 'sobremesas-guloseimas' },
+  { label: 'Chocolate (barra ou gotas)', icon: '🍫', query: 'chocolate', category: 'sobremesas-guloseimas' },
+
+  // ── Especiarias ─────────────────────────────────────────────────────────
+  { label: 'Pimenta do Reino', icon: '🌶️', query: 'black pepper', category: 'especiarias', essential: true },
+  { label: 'Colorau', icon: '🔴', query: 'paprika', category: 'especiarias' },
+  { label: 'Páprica', icon: '🌶️', query: 'sweet paprika', category: 'especiarias' },
+  { label: 'Açafrão', icon: '🟡', query: 'turmeric', category: 'especiarias' },
+  { label: 'Orégano', icon: '🌿', query: 'oregano', category: 'especiarias' },
+  { label: 'Manjericão', icon: '🌿', query: 'basil', category: 'especiarias' },
+  { label: 'Tomilho', icon: '🌿', query: 'thyme', category: 'especiarias' },
+  { label: 'Alecrim', icon: '🌿', query: 'rosemary', category: 'especiarias' },
+  { label: 'Louro', icon: '🌿', query: 'bay leaf', category: 'especiarias' },
+  { label: 'Coentro', icon: '🌿', query: 'cilantro', category: 'especiarias' },
+  { label: 'Hortelã', icon: '🌿', query: 'mint', category: 'especiarias' },
+  { label: 'Cheiro verde', icon: '🌿', query: 'parsley', category: 'especiarias' },
+  { label: 'Cominho', icon: '🌿', query: 'cumin', category: 'especiarias' },
+  { label: 'Alho em pó', icon: '🧄', query: 'garlic powder', category: 'especiarias' },
+  { label: 'Canela', icon: '🟤', query: 'cinnamon', category: 'especiarias' },
+  { label: 'Cravo', icon: '🟤', query: 'cloves', category: 'especiarias' },
+  { label: 'Noz-moscada', icon: '🌰', query: 'nutmeg', category: 'especiarias' },
+  { label: 'Curry', icon: '🍛', query: 'curry powder', category: 'especiarias' },
+  { label: 'Gengibre', icon: '🫚', query: 'ginger', category: 'especiarias' },
+
+  // ── Pimentas quentes ────────────────────────────────────────────────────
+  { label: 'Pimenta calabresa', icon: '🌶️', query: 'calabrian pepper', category: 'pimentas' },
+  { label: 'Molho de pimenta', icon: '🌶️', query: 'hot sauce', category: 'pimentas' },
+
+  // ── Sopas e caldos ──────────────────────────────────────────────────────
+  { label: 'Caldo de legumes', icon: '🧂', query: 'vegetable bouillon', category: 'sopas-caldos' },
+
+  // ── Molhos e condimentos ────────────────────────────────────────────────
+  { label: 'Molho de Tomate', icon: '🥫', query: 'tomato sauce', category: 'molhos-condimentos' },
+  { label: 'Molho rosé', icon: '🍅', query: 'rose sauce', category: 'molhos-condimentos' },
+  { label: 'Molho branco', icon: '🥛', query: 'white sauce', category: 'molhos-condimentos' },
+  { label: 'Molho pesto', icon: '🌿', query: 'pesto sauce', category: 'molhos-condimentos' },
+  { label: 'Ketchup', icon: '🍅', query: 'ketchup', category: 'molhos-condimentos' },
+  { label: 'Mostarda', icon: '🌭', query: 'mustard', category: 'molhos-condimentos' },
+  { label: 'Maionese', icon: '🥚', query: 'mayonnaise', category: 'molhos-condimentos' },
+  { label: 'Barbecue', icon: '🍖', query: 'barbecue sauce', category: 'molhos-condimentos' },
+  { label: 'Molho de soja', icon: '🍶', query: 'soy sauce', category: 'molhos-condimentos' },
+  { label: 'Molho inglês', icon: '🍶', query: 'worcestershire sauce', category: 'molhos-condimentos' },
+  { label: 'Molho de alho', icon: '🧄', query: 'garlic sauce', category: 'molhos-condimentos' },
+  { label: 'Molho agridoce', icon: '🍯', query: 'sweet and sour sauce', category: 'molhos-condimentos' },
+  { label: 'Vinagrete', icon: '🍅', query: 'vinaigrette', category: 'molhos-condimentos' },
 ];
 
 export const EQUIPAMENTOS: IngredientOption[] = [
-  { label: 'Fogão', icon: '🔥', query: 'stove' },
-  { label: 'Forno', icon: '🍞', query: 'oven' },
-  { label: 'Airfryer', icon: '🌀', query: 'air fryer' },
-  { label: 'Micro-ondas', icon: '📡', query: 'microwave' },
-  { label: 'Grelha', icon: '🍢', query: 'grill pan' },
-  { label: 'Churrasqueira', icon: '🔥', query: 'barbecue grill' },
-  { label: 'Chapa', icon: '🥘', query: 'griddle' },
-  { label: 'Liquidificador', icon: '🥤', query: 'blender' },
-  { label: 'Panela de pressão', icon: '🍲', query: 'pressure cooker' },
+  { label: 'Fogão', icon: '🔥', query: 'stove', category: 'equipamentos' },
+  { label: 'Forno', icon: '🍞', query: 'oven', category: 'equipamentos' },
+  { label: 'Airfryer', icon: '🌀', query: 'air fryer', category: 'equipamentos' },
+  { label: 'Micro-ondas', icon: '📡', query: 'microwave', category: 'equipamentos' },
+  { label: 'Grelha', icon: '🍢', query: 'grill pan', category: 'equipamentos' },
+  { label: 'Churrasqueira', icon: '🔥', query: 'barbecue grill', category: 'equipamentos' },
+  { label: 'Chapa', icon: '🥘', query: 'griddle', category: 'equipamentos' },
+  { label: 'Liquidificador', icon: '🥤', query: 'blender', category: 'equipamentos' },
+  { label: 'Panela de pressão', icon: '🍲', query: 'pressure cooker', category: 'equipamentos' },
 ];
 
-export type CategoryKey = 'alimentos' | 'condimentos' | 'temperos' | 'molhos' | 'equipamentos';
+/** Todos os itens selecionáveis (ingredientes + equipamentos), lista única. */
+export const ALL_ITEMS: IngredientOption[] = [...INGREDIENTS, ...EQUIPAMENTOS];
 
-export const CATEGORY_META: Record<CategoryKey, { label: string; icon: string; description: string; path: string }> = {
-  alimentos: { label: 'Alimentos', icon: '🥩', description: 'Frango, Carnes, Peixes, Grãos, Frutas...', path: '/alimentos' },
-  condimentos: { label: 'Condimentos', icon: '🧈', description: 'Farinha, Óleo, Azeite, Leite em pó, Ovo...', path: '/condimentos' },
-  temperos: { label: 'Temperos', icon: '🌿', description: 'Pimenta, Colorau, Orégano, Cominho...', path: '/temperos' },
-  molhos: { label: 'Molhos', icon: '🥫', description: 'Molho de Tomate, Ketchup, Barbecue...', path: '/molhos' },
-  equipamentos: {
-    label: 'Equipamentos',
-    icon: '🍳',
-    description: 'Fogão, Forno, Airfryer, Micro-ondas, Chapa...',
-    path: '/equipamentos',
-  },
-};
+/** Itens marcados como essenciais, na ordem em que aparecem em INGREDIENTS. */
+export const ESSENTIAL_INGREDIENTS: IngredientOption[] = INGREDIENTS.filter((i) => i.essential);
+
+/** Ingredientes de uma categoria específica (não inclui equipamentos). */
+export function ingredientsFor(category: CategoryKey): IngredientOption[] {
+  return INGREDIENTS.filter((i) => i.category === category);
+}

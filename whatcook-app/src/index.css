@@ -723,6 +723,77 @@ input[type=range] {
   line-height: 1.25;
 }
 
+/* Ingredientes — seções em acordeão (tela única de categorias) */
+.ing-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 16px 8px;
+}
+
+.ing-section {
+  border: 1.5px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-gray);
+  overflow: hidden;
+}
+
+.ing-section-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  cursor: pointer;
+  font-family: 'Unbounded', 'Geist', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+  text-align: left;
+}
+
+.ing-section-head.open {
+  border-bottom: 1.5px solid var(--border-color);
+}
+
+.ing-section-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.ing-section-label {
+  flex: 1;
+  line-height: 1.2;
+}
+
+.ing-section-count {
+  flex-shrink: 0;
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ing-section-chevron {
+  flex-shrink: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-muted);
+  width: 16px;
+  text-align: center;
+}
+
+.ing-section .ing-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .category-count {
   position: absolute;
   top: -6px;
@@ -1699,14 +1770,20 @@ input[type=range] {
   margin-bottom: 12px;
 }
 
-.celebration-image {
-  width: 240px;
-  height: 240px;
-  max-width: 100%;
-  border-radius: 24px;
-  object-fit: cover;
-  margin: 0 auto 20px;
-  display: block;
+/* Câmera / foto do prato ocupando o lugar de destaque (antes: imagem de confete) */
+.conclusao-hero-photo {
+  margin-top: 4px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+
+.conclusao-hero-photo:not(.has-photo):not(.camera-live) {
+  animation: hero-photo-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes hero-photo-pulse {
+  0%, 100% { border-color: var(--primary); }
+  50% { border-color: var(--secondary); }
 }
 
 .cooking-stats-row {

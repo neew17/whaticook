@@ -2,39 +2,28 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { CheckIcon, SearchIcon } from '../components/icons';
-import { useAppState, type SelectedIngredientEntry } from '../context/AppStateContext';
+import { useAppState } from '../context/AppStateContext';
 import {
-  ALIMENTOS_TABS,
-  CATEGORY_META,
-  CONDIMENTOS,
   EQUIPAMENTOS,
-  MOLHOS,
-  TEMPEROS,
-  type CategoryKey,
+  ESSENTIAL_INGREDIENTS,
+  INGREDIENT_CATEGORIES,
+  INGREDIENTS,
+  type IngredientOption,
 } from '../data/ingredients';
 import { normalize } from '../utils/text';
 import { isQueryRelevantForTipo } from '../utils/ingredientRelevance';
 import { INGREDIENT_IMAGES } from '../data/ingredientImages';
-import iconAlimentos from '../assets/category-icons/alimentos.png';
-import iconCondimentos from '../assets/category-icons/condimentos.png';
-import iconTemperos from '../assets/category-icons/temperos.png';
-import iconMolhos from '../assets/category-icons/molhos.png';
-import iconEquipamentos from '../assets/category-icons/equipamentos.png';
 
-const CATEGORY_ICON_PHOTOS: Record<CategoryKey, string> = {
-  alimentos: iconAlimentos,
-  condimentos: iconCondimentos,
-  temperos: iconTemperos,
-  molhos: iconMolhos,
-  equipamentos: iconEquipamentos,
-};
-
-const CATEGORY_ORDER: CategoryKey[] = ['alimentos', 'condimentos', 'temperos', 'molhos', 'equipamentos'];
+interface Section {
+  key: string;
+  label: string;
+  icon: string;
+  items: IngredientOption[];
+}
 
 export default function Categorias() {
   const navigate = useNavigate();
   const {
-    countFor,
     totalSelectedCount,
     runSearch,
     isSearching,
@@ -46,6 +35,15 @@ export default function Categorias() {
   } = useAppState();
   const [nameQuery, setNameQuery] = useState('');
   const [ingredientQuery, setIngredientQuery] = useState('');
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(['essenciais']));
+
+  const toggleSection = (key: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
 
   const handleSearch = async () => {
     await runSearch();
@@ -58,34 +56,63 @@ export default function Categorias() {
     navigate('/resultados');
   };
 
-  const allIngredientEntries = useMemo(() => {
-    const entries: SelectedIngredientEntry[] = [];
-    ALIMENTOS_TABS.forEach((t) => t.items.forEach((option) => entries.push({ category: 'alimentos', option })));
-    CONDIMENTOS.forEach((option) => entries.push({ category: 'condimentos', option }));
-    TEMPEROS.forEach((option) => entries.push({ category: 'temperos', option }));
-    MOLHOS.forEach((option) => entries.push({ category: 'molhos', option }));
-    EQUIPAMENTOS.forEach((option) => entries.push({ category: 'equipamentos', option }));
-    return entries.filter((e) => isQueryRelevantForTipo(e.option.query, tipoPrato));
-  }, [tipoPrato]);
+  const isRelevant = (o: IngredientOption) => isQueryRelevantForTipo(o.query, tipoPrato);
 
-  const visibleCategories = useMemo(
-    () => CATEGORY_ORDER.filter((key) => allIngredientEntries.some((e) => e.category === key)),
-    [allIngredientEntries]
-  );
+  // Seções montadas a partir da taxonomia, filtrando por relevância doce/salgado e
+  // ocultando categorias que ficariam vazias.
+  const sections = useMemo<Section[]>(() => {
+    const essenciais = ESSENTIAL_INGREDIENTS.filter(isRelevant);
+    const result: Section[] = [];
+    if (essenciais.length > 0) {
+      result.push({ key: 'essenciais', label: 'Ingredientes essenciais', icon: '🧂', items: essenciais });
+    }
+    for (const cat of INGREDIENT_CATEGORIES) {
+      const items = INGREDIENTS.filter((i) => i.category === cat.key && isRelevant(i));
+      if (items.length > 0) result.push({ key: cat.key, label: cat.label, icon: cat.icon, items });
+    }
+    const equipamentos = EQUIPAMENTOS.filter(isRelevant);
+    if (equipamentos.length > 0) {
+      result.push({ key: 'equipamentos', label: 'Equipamentos', icon: '🍳', items: equipamentos });
+    }
+    return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tipoPrato]);
 
   const isIngredientSearching = ingredientQuery.trim().length > 0;
 
   const ingredientSearchResults = useMemo(() => {
     if (!isIngredientSearching) return [];
     const q = normalize(ingredientQuery.trim());
-    const matches = allIngredientEntries.filter((e) => normalize(e.option.label).includes(q));
-    return [...matches].sort((a, b) => {
-      const aSel = Boolean(selected[a.category][a.option.query]);
-      const bSel = Boolean(selected[b.category][b.option.query]);
-      if (aSel === bSel) return 0;
-      return aSel ? -1 : 1;
+    const pool = [...INGREDIENTS, ...EQUIPAMENTOS].filter(isRelevant);
+    const matches = pool.filter((o) => normalize(o.label).includes(q));
+    return matches.sort((a, b) => {
+      const aSel = Boolean(selected[a.query]);
+      const bSel = Boolean(selected[b.query]);
+      return aSel === bSel ? 0 : aSel ? -1 : 1;
     });
-  }, [isIngredientSearching, ingredientQuery, allIngredientEntries, selected]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isIngredientSearching, ingredientQuery, selected, tipoPrato]);
+
+  const renderCard = (option: IngredientOption) => {
+    const isSelected = Boolean(selected[option.query]);
+    return (
+      <div
+        key={option.query}
+        className={`ing-card${isSelected ? ' selected' : ''}`}
+        onClick={() => toggleIngredient(option)}
+      >
+        <div className="tile-icon-box">
+          {INGREDIENT_IMAGES[option.query] ? <img src={INGREDIENT_IMAGES[option.query]} alt="" /> : option.icon}
+          {isSelected && (
+            <div className="check">
+              <CheckIcon />
+            </div>
+          )}
+        </div>
+        <span>{option.label}</span>
+      </div>
+    );
+  };
 
   return (
     <div className="screen">
@@ -108,44 +135,35 @@ export default function Categorias() {
           </div>
         ) : (
           <div className="ing-grid" style={{ padding: '8px 20px 16px' }}>
-            {ingredientSearchResults.map(({ category, option }) => {
-              const isSelected = Boolean(selected[category][option.query]);
-              return (
-                <div
-                  key={`${category}-${option.query}`}
-                  className={`ing-card${isSelected ? ' selected' : ''}`}
-                  onClick={() => toggleIngredient(category, option)}
-                >
-                  <div className="tile-icon-box">
-                    {INGREDIENT_IMAGES[option.query] ? <img src={INGREDIENT_IMAGES[option.query]} alt="" /> : option.icon}
-                    {isSelected && (
-                      <div className="check">
-                        <CheckIcon />
-                      </div>
-                    )}
-                  </div>
-                  <span>{option.label}</span>
-                </div>
-              );
-            })}
+            {ingredientSearchResults.map(renderCard)}
           </div>
         )
       ) : (
         <>
-          <p className="helper-text">Selecione as categorias para adicionar o que você tem disponível.</p>
+          <p className="helper-text">Abra as categorias e marque tudo que você tem em casa.</p>
 
-          <div className="category-list">
-            {visibleCategories.map((key) => {
-              const meta = CATEGORY_META[key];
-              const count = countFor(key);
+          <div className="ing-sections">
+            {sections.map((section) => {
+              const isOpen = expanded.has(section.key);
+              const selCount = section.items.filter((i) => selected[i.query]).length;
               return (
-                <button key={key} type="button" className="category-card" onClick={() => navigate(meta.path)}>
-                  {count > 0 && <span className="category-count">{count}</span>}
-                  <div className="category-icon-frame">
-                    <img src={CATEGORY_ICON_PHOTOS[key]} alt="" />
-                  </div>
-                  <span>{meta.label}</span>
-                </button>
+                <div className="ing-section" key={section.key}>
+                  <button
+                    type="button"
+                    className={`ing-section-head${isOpen ? ' open' : ''}`}
+                    onClick={() => toggleSection(section.key)}
+                  >
+                    <span className="ing-section-icon">{section.icon}</span>
+                    <span className="ing-section-label">{section.label}</span>
+                    {selCount > 0 && <span className="ing-section-count">{selCount}</span>}
+                    <span className="ing-section-chevron">{isOpen ? '−' : '+'}</span>
+                  </button>
+                  {isOpen && (
+                    <div className="ing-grid" style={{ padding: '4px 4px 12px' }}>
+                      {section.items.map(renderCard)}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -168,12 +186,8 @@ export default function Categorias() {
             <div className="selected-section">
               <div className="selected-section-title">Itens selecionados ({allSelectedEntries.length})</div>
               <div className="selected-chips">
-                {allSelectedEntries.map(({ category, option }) => (
-                  <div
-                    key={`${category}-${option.query}`}
-                    className="selected-chip"
-                    onClick={() => toggleIngredient(category, option)}
-                  >
+                {allSelectedEntries.map((option) => (
+                  <div key={option.query} className="selected-chip" onClick={() => toggleIngredient(option)}>
                     {INGREDIENT_IMAGES[option.query] ? (
                       <img src={INGREDIENT_IMAGES[option.query]} alt="" />
                     ) : (

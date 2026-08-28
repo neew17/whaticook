@@ -270,9 +270,9 @@ const KIND_BY_CATEGORY = {
 function buildPrompt(subject, category) {
   const kind = KIND_BY_CATEGORY[category] ?? 'food';
   if (kind === 'appliance') {
-    return `Professional product photography of a ${subject}, centered, on a dark moody background, dramatic soft studio lighting, square composition, high detail, no text, no watermark, no people`;
+    return `Professional product photography of a ${subject}, centered, on a pure solid white seamless studio background (#FFFFFF), soft even diffused studio lighting, minimal soft shadow directly under the object, square composition, high detail, sharp focus, no text, no watermark, no people, no props`;
   }
-  return `Professional studio food photography of ${subject}, centered, on a dark moody background, dramatic soft side lighting, square composition, high detail, appetizing, no text, no watermark, no people, no plate unless natural to the ingredient`;
+  return `Professional studio food photography of ${subject}, centered, on a pure solid white seamless studio background (#FFFFFF), soft even diffused studio lighting, minimal soft shadow directly under the subject, square composition, high detail, sharp focus, appetizing, natural colors, no text, no watermark, no people, no plate unless natural to the ingredient`;
 }
 
 function slugify(query) {

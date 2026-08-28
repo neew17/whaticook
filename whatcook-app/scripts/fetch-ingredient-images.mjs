@@ -4,13 +4,15 @@
 // the shipped app / not run automatically.
 //
 // Usage:
-//   GEMINI_API_KEY=xxx node scripts/fetch-ingredient-images.mjs --category=frango
-//   GEMINI_API_KEY=xxx node scripts/fetch-ingredient-images.mjs --category=frango,bovinos
+//   GEMINI_API_KEY=xxx node scripts/fetch-ingredient-images.mjs --category=frutas
+//   GEMINI_API_KEY=xxx node scripts/fetch-ingredient-images.mjs --category=carnes,aves
 //   GEMINI_API_KEY=xxx node scripts/fetch-ingredient-images.mjs --all
-//   GEMINI_API_KEY=xxx node scripts/fetch-ingredient-images.mjs --test   (single item, no file writes)
+//   GEMINI_API_KEY=xxx node scripts/fetch-ingredient-images.mjs --all --force   (regenera tudo)
+//   GEMINI_API_KEY=xxx node scripts/fetch-ingredient-images.mjs --test          (1 item, sem escrita)
 //
-// Categories: frango, bovinos, suinos, peixes, embutidos, graos, frutas, legumes, verduras,
-// vegetais, enlatados, condimentos, temperos, molhos, equipamentos
+// Categorias = as chaves de CATEGORIES abaixo, alinhadas a CategoryKey em src/data/ingredients.ts.
+// Ao adicionar itens em ingredients.ts, adicione o subject aqui também — o script avisa no
+// startup se algum query de INGREDIENTS/EQUIPAMENTOS estiver sem entrada.
 
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -26,12 +28,13 @@ const MODEL = 'gemini-2.5-flash-image';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = path.join(__dirname, '..', 'public', 'ingredient-photos');
 const OUTPUT_TS = path.join(__dirname, '..', 'src', 'data', 'ingredientImages.ts');
+const INGREDIENTS_TS = path.join(__dirname, '..', 'src', 'data', 'ingredients.ts');
 const EXISTING_TS = existsSync(OUTPUT_TS) ? readFileSync(OUTPUT_TS, 'utf-8') : null;
 
-// query -> { label, kind } — "kind" tweaks the prompt template (food close-up vs. appliance).
-// One entry per item across ALIMENTOS_TABS / CONDIMENTOS / TEMPEROS / MOLHOS / EQUIPAMENTOS.
+// query -> subject en (frase usada no prompt). Agrupado pela categoria nova (CategoryKey).
+// "kind" do prompt vem de KIND_BY_CATEGORY: 'product' (garrafas, latas, eletros) ou 'food'.
 const CATEGORIES = {
-  frango: {
+  aves: {
     chicken: 'whole raw chicken',
     'chicken breast': 'raw chicken breast fillet',
     'chicken thigh': 'raw chicken thigh',
@@ -39,7 +42,7 @@ const CATEGORIES = {
     'chicken wings': 'raw chicken wings',
     'chicken heart': 'raw chicken hearts',
   },
-  bovinos: {
+  carnes: {
     picanha: 'raw picanha beef cut',
     'top sirloin': 'raw top sirloin steak',
     'beef tenderloin': 'raw beef tenderloin',
@@ -56,49 +59,81 @@ const CATEGORIES = {
     'dried beef': 'dried salted beef jerky',
     'sun-dried beef': 'brazilian sun-dried beef carne de sol',
     liver: 'raw beef liver',
-  },
-  suinos: {
     pork: 'raw pork meat cut',
     'pork loin': 'raw pork loin',
     'pork leg': 'raw pork leg roast',
     'pork chop': 'raw pork chop',
     'pork ribs': 'raw pork ribs',
     'pork belly': 'raw pork belly',
+    bacon: 'raw bacon strips',
+    'pork sausage': 'brazilian pork sausage linguica',
+    sausage: 'sausages',
   },
-  peixes: {
+  frios: {
+    mortadella: 'sliced mortadella',
+    ham: 'sliced ham',
+    turkey: 'sliced turkey breast',
+  },
+  pescados: {
     fish: 'whole raw fish',
     tilapia: 'raw tilapia fillet',
     salmon: 'raw salmon fillet',
     tuna: 'raw tuna steak',
     sardine: 'fresh sardines',
     shrimp: 'raw shrimp',
+    'canned tuna': 'can of tuna',
+    'canned sardine': 'can of sardines',
   },
-  embutidos: {
-    bacon: 'raw bacon strips',
-    'pork sausage': 'brazilian pork sausage linguica',
-    sausage: 'sausages',
-    mortadella: 'sliced mortadella',
-    ham: 'sliced ham',
-    turkey: 'sliced turkey breast',
+  hortalicas: {
+    potato: 'fresh potatoes',
+    'sweet potato': 'fresh sweet potatoes',
+    arracacha: 'fresh arracacha root peruvian parsnip',
+    carrot: 'fresh carrots',
+    onion: 'fresh onions',
+    garlic: 'fresh garlic bulb',
+    beet: 'fresh beets',
+    cassava: 'fresh cassava root',
+    chayote: 'fresh chayote squash',
+    yam: 'fresh yam root',
+    taro: 'fresh taro root',
+    turnip: 'fresh turnip',
+    radish: 'fresh radishes',
+    lettuce: 'fresh lettuce head',
+    'collard greens': 'fresh collard greens',
+    spinach: 'fresh spinach leaves',
+    arugula: 'fresh arugula leaves',
+    cabbage: 'fresh cabbage head',
+    broccoli: 'fresh broccoli',
+    cauliflower: 'fresh cauliflower',
+    watercress: 'fresh watercress',
+    chard: 'fresh swiss chard',
+    escarole: 'fresh escarole leaves',
+    'batavia lettuce': 'fresh batavia lettuce',
+    chicory: 'fresh chicory leaves',
+    'mustard greens': 'fresh mustard greens',
+    taioba: 'fresh taioba leaves brazilian greens',
+    tomato: 'fresh tomatoes',
+    'bell pepper': 'fresh bell peppers',
+    zucchini: 'fresh zucchini',
+    eggplant: 'fresh eggplant',
+    cucumber: 'fresh cucumber',
+    corn: 'fresh corn on the cob',
+    peas: 'fresh green peas',
+    'green beans': 'fresh green beans',
+    pumpkin: 'fresh pumpkin',
+    okra: 'fresh okra',
+    'scarlet eggplant': 'fresh scarlet eggplant jilo',
+    asparagus: 'fresh asparagus',
+    leek: 'fresh leek',
+    celery: 'fresh celery stalks',
   },
-  graos: {
-    rice: 'raw white rice grains',
-    'brown rice': 'raw brown rice grains',
-    'pinto beans': 'raw pinto beans',
-    'black beans': 'raw black beans',
-    'black-eyed peas': 'raw black-eyed peas',
-    lentils: 'raw lentils',
-    chickpeas: 'raw chickpeas',
-    pasta: 'raw pasta',
-    quinoa: 'raw quinoa grains',
-    oats: 'raw rolled oats',
-    popcorn: 'popcorn kernels',
-    bread: 'loaf of bread',
+  cogumelos: {
+    mushroom: 'fresh mushrooms',
   },
   frutas: {
     banana: 'fresh bananas',
     apple: 'fresh red apple',
-    lemon: 'fresh lemons',
+    lemon: 'fresh limes',
     orange: 'fresh oranges',
     tangerine: 'fresh tangerines',
     pineapple: 'fresh pineapple',
@@ -121,76 +156,18 @@ const CATEGORIES = {
     acerola: 'fresh acerola cherries',
     lychee: 'fresh lychee fruit',
   },
-  legumes: {
-    potato: 'fresh potatoes',
-    'sweet potato': 'fresh sweet potatoes',
-    arracacha: 'fresh arracacha root peruvian parsnip',
-    carrot: 'fresh carrots',
-    onion: 'fresh onions',
-    garlic: 'fresh garlic bulb',
-    beet: 'fresh beets',
-    cassava: 'fresh cassava root',
-    chayote: 'fresh chayote squash',
-    yam: 'fresh yam root',
-    taro: 'fresh taro root',
-    turnip: 'fresh turnip',
-    radish: 'fresh radishes',
-    ginger: 'fresh ginger root',
-  },
-  verduras: {
-    lettuce: 'fresh lettuce head',
-    'collard greens': 'fresh collard greens',
-    spinach: 'fresh spinach leaves',
-    arugula: 'fresh arugula leaves',
-    cabbage: 'fresh cabbage head',
-    broccoli: 'fresh broccoli',
-    cauliflower: 'fresh cauliflower',
-    watercress: 'fresh watercress',
-    chard: 'fresh swiss chard',
-    escarole: 'fresh escarole leaves',
-    'batavia lettuce': 'fresh batavia lettuce',
-    chicory: 'fresh chicory leaves',
-    'mustard greens': 'fresh mustard greens',
-    taioba: 'fresh taioba leaves brazilian greens',
-  },
-  vegetais: {
-    tomato: 'fresh tomatoes',
-    'bell pepper': 'fresh bell peppers',
-    zucchini: 'fresh zucchini',
-    eggplant: 'fresh eggplant',
-    cucumber: 'fresh cucumber',
-    corn: 'fresh corn on the cob',
-    peas: 'fresh green peas',
-    'green beans': 'fresh green beans',
-    pumpkin: 'fresh pumpkin',
-    okra: 'fresh okra',
-    'scarlet eggplant': 'fresh scarlet eggplant jilo',
-    asparagus: 'fresh asparagus',
-    leek: 'fresh leek',
-    mushroom: 'fresh mushrooms',
-    celery: 'fresh celery stalks',
-  },
-  enlatados: {
-    'canned corn': 'can of corn kernels',
-    'canned peas': 'can of green peas',
-    'canned tuna': 'can of tuna',
-    'canned sardine': 'can of sardines',
-    'canned beans': 'can of beans',
-    'canned chickpeas': 'can of chickpeas',
-    'heart of palm': 'heart of palm palmito',
-    olives: 'green and black olives',
-    'mixed vegetables': 'can of mixed vegetables',
-    'canned mushroom': 'can of sliced mushrooms',
+  'geleias-conserva-fruta': {
     'canned peach': 'can of peach halves in syrup',
   },
-  condimentos: {
-    flour: 'wheat flour in a bowl',
-    breadcrumbs: 'breadcrumbs in a bowl',
-    'cassava flour': 'brazilian cassava flour farinha',
-    'corn flour': 'yellow corn flour fuba',
-    cornstarch: 'cornstarch powder',
-    'vegetable oil': 'bottle of vegetable oil',
-    'olive oil': 'bottle of olive oil',
+  'frutas-secas-nozes': {
+    peanut: 'roasted peanuts',
+    'shredded coconut': 'shredded coconut',
+  },
+  queijos: {
+    cheese: 'block of cheese',
+    'cream cheese': 'brazilian requeijao cream cheese',
+  },
+  'laticinios-ovos': {
     egg: 'fresh eggs',
     milk: 'glass of milk',
     'powdered milk': 'powdered milk in a bowl',
@@ -198,23 +175,64 @@ const CATEGORIES = {
     'heavy cream': 'heavy cream carton',
     yogurt: 'bowl of yogurt',
     butter: 'block of butter',
-    margarine: 'margarine tub',
-    cheese: 'block of cheese',
-    'cream cheese': 'brazilian requeijao cream cheese',
-    'shredded coconut': 'shredded coconut',
+  },
+  'veganos-vegetarianos': {
     'coconut milk': 'can of coconut milk',
+  },
+  'oleos-gorduras-vinagres': {
+    'vegetable oil': 'bottle of vegetable oil',
+    'olive oil': 'bottle of olive oil',
+    margarine: 'margarine tub',
+    vinegar: 'bottle of vinegar',
+  },
+  'farinhas-fermentos': {
+    flour: 'wheat flour in a bowl',
+    breadcrumbs: 'breadcrumbs in a bowl',
+    'cassava flour': 'brazilian cassava flour farinha',
+    'corn flour': 'yellow corn flour fuba',
+    cornstarch: 'cornstarch powder',
+    'tapioca starch': 'tapioca starch powder',
+    'baking powder': 'baking powder in a bowl',
+  },
+  'graos-cereais': {
+    rice: 'raw white rice grains',
+    'brown rice': 'raw brown rice grains',
+    'pinto beans': 'raw pinto beans',
+    'black beans': 'raw black beans',
+    'black-eyed peas': 'raw black-eyed peas',
+    lentils: 'raw lentils',
+    chickpeas: 'raw chickpeas',
+    quinoa: 'raw quinoa grains',
+    oats: 'raw rolled oats',
+    popcorn: 'popcorn kernels',
+  },
+  massas: {
+    pasta: 'raw pasta',
+  },
+  padaria: {
+    bread: 'loaf of bread',
     'maria cookies': 'maria cookies biscuits',
+  },
+  'conservas-vegetais': {
+    'canned corn': 'can of corn kernels',
+    'canned peas': 'can of green peas',
+    'canned beans': 'can of beans',
+    'canned chickpeas': 'can of chickpeas',
+    'heart of palm': 'heart of palm palmito',
+    olives: 'green and black olives',
+    'mixed vegetables': 'can of mixed vegetables',
+    'canned mushroom': 'can of sliced mushrooms',
+  },
+  'acucar-adocantes': {
     sugar: 'white sugar in a bowl',
     honey: 'jar of honey',
-    'baking powder': 'baking powder in a bowl',
-    vinegar: 'bottle of vinegar',
+  },
+  'sobremesas-guloseimas': {
     'cocoa powder': 'cocoa powder in a bowl',
     chocolate: 'chocolate bar and chips',
-    'tapioca starch': 'tapioca starch powder',
   },
-  temperos: {
+  especiarias: {
     'black pepper': 'black peppercorns',
-    'calabrian pepper': 'crushed calabrian chili pepper',
     paprika: 'colorau paprika powder',
     'sweet paprika': 'sweet paprika powder',
     turmeric: 'turmeric powder and root',
@@ -232,9 +250,16 @@ const CATEGORIES = {
     cloves: 'whole cloves spice',
     nutmeg: 'whole and ground nutmeg',
     'curry powder': 'curry powder',
+    ginger: 'fresh ginger root',
+  },
+  pimentas: {
+    'calabrian pepper': 'crushed calabrian chili pepper',
+    'hot sauce': 'bottle of hot sauce',
+  },
+  'sopas-caldos': {
     'vegetable bouillon': 'vegetable bouillon cubes',
   },
-  molhos: {
+  'molhos-condimentos': {
     'tomato sauce': 'bowl of tomato sauce',
     'rose sauce': 'bowl of pink rose pasta sauce',
     'white sauce': 'bowl of white bechamel sauce',
@@ -245,10 +270,51 @@ const CATEGORIES = {
     'barbecue sauce': 'bottle of barbecue sauce',
     'soy sauce': 'bottle of soy sauce',
     'worcestershire sauce': 'bottle of worcestershire sauce',
-    'hot sauce': 'bottle of hot sauce',
     'garlic sauce': 'bowl of garlic sauce',
     'sweet and sour sauce': 'bowl of sweet and sour sauce',
     vinaigrette: 'bowl of vinaigrette dressing',
+  },
+  'bebidas-com-alcool': {
+    cachaca: 'bottle of cachaça brazilian sugarcane spirit',
+    vodka: 'bottle of vodka',
+    gin: 'bottle of gin',
+    'white rum': 'bottle of white rum',
+    'dark rum': 'bottle of dark aged rum',
+    tequila: 'bottle of tequila',
+    whiskey: 'bottle of whiskey',
+    brandy: 'bottle of brandy',
+    'triple sec': 'bottle of triple sec orange liqueur',
+    aperol: 'bottle of orange bitter aperitif liqueur',
+    campari: 'bottle of red bitter aperitif liqueur',
+    'dry vermouth': 'bottle of dry vermouth',
+    'sweet vermouth': 'bottle of sweet red vermouth',
+    'red wine': 'bottle of red wine',
+    'white wine': 'bottle of white wine',
+    'sparkling wine': 'bottle of sparkling wine prosecco',
+    beer: 'bottle of lager beer',
+    'coffee liqueur': 'bottle of coffee liqueur',
+    'cassis liqueur': 'bottle of blackcurrant cassis liqueur',
+    sake: 'bottle of sake rice wine',
+  },
+  'bebidas-sem-alcool': {
+    'sparkling water': 'bottle of sparkling water',
+    'tonic water': 'bottle of tonic water',
+    cola: 'glass bottle of cola soda',
+    'lemon-lime soda': 'bottle of clear lemon lime soda',
+    'ginger ale': 'bottle of ginger ale',
+    'ginger beer': 'bottle of ginger beer',
+    'energy drink': 'can of energy drink',
+    'coconut water': 'carton of coconut water',
+    'orange juice': 'glass of fresh orange juice',
+    'cranberry juice': 'glass of cranberry juice',
+    'pineapple juice': 'glass of pineapple juice',
+    'grape juice': 'glass of purple grape juice',
+    'simple syrup': 'bottle of clear simple sugar syrup',
+    grenadine: 'bottle of red grenadine syrup',
+    coffee: 'cup of black coffee',
+    'black tea': 'glass of iced black tea',
+    'hibiscus tea': 'glass of red hibiscus iced tea',
+    'sparkling grape juice': 'bottle of non-alcoholic sparkling grape juice',
   },
   equipamentos: {
     stove: 'kitchen gas stove top',
@@ -260,16 +326,15 @@ const CATEGORIES = {
     griddle: 'flat griddle chapa',
     blender: 'kitchen blender',
     'pressure cooker': 'pressure cooker pot',
+    'cocktail shaker': 'stainless steel cocktail shaker',
   },
 };
 
-const KIND_BY_CATEGORY = {
-  equipamentos: 'appliance',
-};
+// Categorias fotografadas como "produto" (garrafa/lata/eletro sobre fundo branco) e não "comida".
+const PRODUCT_CATEGORIES = new Set(['equipamentos', 'bebidas-com-alcool', 'bebidas-sem-alcool']);
 
 function buildPrompt(subject, category) {
-  const kind = KIND_BY_CATEGORY[category] ?? 'food';
-  if (kind === 'appliance') {
+  if (PRODUCT_CATEGORIES.has(category)) {
     return `Professional product photography of a ${subject}, centered, on a pure solid white seamless studio background (#FFFFFF), soft even diffused studio lighting, minimal soft shadow directly under the object, square composition, high detail, sharp focus, no text, no watermark, no people, no props`;
   }
   return `Professional studio food photography of ${subject}, centered, on a pure solid white seamless studio background (#FFFFFF), soft even diffused studio lighting, minimal soft shadow directly under the subject, square composition, high detail, sharp focus, appetizing, natural colors, no text, no watermark, no people, no plate unless natural to the ingredient`;
@@ -284,6 +349,18 @@ function slugify(query) {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Lê os `query` de INGREDIENTS + EQUIPAMENTOS em ingredients.ts e avisa se algum não tem subject aqui.
+function checkCoverage() {
+  if (!existsSync(INGREDIENTS_TS)) return;
+  const src = readFileSync(INGREDIENTS_TS, 'utf-8');
+  const declared = new Set(Object.values(CATEGORIES).flatMap((g) => Object.keys(g)));
+  const inCode = [...src.matchAll(/query: '([^']+)'/g)].map((m) => m[1]);
+  const missing = [...new Set(inCode)].filter((q) => !declared.has(q));
+  const extra = [...declared].filter((q) => !inCode.includes(q));
+  if (missing.length) console.warn(`AVISO: sem subject para: ${missing.join(', ')}`);
+  if (extra.length) console.warn(`AVISO: subject sem item em ingredients.ts: ${extra.join(', ')}`);
 }
 
 async function generateImage(prompt) {
@@ -326,10 +403,11 @@ function parseArgs() {
 
 async function main() {
   const { test, all, categories } = parseArgs();
+  checkCoverage();
 
   if (test) {
     console.log(`Testing model "${MODEL}" with a single item ("chicken breast")...`);
-    const buf = await generateImage(buildPrompt('raw chicken breast fillet', 'frango'));
+    const buf = await generateImage(buildPrompt('raw chicken breast fillet', 'aves'));
     const testPath = path.join(__dirname, 'test-output.jpg');
     writeFileSync(testPath, buf);
     console.log(`OK — wrote ${buf.length} bytes to ${testPath}. Open it to check quality before running a batch.`);

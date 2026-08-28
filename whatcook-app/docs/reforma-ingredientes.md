@@ -406,8 +406,14 @@ Pendências da fase A (não bloqueantes):
    foto real, adicionar `src/assets/tipo-prato/drinks.jpg` e trocar o `<div>` por `<img>`.
 
 **C — Imagens**
-10. `fetch-ingredient-images.mjs`: alinhar `CATEGORIES` à nova taxonomia (inclui itens de bar);
-    rodar com `GEMINI_API_KEY` (fundo branco); commitar `ingredientImages.ts` + `public/ingredient-photos/`
+10. ✅ `fetch-ingredient-images.mjs` alinhado: `CATEGORIES` reescrito nas chaves de `CategoryKey`
+    (28 grupos + `equipamentos`), 240 subjects = 240 queries de `ingredients.ts` (1:1, checagem de
+    cobertura no startup). `PRODUCT_CATEGORIES` (equipamentos + bebidas) usam prompt de "produto".
+    `lemon` corrigido para "limes" (limão BR = lima). Prompt já pede fundo branco #FFFFFF.
+11. ⏳ **Giovanni roda:** `GEMINI_API_KEY=xxx node scripts/fetch-ingredient-images.mjs --all --force`
+    (~240 imagens, ~8 min). Antes: `--test` para conferir 1. Depois: commitar
+    `src/data/ingredientImages.ts` + `public/ingredient-photos/*.jpg`.
+12. ⏭️ Opcional: `src/assets/tipo-prato/drinks.jpg` para o card de Drinks (hoje gradiente CSS).
 
 ## Invariantes a manter (CLAUDE.md)
 

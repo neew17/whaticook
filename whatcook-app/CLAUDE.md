@@ -20,10 +20,12 @@ for it rather than starting Vite manually.
 
 One-time data-enrichment scripts (not part of the app bundle, run manually with an API key):
 ```bash
-PEXELS_API_KEY=xxx node scripts/fetch-recipe-images.mjs       # regenerates src/data/recipe-images.ts for ALL recipes
-PEXELS_API_KEY=xxx node scripts/fetch-tipo-prato-images.mjs   # regenerates src/data/tipoPratoImages.ts (doce/salgado backgrounds)
+PEXELS_API_KEY=xxx node scripts/fetch-recipe-images.mjs                      # src/data/recipe-images.ts (por recipe id)
+GEMINI_API_KEY=xxx node scripts/fetch-ingredient-images.mjs --all --force    # src/data/ingredientImages.ts + public/ingredient-photos/ (por query, fundo branco)
 ```
 `fetch-recipe-images.mjs` rewrites its output file from scratch based on the hardcoded `QUERIES` map inside it — when adding recipes, add an English search query for the new id to that map before rerunning, or the whole file (including previously-fetched recipes) is regenerated but new ids without a query entry get no image.
+
+`fetch-ingredient-images.mjs` has a hardcoded `CATEGORIES` map (`query -> english subject`) grouped by the new `CategoryKey`s; it prints a coverage warning on startup if any `query` in `ingredients.ts` lacks a subject. `--force` regenerates existing images (needed after the white-background prompt change). `TIPO_PRATO_IMAGES` / `fetch-tipo-prato-images.mjs` are dead code — `TipoPrato.tsx` uses static jpgs and a CSS gradient for the drink card.
 
 ## Architecture
 

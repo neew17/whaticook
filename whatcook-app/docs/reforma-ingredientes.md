@@ -405,18 +405,19 @@ Pendências da fase A (não bloqueantes):
    `TIPO_PRATO_IMAGES` / `fetch-tipo-prato-images.mjs` são código morto (nada importa). Se quiser
    foto real, adicionar `src/assets/tipo-prato/drinks.jpg` e trocar o `<div>` por `<img>`.
 
-**C — Imagens**
+**C — Imagens — DONE 2026-08-29**
 10. ✅ `fetch-ingredient-images.mjs` alinhado: `CATEGORIES` reescrito nas chaves de `CategoryKey`
     (28 grupos + `equipamentos`), 240 subjects = 240 queries de `ingredients.ts` (1:1, checagem de
     cobertura no startup). `PRODUCT_CATEGORIES` (equipamentos + bebidas) usam prompt de "produto".
     `lemon` corrigido para "limes" (limão BR = lima). Prompt já pede fundo branco #FFFFFF.
-11. ⏳ **Adiado para outra sessão.** `--test` já rodou (fundo branco OK, ver `scratchpad`).
-    O batch `--all --force` foi tentado 2x e abortado — o modelo devolve muito 503 "high demand"
-    (o script agora tem retry com backoff, mas ainda assim rendeu só ~30/240 antes de parar).
-    Nada de imagem foi commitado; `ingredientImages.ts` intacto. Rodar de novo com calma:
-    `GEMINI_API_KEY=xxx node scripts/fetch-ingredient-images.mjs --all --force` e depois
-    `--all` (sem --force) quantas vezes precisar para pegar os que faltarem, então commitar
-    `src/data/ingredientImages.ts` + `public/ingredient-photos/*.jpg` + `scripts/test-output.jpg`.
+11. ✅ **FEITO 2026-08-29.** Batch `--all --force` rodou de fato: **219/240** na 1ª passada
+    (o retry com backoff segurou os 503). Os 21 que falharam ainda tinham a imagem antiga no
+    disco, então o rerun sem `--force` os pulava — apagados os 21 `.jpg` e rodado `--all` de
+    novo: 20/21, depois +1 (`stove`). **240/240** agora com fundo branco #FFFFFF. Verificado:
+    240 queries de `ingredients.ts` = 240 entradas em `ingredientImages.ts` = 240 `.jpg`, 0
+    órfãos, 0 faltando; `tsc` limpo; tela Categorias no preview carrega todas as fotos (todas
+    200 OK, 0 404, 0 erro de console). Commitado: `src/data/ingredientImages.ts` (200 M) +
+    `public/ingredient-photos/*.jpg` (200 M + 40 novos).
 12. ⏭️ Opcional: `src/assets/tipo-prato/drinks.jpg` para o card de Drinks (hoje gradiente CSS).
 
 ## Invariantes a manter (CLAUDE.md)

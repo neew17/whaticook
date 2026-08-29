@@ -6,7 +6,7 @@
       "runtimeExecutable": "cmd.exe",
       "runtimeArgs": [
         "/c",
-        "set PATH=C:\\Program Files\\nodejs;%PATH% && cd whatcook-app && npm run dev"
+        "set PATH=C:\\Program Files\\nodejs;%PATH% && cd whatcook-app && set VITE_HTTPS=0&& npm run dev"
       ],
       "port": 5173
     }

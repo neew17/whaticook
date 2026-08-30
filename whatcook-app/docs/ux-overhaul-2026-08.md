@@ -92,17 +92,26 @@ todos endereçados, mais um passe de layout e as partes 1 e 3 da camada social.
 - Toolbar do Perfil: emojis 🛡️/🚪 → `ShieldIcon`/`LogoutIcon`. Logout com `confirm()`.
 - `.pillar-decoration` removida.
 
-## O que ainda está aberto (ver reauditoria)
+## Rodada 2 — os 3 críticos da reauditoria (FEITO)
 
-Prioridade alta:
-- **Descoberta social** — `/buscar` só acha gente por e-mail exato. Precisa de
-  busca por nome/@ + "em alta" + sugestões, senão a aba "Seguindo" fica vazia.
-- **`/social`** — quase intocada; virar um sheet compacto disparado da Conclusão.
-- **Conclusão** — CTA primário deveria ser "Salvar", não "Compartilhar"; e o
-  usuário anônimo não vê o pedido de avaliação nem um caminho de salvar.
+- **Descoberta social** — `/buscar` virou "Descobrir": busca por nome enquanto
+  digita (ilike em `profiles.display_name` — select já público), "Cozinheiros em
+  alta" (agrega `saved_dishes` recentes client-side, sem RPC), busca por e-mail
+  como opção secundária. Comunidade "Seguindo" vazio → botão "Descobrir cozinheiros".
+- **`/social`** — deletado. Virou `components/ShareSheet.tsx`: bottom sheet
+  disparado da Conclusão, gera um card 4:5 no canvas (foto + nome + marca) e usa
+  `navigator.share`. Rota `/social` redireciona pra `/tipo-prato`.
+- **Conclusão** — reescrita. CTA primário "Salvar em Minhas Receitas"
+  (`utils/saveDish.ts`), "Compartilhar" secundário. Avaliação de dificuldade
+  agora vale pra anônimo: `utils/ratingStore.ts` guarda em localStorage e
+  `flushPendingRatings` (AuthContext) sincroniza no login. Foto compacta.
+
+## O que ainda está aberto
+
 - **Categorias** — 22 acordeões + duas buscas; abrir 3-4 por padrão, uma busca só,
   atalho "tenho o básico".
 - **Tempo** — slider + presets duplicados; deixar só os 4 presets como chips.
+- Onboarding pós-cadastro (seed de follows), notificações in-app, @usernames.
 
 Menores: NotFound com copy de "em construção"; erros de auth crus em inglês;
 posts sem foto no feed viram caixa vazia 1:1; vazios verticais em Login/Tempo/

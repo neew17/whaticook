@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { flushPendingRatings } from '../utils/ratingStore';
+import { translateAuthError } from '../utils/authErrors';
 
 export interface Profile {
   id: string;
@@ -72,12 +73,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: { data: { display_name: displayName, favorite_dish: favoriteDish || null } },
     });
-    return error?.message ?? null;
+    return translateAuthError(error?.message);
   };
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return error?.message ?? null;
+    return translateAuthError(error?.message);
   };
 
   const signInWithGoogle = async () => {
@@ -85,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/tipo-prato` },
     });
-    return error?.message ?? null;
+    return translateAuthError(error?.message);
   };
 
   const signOut = async () => {
@@ -96,13 +97,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/redefinir-senha`,
     });
-    return error?.message ?? null;
+    return translateAuthError(error?.message);
   };
 
   const updatePassword = async (newPassword: string) => {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (!error) setPasswordRecovery(false);
-    return error?.message ?? null;
+    return translateAuthError(error?.message);
   };
 
   return (

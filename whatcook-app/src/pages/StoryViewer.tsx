@@ -162,7 +162,7 @@ export default function StoryViewer() {
         <span className="cooker-row-avatar">
           {author?.avatar_url ? <img src={author.avatar_url} alt="" /> : (author?.display_name?.[0]?.toUpperCase() ?? '?')}
         </span>
-        <b>{author?.display_name ?? 'Cooker'}</b>
+        <b>{author?.display_name ?? 'Cozinheiro'}</b>
         <span className="story-viewer-time">{timeAgoLabel(current!.created_at)}</span>
         <span className="story-viewer-close" onClick={() => navigate(-1)}>
           ✕
@@ -202,7 +202,7 @@ export default function StoryViewer() {
                     {v.avatar_url ? <img src={v.avatar_url} alt="" /> : (v.display_name?.[0]?.toUpperCase() ?? '?')}
                   </span>
                   <div>
-                    <b>{v.display_name ?? 'Cooker'}</b>
+                    <b>{v.display_name ?? 'Cozinheiro'}</b>
                   </div>
                 </div>
               ))

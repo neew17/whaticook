@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { getBlockedByMeIds, getWhoBlockedMeIds } from '../utils/blocks';
 import { RECIPE_IMAGES } from '../data/recipe-images';
+import { RECIPES } from '../data/recipes';
 
 interface FeedDish {
   id: string;
@@ -94,7 +95,7 @@ export default function Comunidade() {
         const p = profileById.get(d.user_id);
         return {
           ...d,
-          authorName: p?.display_name ?? 'Cooker',
+          authorName: p?.display_name ?? 'Cozinheiro',
           authorAvatar: p?.avatar_url ?? null,
           likeCount: likeCountByDish.get(d.id) ?? 0,
           likedByMe: likedByMe.has(d.id),
@@ -226,7 +227,14 @@ export default function Comunidade() {
         </div>
       </div>
 
-      {tab === 'todos' && <StoryBar />}
+      {tab === 'todos' &&
+        (user ? (
+          <StoryBar />
+        ) : (
+          <button type="button" className="explore-stories-link" onClick={() => navigate('/stories')}>
+            📸 Ver os stories da comunidade
+          </button>
+        ))}
 
       {dishes === null ? (
         <div className="state-block">
@@ -238,37 +246,52 @@ export default function Comunidade() {
         <div className="feed-list">
           {dishes.map((d) => {
             const img = d.photo_url ?? RECIPE_IMAGES[d.recipe_id]?.url ?? null;
-            return (
-              <article key={d.id} className="feed-card">
-                <button
-                  type="button"
-                  className="feed-card-author"
-                  onClick={() => navigate(`/cooker/${d.user_id}`)}
-                >
-                  <span className="feed-card-avatar">
-                    {d.authorAvatar ? <img src={d.authorAvatar} alt="" /> : d.authorName[0]?.toUpperCase() ?? '?'}
-                  </span>
-                  <span className="feed-card-name">{d.authorName}</span>
-                </button>
+            const emoji = RECIPES.find((r) => r.id === d.recipe_id)?.emoji ?? '🍽️';
+            const author = (
+              <button type="button" className="feed-card-author" onClick={() => navigate(`/cooker/${d.user_id}`)}>
+                <span className="feed-card-avatar">
+                  {d.authorAvatar ? <img src={d.authorAvatar} alt="" /> : (d.authorName[0]?.toUpperCase() ?? '?')}
+                </span>
+                <span className="feed-card-name">{d.authorName}</span>
+              </button>
+            );
+            const like = (
+              <button
+                type="button"
+                className={`feed-like-btn${d.likedByMe ? ' liked' : ''}`}
+                onClick={() => toggleLike(d)}
+              >
+                <HeartIcon color={d.likedByMe ? 'var(--primary)' : 'currentColor'} size={18} />
+                {d.likeCount > 0 && <span>{d.likeCount}</span>}
+              </button>
+            );
 
-                <button type="button" className="feed-card-photo" onClick={() => navigate(`/publicacao/${d.id}`)}>
-                  {img ? <img src={img} alt={d.title} /> : <span className="feed-card-photo-fallback">🍽️</span>}
-                </button>
-
-                <div className="feed-card-footer">
+            if (!img) {
+              return (
+                <article key={d.id} className="feed-card feed-card--compact">
+                  {author}
                   <button
                     type="button"
-                    className={`feed-like-btn${d.likedByMe ? ' liked' : ''}`}
-                    onClick={() => toggleLike(d)}
-                  >
-                    <HeartIcon color={d.likedByMe ? 'var(--primary)' : 'currentColor'} size={18} />
-                    {d.likeCount > 0 && <span>{d.likeCount}</span>}
-                  </button>
-                  <button
-                    type="button"
-                    className="feed-card-title"
+                    className="feed-card-compact-body"
                     onClick={() => navigate(`/publicacao/${d.id}`)}
                   >
+                    <span className="feed-card-compact-emoji">{emoji}</span>
+                    <span className="feed-card-compact-title">{d.title}</span>
+                  </button>
+                  <div className="feed-card-footer">{like}</div>
+                </article>
+              );
+            }
+
+            return (
+              <article key={d.id} className="feed-card">
+                {author}
+                <button type="button" className="feed-card-photo" onClick={() => navigate(`/publicacao/${d.id}`)}>
+                  <img src={img} alt={d.title} />
+                </button>
+                <div className="feed-card-footer">
+                  {like}
+                  <button type="button" className="feed-card-title" onClick={() => navigate(`/publicacao/${d.id}`)}>
                     {d.title}
                   </button>
                 </div>

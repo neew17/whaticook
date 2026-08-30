@@ -6,14 +6,14 @@ export default function NotFound() {
 
   return (
     <div className="screen">
-      <TopBar title="Página não encontrada" onBack={() => navigate('/')} />
+      <TopBar title="Página não encontrada" onBack={() => navigate('/tipo-prato')} hideAccountIcon />
 
-      <div className="state-block">
-        <p style={{ fontSize: 40 }}>🍽️</p>
-        <p>Estamos em preparação para uma nova invenção, agradecemos a compreensão.</p>
-        <div className="fab" style={{ marginTop: 12 }} onClick={() => navigate('/')}>
-          Voltar para o início
-        </div>
+      <div className="state-block" style={{ flex: 1 }}>
+        <p style={{ fontSize: 40 }}>🔍</p>
+        <p>Não encontramos essa página. Ela pode ter mudado de lugar ou o link está quebrado.</p>
+        <button type="button" className="fab" style={{ marginTop: 12 }} onClick={() => navigate('/tipo-prato')}>
+          Ir para o início
+        </button>
       </div>
     </div>
   );

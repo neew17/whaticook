@@ -61,7 +61,7 @@ export default function Login() {
     <div className="screen">
       <TopBar title={mode === 'signup' ? 'Criar conta' : 'Entrar'} onBack={() => navigate(-1)} hideAccountIcon />
 
-      <div style={{ padding: '0 20px 20px' }}>
+      <div className="auth-body">
         {intent && <p className="auth-intent">{AUTH_INTENT_COPY[intent]}</p>}
 
         {mode === 'signup' && (
@@ -106,9 +106,8 @@ export default function Login() {
         )}
 
         {error && <p className="auth-error">{error}</p>}
-      </div>
 
-      <div className="fab-container">
+        <div className="auth-actions">
         <div className="fab" onClick={loading ? undefined : handleSubmit}>
           {loading ? 'Aguarde...' : mode === 'signup' ? 'Criar conta' : 'Entrar'}
         </div>
@@ -129,6 +128,7 @@ export default function Login() {
         <p className="auth-switch" style={{ color: 'var(--text-muted)' }} onClick={() => navigate(-1)}>
           Agora não
         </p>
+        </div>
       </div>
     </div>
   );

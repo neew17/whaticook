@@ -95,7 +95,7 @@ export default function Resultados() {
   if (isSearching) {
     return (
       <div className="screen">
-        <TopBar title="Receitas" onBack={() => navigate('/categorias')} rightSlot={backToPicker} />
+        <TopBar title="Receitas" onBack={() => navigate("/categorias")} rightSlot={backToPicker} hideAccountIcon />
         <div className="skeleton-list" aria-label="Carregando receitas">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="skeleton-card" />
@@ -108,7 +108,7 @@ export default function Resultados() {
   if (searchError) {
     return (
       <div className="screen">
-        <TopBar title="Receitas" onBack={() => navigate('/categorias')} rightSlot={backToPicker} />
+        <TopBar title="Receitas" onBack={() => navigate("/categorias")} rightSlot={backToPicker} hideAccountIcon />
         <div className="state-block">
           <p>{searchError}</p>
           <div className="fab" style={{ marginTop: 12 }} onClick={() => navigate('/categorias')}>
@@ -122,7 +122,7 @@ export default function Resultados() {
   if (!results || results.length === 0) {
     return (
       <div className="screen">
-        <TopBar title="Receitas" onBack={() => navigate('/categorias')} rightSlot={backToPicker} />
+        <TopBar title="Receitas" onBack={() => navigate("/categorias")} rightSlot={backToPicker} hideAccountIcon />
         <div className="state-block">
           <p>Nenhuma receita encontrada com esses ingredientes e tempo. Tente ajustar as escolhas.</p>
           <div className="fab" style={{ marginTop: 12 }} onClick={() => navigate('/categorias')}>
@@ -138,6 +138,7 @@ export default function Resultados() {
       <TopBar
         title={`${filtered.length} receita${filtered.length === 1 ? '' : 's'}`}
         onBack={() => navigate('/categorias')}
+        hideAccountIcon
         rightSlot={
           !viaSearch ? (
             <div

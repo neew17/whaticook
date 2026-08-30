@@ -21,10 +21,6 @@ export default function StoriesExplore() {
 
   useEffect(() => {
     if (loading) return;
-    if (!user) {
-      navigate('/entrar', { replace: true });
-      return;
-    }
 
     (async () => {
       const { data: storyRows } = await supabase
@@ -33,20 +29,21 @@ export default function StoriesExplore() {
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
         .limit(500);
-      const [blockedByMe, blockedMe] = await Promise.all([getBlockedByMeIds(user.id), getWhoBlockedMeIds()]);
-      const rows = ((storyRows as { id: string; user_id: string; created_at: string }[]) ?? []).filter(
-        (r) => !blockedByMe.has(r.user_id) && !blockedMe.has(r.user_id)
-      );
+      let rows = (storyRows as { id: string; user_id: string; created_at: string }[]) ?? [];
 
-      const storyIds = rows.map((r) => r.id);
       const seenIds = new Set<string>();
-      if (storyIds.length > 0) {
-        const { data: viewRows } = await supabase
-          .from('story_views')
-          .select('story_id')
-          .eq('user_id', user.id)
-          .in('story_id', storyIds);
-        (viewRows ?? []).forEach((v: { story_id: string }) => seenIds.add(v.story_id));
+      if (user) {
+        const [blockedByMe, blockedMe] = await Promise.all([getBlockedByMeIds(user.id), getWhoBlockedMeIds()]);
+        rows = rows.filter((r) => !blockedByMe.has(r.user_id) && !blockedMe.has(r.user_id));
+        const storyIds = rows.map((r) => r.id);
+        if (storyIds.length > 0) {
+          const { data: viewRows } = await supabase
+            .from('story_views')
+            .select('story_id')
+            .eq('user_id', user.id)
+            .in('story_id', storyIds);
+          (viewRows ?? []).forEach((v: { story_id: string }) => seenIds.add(v.story_id));
+        }
       }
 
       const userIds = [...new Set(rows.map((r) => r.user_id))];
@@ -69,7 +66,7 @@ export default function StoriesExplore() {
         const p = profileById.get(uid);
         return {
           userId: uid,
-          displayName: p?.display_name ?? 'Cooker',
+          displayName: p?.display_name ?? 'Cozinheiro',
           avatarUrl: p?.avatar_url ?? null,
           storyCount: entry.ids.length,
           hasUnseen: entry.ids.some((id) => !seenIds.has(id)),
@@ -84,7 +81,7 @@ export default function StoriesExplore() {
 
       setGroups(built);
     })();
-  }, [loading, user, navigate]);
+  }, [loading, user]);
 
   const openSequence = (startUserId: string) => {
     if (!groups) return;
@@ -118,7 +115,7 @@ export default function StoriesExplore() {
                   <b>{g.displayName}</b>
                 </span>
                 <span>
-                  {g.storyCount} story{g.storyCount > 1 ? 's' : ''}
+                  {g.storyCount} {g.storyCount === 1 ? 'story' : 'stories'}
                 </span>
               </div>
             </div>

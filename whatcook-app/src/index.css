@@ -122,12 +122,6 @@ input[type=range] {
   padding: 0 20px 24px;
 }
 
-.tipo-prato-subtitle {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
 .tipo-prato-stack {
   display: flex;
   flex-direction: column;
@@ -329,9 +323,11 @@ input[type=range] {
 }
 
 .tempo-list {
-  padding: 0 20px 20px;
+  flex: 1;
+  padding: 0 20px 40px;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 14px;
 }
 
@@ -1367,93 +1363,6 @@ input[type=range] {
   line-height: 1.4;
 }
 
-/* Social */
-.social-header-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 24px;
-  background: var(--primary-light);
-  border: 2px solid var(--secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  margin: 0 auto 6px;
-}
-
-.social-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-
-.social-btn {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: var(--bg-gray);
-  border: 1.5px solid var(--border-color);
-  border-radius: 20px;
-  padding: 16px;
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-}
-
-.social-icon {
-  font-size: 20px;
-  width: 22px;
-  flex-shrink: 0;
-  text-align: center;
-}
-
-.social-btn-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
-}
-
-.social-btn-text span:first-child {
-  font-family: 'Unbounded', 'Geist', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.social-btn-text span:last-child {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.social-btn-chevron {
-  color: var(--text-muted);
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.instagram-cta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: var(--primary-light);
-  border: 2px solid var(--primary);
-  border-radius: 999px;
-  padding: 18px;
-  width: 100%;
-  cursor: pointer;
-  font-family: 'Unbounded', 'Geist', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  color: #fff;
-}
-
 /* Cooking (full screen step) */
 .cooking-screen {
   background: var(--bg-page);
@@ -1522,60 +1431,12 @@ input[type=range] {
 }
 
 .cooking-body {
+  flex: 1;
   padding: 20px;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 20px;
-}
-
-.step-progress-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.step-progress-number {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.step-progress-number span:first-child {
-  font-family: 'Unbounded', 'Geist', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: var(--secondary);
-}
-
-.step-progress-number span:last-child {
-  font-family: 'Unbounded', 'Geist', sans-serif;
-  font-size: 56px;
-  font-weight: 800;
-  color: var(--primary);
-  line-height: 1;
-}
-
-.progress-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg-gray);
-  border: 1.5px solid var(--border-color);
-  border-radius: 999px;
-  padding: 8px 12px;
-  font-size: 12px;
-}
-
-.progress-pill span:first-child {
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-.progress-pill span:last-child {
-  font-family: 'Unbounded', 'Geist', sans-serif;
-  color: var(--secondary);
-  font-weight: 700;
 }
 
 .progress-track {
@@ -1656,42 +1517,6 @@ input[type=range] {
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-
-.instruction-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.step-icon-box {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  border: 1.5px solid var(--primary);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-}
-
-.instruction-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.instruction-meta span:first-child {
-  font-family: 'Unbounded', 'Geist', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--secondary);
-}
-
-.instruction-meta span:last-child {
-  font-size: 12px;
-  color: var(--text-muted);
 }
 
 .cooking-body p.instruction-text {
@@ -1890,6 +1715,36 @@ input[type=range] {
   overflow: hidden;
 }
 
+/* Post sem foto — card compacto, não um quadrado 1:1 vazio */
+.feed-card--compact .feed-card-footer {
+  padding-top: 0;
+}
+
+.feed-card-compact-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 4px 14px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.feed-card-compact-emoji {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.feed-card-compact-title {
+  font-family: 'Unbounded', 'Geist', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.3;
+}
+
 .feed-load-more {
   width: 100%;
   background: var(--bg-gray);
@@ -1961,10 +1816,6 @@ input[type=range] {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.feed-card-photo-fallback {
-  font-size: 56px;
 }
 
 .feed-card-footer {
@@ -2545,60 +2396,23 @@ input[type=range] {
   border-bottom-right-radius: 6px;
 }
 
-/* Social save-to-profile */
-.dish-preview-card {
-  margin: 0 20px 16px;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-.dish-preview-card img {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  display: block;
-}
-
-.save-profile-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: var(--success);
-  color: #fff;
-  border-radius: 999px;
-  padding: 16px;
-  font-weight: 800;
-  font-size: 14px;
-  cursor: pointer;
-  margin: 0 20px 4px;
-  box-shadow: 0 8px 20px rgba(76, 175, 125, 0.35);
-}
-
-.save-profile-btn.saved {
-  background: var(--bg-gray);
-  color: var(--text-muted);
-  box-shadow: none;
-}
-
-.dish-save-footer {
-  padding: 14px;
-  text-align: center;
-  font-weight: 800;
-  font-size: 13px;
-  background: var(--success);
-  color: #fff;
-  cursor: pointer;
-}
-
-.dish-save-footer.saved {
-  background: var(--bg-gray);
-  color: var(--text-muted);
-  cursor: default;
-}
-
 /* Auth */
+.auth-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 20px 40px;
+}
+
+.auth-actions {
+  margin-top: 24px;
+}
+
+.auth-actions .auth-switch {
+  text-align: center;
+}
+
 .auth-intent {
   background: var(--primary-light);
   border: 1.5px solid var(--primary);
@@ -2646,8 +2460,8 @@ input[type=range] {
   background: var(--surface-2);
   border: 1.5px solid var(--border-color);
   border-radius: 14px;
-  padding: 14px 16px;
-  font-size: 14px;
+  padding: 13px 16px;
+  font-size: 16px;
   color: var(--text-main);
   outline: none;
 }
@@ -3421,7 +3235,13 @@ input[type=range] {
 }
 
 .explore-stories-link {
-  margin: -8px 20px 12px;
+  display: block;
+  width: calc(100% - 40px);
+  margin: -4px 20px 12px;
+  padding: 10px 0;
+  text-align: left;
+  background: none;
+  border: none;
   font-size: 12px;
   font-weight: 700;
   color: var(--secondary);
@@ -3814,24 +3634,15 @@ input[type=range] {
   margin-top: 4px;
 }
 
-.admin-recipe-actions .btn-ghost,
-.admin-recipe-actions .btn-finish {
-  padding: 12px;
-  font-size: 12px;
-}
-
-/* --- Unificação visual dos botões de ação -----------------------------------
-   Todos os "botões-pílula" do app compartilham forma, tipografia e tamanho.
-   As regras individuais acima só definem cor/borda/margem/flex. */
+/* --- Unificação visual dos botões-pílula ------------------------------------
+   Forma/tipografia/tamanho comuns; as regras individuais acima só definem
+   cor/borda/margem/flex. */
 .fab,
 .cta-fixed,
 .cta-secondary,
 .btn-next,
 .btn-finish,
-.btn-ghost,
-.save-profile-btn,
-.instagram-cta,
-.dish-save-footer {
+.btn-ghost {
   border-radius: 999px;
   padding: 17px 20px;
   text-align: center;
@@ -3839,10 +3650,6 @@ input[type=range] {
   font-weight: 700;
   font-size: 13px;
   line-height: 1;
-}
-
-.dish-save-footer {
-  border-radius: 0;
 }
 
 .admin-recipe-actions .btn-ghost,

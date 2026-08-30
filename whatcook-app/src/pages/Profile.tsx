@@ -202,7 +202,7 @@ export default function Profile() {
 
       <StoryBar />
       <div className="explore-stories-link" onClick={() => navigate('/stories')}>
-        🔎 Explorar stories de todos os cookers
+        🔎 Explorar stories de todos os cozinheiros
       </div>
 
       <div style={{ padding: '8px 20px 20px' }}>

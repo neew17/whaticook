@@ -120,7 +120,7 @@ export default function Categorias() {
 
   return (
     <div className="screen">
-      <TopBar title="O que tem aí?" onBack={() => navigate('/tempo')} />
+      <TopBar title="O que tem aí?" onBack={() => navigate("/tempo")} hideAccountIcon />
 
       <div className="search">
         <SearchIcon />

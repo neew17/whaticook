@@ -108,7 +108,7 @@ export default function CookerProfile() {
       await unblockUser(user.id, id);
       setBlockedByMe(false);
     } else {
-      if (!window.confirm(`Bloquear ${cooker?.display_name ?? 'esse cooker'}? Vocês deixam de ver o conteúdo um do outro.`)) {
+      if (!window.confirm(`Bloquear ${cooker?.display_name ?? 'esse cozinheiro'}? Vocês deixam de ver o conteúdo um do outro.`)) {
         setBlockBusy(false);
         return;
       }
@@ -134,7 +134,7 @@ export default function CookerProfile() {
       <div className="screen">
         <TopBar title="Perfil" onBack={() => navigate(-1)} />
         <div className="state-block">
-          <p>Esse cooker não foi encontrado.</p>
+          <p>Esse cozinheiro não foi encontrado.</p>
         </div>
       </div>
     );
@@ -154,7 +154,7 @@ export default function CookerProfile() {
   return (
     <div className="screen">
       <TopBar
-        title={cooker.display_name ?? 'Cooker'}
+        title={cooker.display_name ?? 'Cozinheiro'}
         onBack={() => navigate(-1)}
         rightSlot={
           <div className="icon-btn" onClick={blockBusy ? undefined : handleToggleBlock} role="button" aria-label="Bloquear cooker">
@@ -171,7 +171,7 @@ export default function CookerProfile() {
           >
             <div className="profile-avatar-wrap" style={{ cursor: 'pointer', margin: 0 }}>
               {cooker.avatar_url ? (
-                <img src={cooker.avatar_url} alt={cooker.display_name ?? 'Cooker'} />
+                <img src={cooker.avatar_url} alt={cooker.display_name ?? 'Cozinheiro'} />
               ) : (
                 <span>{cooker.display_name?.[0]?.toUpperCase() ?? '?'}</span>
               )}
@@ -180,7 +180,7 @@ export default function CookerProfile() {
         ) : (
           <div className="profile-avatar-wrap" style={{ cursor: 'default' }}>
             {cooker.avatar_url ? (
-              <img src={cooker.avatar_url} alt={cooker.display_name ?? 'Cooker'} />
+              <img src={cooker.avatar_url} alt={cooker.display_name ?? 'Cozinheiro'} />
             ) : (
               <span>{cooker.display_name?.[0]?.toUpperCase() ?? '?'}</span>
             )}
@@ -211,7 +211,7 @@ export default function CookerProfile() {
 
       {blockedByMe ? (
         <div className="state-block">
-          <p>Você bloqueou esse cooker. Toque em 🔓 para desbloquear e ver o conteúdo dele de novo.</p>
+          <p>Você bloqueou esse cozinheiro. Toque em 🔓 para desbloquear e ver o conteúdo dele de novo.</p>
         </div>
       ) : (
         <>
@@ -220,7 +220,7 @@ export default function CookerProfile() {
           </div>
           {dishes.length === 0 ? (
             <div className="state-block">
-              <p>Esse cooker ainda não postou nenhum prato.</p>
+              <p>Esse cozinheiro ainda não postou nenhum prato.</p>
             </div>
           ) : (
             <div className="profile-feed-grid" style={{ padding: '0 20px 20px' }}>

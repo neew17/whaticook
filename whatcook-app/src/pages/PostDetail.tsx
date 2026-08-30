@@ -230,7 +230,7 @@ export default function PostDetail() {
         {c.author?.avatar_url ? <img src={c.author.avatar_url} alt="" /> : (c.author?.display_name?.[0]?.toUpperCase() ?? '?')}
       </span>
       <div style={{ flex: 1 }}>
-        <b>{c.author?.display_name ?? 'Cooker'}</b>
+        <b>{c.author?.display_name ?? 'Cozinheiro'}</b>
         <p>{c.content}</p>
         <div className="comment-actions">
           <span
@@ -258,7 +258,7 @@ export default function PostDetail() {
             <input
               type="text"
               autoFocus
-              placeholder={`Responder ${c.author?.display_name ?? 'Cooker'}...`}
+              placeholder={`Responder ${c.author?.display_name ?? 'Cozinheiro'}...`}
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               onKeyDown={(e) => {
@@ -297,7 +297,7 @@ export default function PostDetail() {
         <span className="cooker-row-avatar">
           {author?.avatar_url ? <img src={author.avatar_url} alt="" /> : (author?.display_name?.[0]?.toUpperCase() ?? '?')}
         </span>
-        <b>{author?.display_name ?? 'Cooker'}</b>
+        <b>{author?.display_name ?? 'Cozinheiro'}</b>
       </div>
 
       <div className="post-detail-actions">

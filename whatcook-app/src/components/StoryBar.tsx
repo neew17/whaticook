@@ -65,7 +65,7 @@ export default function StoryBar() {
       const p = profileById.get(uid);
       return {
         userId: uid,
-        displayName: p?.display_name ?? 'Cooker',
+        displayName: p?.display_name ?? 'Cozinheiro',
         avatarUrl: p?.avatar_url ?? null,
         storyCount: entry.ids.length,
         hasUnseen: entry.ids.some((id) => !seenIds.has(id)),

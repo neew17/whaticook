@@ -26,7 +26,7 @@ export default function Tempo() {
 
   return (
     <div className="screen">
-      <TopBar title="Quanto tempo você tem?" onBack={() => navigate('/tipo-prato')} />
+      <TopBar title="Quanto tempo você tem?" onBack={() => navigate("/tipo-prato")} hideAccountIcon />
 
       <div className="tempo-list" style={{ paddingTop: 12 }}>
         {PRESETS.map((p) => {

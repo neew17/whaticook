@@ -126,3 +126,15 @@ npm run build   # tsc -b + vite build — usar ESTE, não só `tsc --noEmit`
 npm run lint     # oxlint — 3 warnings pré-existentes, 0 erros
 npm run dev      # :5173
 ```
+
+## Rodada 3 — funil + editor de story (commit 77a66b9)
+
+- **Tempo**: sem slider; 4 presets como cards, tocar navega direto.
+- **Categorias**: uma busca só; "+ Tenho o básico" (`AppState.selectIngredients`);
+  abre essenciais + 3 categorias úteis por padrão.
+- **TipoPrato**: barra de busca por nome de receita no topo (moveu de Categorias).
+- **Resultados**: grupo "Falta 2+" ordenado por nº de faltas.
+- **StoryEditor**: corrigido o bug de posicionamento de texto (agora há
+  `.story-editor-stage` com a proporção exata da foto); `100dvh`, safe-area,
+  composer sobe com o teclado (`visualViewport`), alvos 44px, input 16px,
+  dica quando vazio. `ShareSheet` ganhou "Postar no Story".

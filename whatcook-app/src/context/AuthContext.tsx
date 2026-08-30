@@ -7,6 +7,7 @@ import { translateAuthError } from '../utils/authErrors';
 export interface Profile {
   id: string;
   display_name: string | null;
+  username: string | null;
   avatar_url: string | null;
   favorite_dish: string | null;
   bio: string | null;
@@ -19,7 +20,13 @@ interface AuthState {
   profile: Profile | null;
   loading: boolean;
   passwordRecovery: boolean;
-  signUp: (email: string, password: string, displayName: string, favoriteDish: string) => Promise<string | null>;
+  signUp: (
+    email: string,
+    password: string,
+    displayName: string,
+    username: string,
+    favoriteDish: string
+  ) => Promise<string | null>;
   signIn: (email: string, password: string) => Promise<string | null>;
   signInWithGoogle: () => Promise<string | null>;
   signOut: () => Promise<void>;
@@ -67,11 +74,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) await fetchProfile(user.id);
   }, [user, fetchProfile]);
 
-  const signUp = async (email: string, password: string, displayName: string, favoriteDish: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    displayName: string,
+    username: string,
+    favoriteDish: string
+  ) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { display_name: displayName, favorite_dish: favoriteDish || null } },
+      options: {
+        data: {
+          display_name: displayName,
+          username: username.toLowerCase(),
+          favorite_dish: favoriteDish || null,
+        },
+      },
     });
     return translateAuthError(error?.message);
   };

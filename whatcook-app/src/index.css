@@ -2436,6 +2436,38 @@ input[type=range] {
   position: relative;
 }
 
+.auth-username-field {
+  position: relative;
+}
+.auth-username-field .auth-input {
+  padding-left: 28px;
+}
+.auth-username-at {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 16px;
+  pointer-events: none;
+}
+.auth-username-hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.profile-username {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-top: 2px;
+}
+.auth-username-hint.good {
+  color: var(--primary-dark, var(--primary));
+}
+.auth-username-hint.bad {
+  color: var(--primary-dark);
+}
+
 .auth-password-field .auth-input {
   padding-right: 76px;
 }

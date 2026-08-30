@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { GoogleGlyph } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { AUTH_INTENT_COPY, type AuthIntent } from '../utils/authIntent';
+import { isUsernameAvailable, sanitizeUsernameInput, validateUsername } from '../utils/username';
+
+type UsernameState = 'idle' | 'checking' | 'ok' | 'taken' | 'invalid';
 
 const GOOGLE_AUTH_ENABLED = import.meta.env.VITE_ENABLE_GOOGLE_AUTH === 'true';
 
@@ -14,6 +17,8 @@ export default function Login() {
   const { user, signUp, signIn, signInWithGoogle } = useAuth();
   const [mode, setMode] = useState<'signup' | 'signin'>('signup');
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [usernameState, setUsernameState] = useState<UsernameState>('idle');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -24,16 +29,58 @@ export default function Login() {
     if (user) navigate('/tipo-prato');
   }, [user, navigate]);
 
+  // Checa disponibilidade do username com debounce enquanto digita.
+  const usernameDebounce = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => {
+    if (mode !== 'signup') return;
+    clearTimeout(usernameDebounce.current);
+    const value = username.trim().toLowerCase();
+    if (!value) {
+      setUsernameState('idle');
+      return;
+    }
+    if (validateUsername(value)) {
+      setUsernameState('invalid');
+      return;
+    }
+    setUsernameState('checking');
+    let cancelled = false;
+    usernameDebounce.current = setTimeout(async () => {
+      const free = await isUsernameAvailable(value);
+      if (!cancelled) setUsernameState(free ? 'ok' : 'taken');
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(usernameDebounce.current);
+    };
+  }, [username, mode]);
+
   const handleSubmit = async () => {
     setError(null);
     if (!email.trim() || !password.trim() || (mode === 'signup' && !name.trim())) {
       setError('Preencha os campos obrigatórios.');
       return;
     }
-    setLoading(true);
+    if (mode === 'signup') {
+      const uErr = validateUsername(username);
+      if (uErr) {
+        setError(uErr);
+        return;
+      }
+      setLoading(true);
+      const free = await isUsernameAvailable(username);
+      if (!free) {
+        setLoading(false);
+        setUsernameState('taken');
+        setError('Esse nome de usuário já está em uso. Escolha outro.');
+        return;
+      }
+    } else {
+      setLoading(true);
+    }
     const errMsg =
       mode === 'signup'
-        ? await signUp(email.trim(), password, name.trim(), '')
+        ? await signUp(email.trim(), password, name.trim(), username.trim().toLowerCase(), '')
         : await signIn(email.trim(), password);
     setLoading(false);
     if (errMsg) {
@@ -45,6 +92,8 @@ export default function Login() {
     if (intent) navigate(-1);
     else navigate('/tipo-prato');
   };
+
+  const blockSubmit = mode === 'signup' && (usernameState === 'taken' || usernameState === 'invalid');
 
   const handleGoogle = async () => {
     setError(null);
@@ -73,6 +122,29 @@ export default function Login() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Seu nome"
             />
+
+            <label className="auth-label">Nome de usuário</label>
+            <div className="auth-username-field">
+              <span className="auth-username-at">@</span>
+              <input
+                className="auth-input"
+                value={username}
+                onChange={(e) => setUsername(sanitizeUsernameInput(e.target.value))}
+                placeholder="soninha92"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                maxLength={20}
+              />
+            </div>
+            {username.trim() !== '' && (
+              <p className={`auth-username-hint${usernameState === 'taken' || usernameState === 'invalid' ? ' bad' : usernameState === 'ok' ? ' good' : ''}`}>
+                {usernameState === 'checking' && 'Verificando...'}
+                {usernameState === 'ok' && '✓ Disponível'}
+                {usernameState === 'taken' && 'Já está em uso'}
+                {usernameState === 'invalid' && 'Só letras e números, de 3 a 20 caracteres'}
+              </p>
+            )}
           </>
         )}
 
@@ -108,7 +180,10 @@ export default function Login() {
         {error && <p className="auth-error">{error}</p>}
 
         <div className="auth-actions">
-        <div className="fab" onClick={loading ? undefined : handleSubmit}>
+        <div
+          className={`fab${loading || blockSubmit ? ' disabled' : ''}`}
+          onClick={loading || blockSubmit ? undefined : handleSubmit}
+        >
           {loading ? 'Aguarde...' : mode === 'signup' ? 'Criar conta' : 'Entrar'}
         </div>
         {GOOGLE_AUTH_ENABLED && (

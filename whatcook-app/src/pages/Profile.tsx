@@ -182,6 +182,7 @@ export default function Profile() {
           <span className="profile-avatar-edit">{uploadingAvatar ? '…' : '✏️'}</span>
         </div>
         <div className="profile-name">{profile?.display_name ?? 'Sem nome'}</div>
+        {profile?.username && <div className="profile-username">@{profile.username}</div>}
         {profile?.favorite_dish && (
           <div className="profile-favorite-dish">🍽️ Prato favorito: {profile.favorite_dish}</div>
         )}

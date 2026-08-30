@@ -175,10 +175,18 @@ export default function Comunidade() {
     if (tab === 'seguindo' && followsNobody) {
       return (
         <div className="state-block" style={{ flex: 1 }}>
-          <p style={{ fontSize: 40 }}>🍽️</p>
-          <p>Você ainda não segue ninguém. Veja a aba “Todos” e siga quem cozinha o que você curte.</p>
-          <button type="button" className="fab" style={{ marginTop: 12 }} onClick={() => setTab('todos')}>
-            Ver todos
+          <p style={{ fontSize: 40 }}>🧑‍🍳</p>
+          <p>Você ainda não segue ninguém. Encontre cozinheiros pra montar seu feed.</p>
+          <button type="button" className="fab" style={{ marginTop: 12 }} onClick={() => navigate('/buscar')}>
+            Descobrir cozinheiros
+          </button>
+          <button
+            type="button"
+            className="cta-secondary"
+            style={{ margin: '8px 0 0' }}
+            onClick={() => setTab('todos')}
+          >
+            Ou ver todos
           </button>
         </div>
       );

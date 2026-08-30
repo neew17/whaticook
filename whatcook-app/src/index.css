@@ -2940,8 +2940,8 @@ input[type=range] {
 }
 
 .cooker-row-avatar {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: var(--primary-light);
   color: var(--primary);
@@ -2952,6 +2952,79 @@ input[type=range] {
   font-size: 14px;
   flex-shrink: 0;
   overflow: hidden;
+}
+
+/* Descobrir cozinheiros */
+.cooker-section-label {
+  font-family: 'Unbounded', 'Geist', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 8px 20px 4px;
+}
+
+.cooker-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.cooker-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.cooker-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.cooker-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.cooker-row-text b {
+  font-family: 'Unbounded', 'Geist', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cooker-row-text span {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.cooker-email-toggle {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin-top: 8px;
+  color: var(--primary-dark);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
 }
 
 .cooker-row-avatar img {

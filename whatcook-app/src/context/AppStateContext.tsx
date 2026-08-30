@@ -133,6 +133,7 @@ interface AppState {
   setTimeMinutes: (minutes: number) => void;
   selected: SelectedMap;
   toggleIngredient: (option: IngredientOption) => void;
+  selectIngredients: (options: IngredientOption[]) => void;
   countFor: (category: CategoryKey) => number;
   totalSelectedCount: number;
   allSelectedEntries: IngredientOption[];
@@ -267,6 +268,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  /** Adiciona vários itens de uma vez (não faz toggle) — usado pelo "Tenho o básico". */
+  const selectIngredients = useCallback((options: IngredientOption[]) => {
+    setSelected((prev) => {
+      const next = { ...prev };
+      for (const o of options) next[o.query] = o;
+      return next;
+    });
+  }, []);
+
   const countFor = useCallback(
     (category: CategoryKey) => Object.values(selected).filter((o) => o.category === category).length,
     [selected]
@@ -363,6 +373,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setTimeMinutes,
     selected,
     toggleIngredient,
+    selectIngredients,
     countFor,
     totalSelectedCount,
     allSelectedEntries,

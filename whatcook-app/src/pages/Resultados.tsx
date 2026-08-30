@@ -70,6 +70,8 @@ export default function Resultados() {
       else if (n === 1) one.push(r);
       else far.push(r);
     }
+    // Dentro de "falta 2+", mostra primeiro as que estão mais perto (faltam menos).
+    far.sort((a, b) => a.missedIngredients.length - b.missedIngredients.length);
     return { now, one, far };
   }, [filtered]);
 

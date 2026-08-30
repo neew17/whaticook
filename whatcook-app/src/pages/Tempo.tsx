@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { useAppState } from '../context/AppStateContext';
@@ -14,50 +15,39 @@ const PRESETS = [
 export default function Tempo() {
   const navigate = useNavigate();
   const { timeMinutes, setTimeMinutes } = useAppState();
+  const [chosen, setChosen] = useState<number | null>(null);
+
+  const choose = (minutes: number) => {
+    if (chosen) return;
+    setChosen(minutes);
+    setTimeMinutes(minutes);
+    setTimeout(() => navigate('/categorias'), 240);
+  };
 
   return (
     <div className="screen">
-      <TopBar title="Quanto tempo?" onBack={() => navigate('/tipo-prato')} />
+      <TopBar title="Quanto tempo você tem?" onBack={() => navigate('/tipo-prato')} />
 
-      <div className="slider-container" style={{ paddingTop: 16, paddingBottom: 24 }}>
-        <div className="slider-labels">
-          <span>5m</span>
-          <span>30m</span>
-          <span>2h+</span>
-        </div>
-        <input
-          type="range"
-          min={5}
-          max={120}
-          value={timeMinutes}
-          onChange={(e) => setTimeMinutes(Number(e.target.value))}
-        />
-      </div>
-
-      <div className="tempo-list">
+      <div className="tempo-list" style={{ paddingTop: 12 }}>
         {PRESETS.map((p) => {
-          const selected = timeMinutes === p.minutes;
-          const isImageIcon = p.icon.includes('/');
+          const isImageIcon = typeof p.icon === 'string' && p.icon.includes('/');
+          const active = chosen === p.minutes || (chosen === null && timeMinutes === p.minutes);
           return (
             <button
               key={p.minutes}
               type="button"
-              className={`tempo-card${selected ? ' selected' : ''}`}
-              onClick={() => setTimeMinutes(p.minutes)}
+              className={`tempo-card${active ? ' selected' : ''}${chosen && chosen !== p.minutes ? ' dimmed' : ''}`}
+              onClick={() => choose(p.minutes)}
             >
               <div className="tempo-icon">{isImageIcon ? <img src={p.icon} alt="" /> : p.icon}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h4>{p.title}</h4>
                 <p>{p.desc}</p>
               </div>
-              <div className="tempo-radio">{selected && <div className="tempo-radio-dot" />}</div>
+              <span className="tempo-card-arrow">›</span>
             </button>
           );
         })}
-      </div>
-
-      <div className="cta-fixed" onClick={() => navigate('/categorias')}>
-        Continuar
       </div>
     </div>
   );

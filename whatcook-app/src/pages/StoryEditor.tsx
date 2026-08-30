@@ -61,11 +61,14 @@ export default function StoryEditor() {
   const state = location.state as StoryEditorState | null;
 
   const imgRef = useRef<HTMLImageElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ id: string; startX: number; startY: number; moved: boolean; overTrash: boolean } | null>(
     null
   );
 
+  const [aspect, setAspect] = useState<number | null>(null);
+  const [imgReady, setImgReady] = useState(false);
   const [layers, setLayers] = useState<TextLayer[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [composerMode, setComposerMode] = useState<'text' | 'location' | null>(null);
@@ -75,6 +78,7 @@ export default function StoryEditor() {
   const [overTrash, setOverTrash] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [kbInset, setKbInset] = useState(0);
 
   useEffect(() => {
     if (loading) return;
@@ -86,6 +90,19 @@ export default function StoryEditor() {
       navigate('/perfil', { replace: true });
     }
   }, [loading, user, state?.imageSrc, navigate]);
+
+  // Empurra o composer pra cima quando o teclado abre (iOS não redimensiona a viewport).
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => setKbInset(Math.max(0, window.innerHeight - vv.height - vv.offsetTop));
+    vv.addEventListener('resize', onResize);
+    vv.addEventListener('scroll', onResize);
+    return () => {
+      vv.removeEventListener('resize', onResize);
+      vv.removeEventListener('scroll', onResize);
+    };
+  }, []);
 
   if (loading || !user || !state?.imageSrc) {
     return <div className="story-editor" />;
@@ -140,12 +157,12 @@ export default function StoryEditor() {
 
   const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>, layer: TextLayer) => {
     const drag = dragRef.current;
-    if (!drag || drag.id !== layer.id || !imgRef.current) return;
+    if (!drag || drag.id !== layer.id || !stageRef.current) return;
     const dx = e.clientX - drag.startX;
     const dy = e.clientY - drag.startY;
     if (Math.abs(dx) > 4 || Math.abs(dy) > 4) drag.moved = true;
     if (!drag.moved) return;
-    const rect = imgRef.current.getBoundingClientRect();
+    const rect = stageRef.current.getBoundingClientRect();
     const xPct = Math.min(96, Math.max(4, layer.xPct + (dx / rect.width) * 100));
     const yPct = Math.min(96, Math.max(4, layer.yPct + (dy / rect.height) * 100));
     drag.startX = e.clientX;
@@ -154,7 +171,8 @@ export default function StoryEditor() {
 
     if (trashRef.current) {
       const t = trashRef.current.getBoundingClientRect();
-      const inside = e.clientX >= t.left - 14 && e.clientX <= t.right + 14 && e.clientY >= t.top - 14 && e.clientY <= t.bottom + 14;
+      const inside =
+        e.clientX >= t.left - 16 && e.clientX <= t.right + 16 && e.clientY >= t.top - 16 && e.clientY <= t.bottom + 16;
       drag.overTrash = inside;
       setOverTrash(inside);
     }
@@ -199,49 +217,75 @@ export default function StoryEditor() {
   return (
     <div className="story-editor">
       <div className="story-editor-canvas-wrap">
-        <img ref={imgRef} src={state.imageSrc} alt="" className="story-editor-photo" draggable={false} />
-        {layers.map((layer) => {
-          const textColor = layer.isLocation ? '#ffffff' : layer.color;
-          const isDark = !layer.isLocation && textColor.toLowerCase() === '#000000';
-          return (
-            <div
-              key={layer.id}
-              className={`story-editor-layer${layer.isLocation ? ' location' : ''}`}
-              style={{
-                left: `${layer.xPct}%`,
-                top: `${layer.yPct}%`,
-                color: textColor,
-                textShadow: layer.isLocation
-                  ? undefined
-                  : isDark
-                    ? '0 1px 6px rgba(255,255,255,0.75), 0 0 2px rgba(255,255,255,0.9)'
-                    : '0 1px 6px rgba(0,0,0,0.7), 0 0 2px rgba(0,0,0,0.9)',
-              }}
-              onPointerDown={(e) => handlePointerDown(e, layer)}
-              onPointerMove={(e) => handlePointerMove(e, layer)}
-              onPointerUp={() => handlePointerUp(layer)}
-            >
-              {layer.isLocation ? `📍 ${layer.text}` : layer.text}
-            </div>
-          );
-        })}
+        <div
+          ref={stageRef}
+          className="story-editor-stage"
+          style={aspect ? { aspectRatio: String(aspect) } : undefined}
+        >
+          <img
+            ref={imgRef}
+            src={state.imageSrc}
+            alt=""
+            className="story-editor-photo"
+            draggable={false}
+            onLoad={(e) => {
+              const el = e.currentTarget;
+              setAspect(el.naturalWidth / el.naturalHeight);
+              setImgReady(true);
+            }}
+          />
+          {layers.map((layer) => {
+            const textColor = layer.isLocation ? '#ffffff' : layer.color;
+            const isDark = !layer.isLocation && textColor.toLowerCase() === '#000000';
+            return (
+              <div
+                key={layer.id}
+                className={`story-editor-layer${layer.isLocation ? ' location' : ''}${draggingId === layer.id ? ' dragging' : ''}`}
+                style={{
+                  left: `${layer.xPct}%`,
+                  top: `${layer.yPct}%`,
+                  color: textColor,
+                  textShadow: layer.isLocation
+                    ? undefined
+                    : isDark
+                      ? '0 1px 6px rgba(255,255,255,0.75), 0 0 2px rgba(255,255,255,0.9)'
+                      : '0 1px 6px rgba(0,0,0,0.7), 0 0 2px rgba(0,0,0,0.9)',
+                }}
+                onPointerDown={(e) => handlePointerDown(e, layer)}
+                onPointerMove={(e) => handlePointerMove(e, layer)}
+                onPointerUp={() => handlePointerUp(layer)}
+              >
+                {layer.isLocation ? `📍 ${layer.text}` : layer.text}
+              </div>
+            );
+          })}
+        </div>
+
+        {imgReady && layers.length === 0 && !composerMode && (
+          <p className="story-editor-hint">Toque em Aa para adicionar um texto</p>
+        )}
       </div>
 
       <div className="story-editor-header">
-        <span className="story-viewer-close" onClick={handleClose}>
+        <button type="button" className="story-editor-icon-btn" onClick={handleClose} aria-label="Fechar">
           ✕
-        </span>
+        </button>
         <div className="story-editor-tools">
-          <span className="story-editor-tool-btn" onClick={() => openComposer('text')}>
+          <button type="button" className="story-editor-icon-btn" onClick={() => openComposer('text')} aria-label="Adicionar texto">
             Aa
-          </span>
-          <span className="story-editor-tool-btn" onClick={() => openComposer('location')}>
+          </button>
+          <button type="button" className="story-editor-icon-btn" onClick={() => openComposer('location')} aria-label="Adicionar localização">
             📍
-          </span>
+          </button>
         </div>
-        <div className="story-editor-publish-btn" onClick={publishing ? undefined : handlePublish}>
+        <button
+          type="button"
+          className="story-editor-publish-btn"
+          onClick={publishing ? undefined : handlePublish}
+          disabled={publishing}
+        >
           {publishing ? 'Enviando...' : 'Publicar'}
-        </div>
+        </button>
       </div>
 
       {draggingId && (
@@ -250,22 +294,20 @@ export default function StoryEditor() {
         </div>
       )}
 
-      {error && (
-        <p className="auth-error" style={{ position: 'absolute', bottom: 70, left: 16, right: 16, zIndex: 4 }}>
-          {error}
-        </p>
-      )}
+      {error && <p className="story-editor-error">{error}</p>}
 
       {composerMode && (
-        <div className="story-editor-composer">
+        <div className="story-editor-composer" style={{ bottom: kbInset }}>
           {composerMode === 'text' && (
             <div className="story-editor-color-row">
               {TEXT_COLORS.map((c) => (
-                <span
+                <button
                   key={c}
+                  type="button"
                   className={`story-editor-color-swatch${composerColor === c ? ' selected' : ''}`}
                   style={{ background: c }}
                   onClick={() => setComposerColor(c)}
+                  aria-label={`Cor ${c}`}
                 />
               ))}
             </div>
@@ -282,13 +324,13 @@ export default function StoryEditor() {
               }}
             />
             {selectedId && (
-              <span className="comment-send-btn" style={{ color: 'var(--primary)' }} onClick={deleteSelected}>
+              <button type="button" className="story-editor-composer-action danger" onClick={deleteSelected}>
                 Excluir
-              </span>
+              </button>
             )}
-            <span className="comment-send-btn" onClick={confirmComposer}>
+            <button type="button" className="story-editor-composer-action" onClick={confirmComposer}>
               OK
-            </span>
+            </button>
           </div>
         </div>
       )}

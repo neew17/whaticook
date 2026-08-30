@@ -328,21 +328,6 @@ input[type=range] {
   line-height: 1.4;
 }
 
-/* Slider */
-.slider-container {
-  padding: 8px 20px 16px;
-}
-
-.slider-labels {
-  display: flex;
-  justify-content: space-between;
-  font-family: 'Unbounded', 'Geist', sans-serif;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-
 .tempo-list {
   padding: 0 20px 20px;
   display: flex;
@@ -357,21 +342,30 @@ input[type=range] {
   background: var(--bg-gray);
   border: 2px solid var(--border-color);
   border-radius: 20px;
-  padding: 18px;
+  padding: 20px 18px;
   cursor: pointer;
   text-align: left;
   width: 100%;
+  transition: opacity 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
 }
 
 .tempo-card.selected {
   background: var(--primary-light);
-  border: 2px solid var(--primary);
+  border-color: var(--primary);
+}
+
+.tempo-card.dimmed {
+  opacity: 0.35;
+}
+
+.tempo-card:not(.dimmed):active {
+  transform: scale(0.98);
 }
 
 .tempo-icon {
-  font-size: 22px;
-  width: 22px;
-  height: 22px;
+  font-size: 24px;
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -386,7 +380,7 @@ input[type=range] {
 
 .tempo-card h4 {
   font-family: 'Unbounded', 'Geist', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-main);
 }
@@ -394,29 +388,18 @@ input[type=range] {
 .tempo-card p {
   font-size: 12px;
   color: var(--text-muted);
+  margin-top: 2px;
 }
 
-.tempo-radio {
-  width: 20px;
-  height: 20px;
+.tempo-card-arrow {
   flex-shrink: 0;
-  border-radius: 10px;
-  border: 2px solid var(--border-color);
-  background: var(--bg-page);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-muted);
 }
 
-.tempo-card.selected .tempo-radio {
-  border-color: var(--secondary);
-}
-
-.tempo-radio-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 5px;
-  background: var(--secondary);
+.tempo-card.selected .tempo-card-arrow {
+  color: var(--primary);
 }
 
 .cta-fixed {
@@ -741,6 +724,38 @@ input[type=range] {
 }
 
 /* Ingredientes — seções em acordeão (tela única de categorias) */
+.cat-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 20px 10px;
+}
+
+.cat-toolbar-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.cat-basics-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--primary-light);
+  border: 1.5px solid var(--primary);
+  color: #fff;
+  font-family: 'Unbounded', 'Geist', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cat-basics-btn.on {
+  background: var(--bg-gray);
+  border-color: var(--border-color);
+  color: var(--text-muted);
+}
+
 .ing-sections {
   display: flex;
   flex-direction: column;
@@ -3458,40 +3473,75 @@ input[type=range] {
 .story-editor {
   position: relative;
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   background: #000;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  touch-action: none;
+  user-select: none;
 }
 
 .story-editor-canvas-wrap {
   position: relative;
   flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 8px;
+  overflow: hidden;
+}
+
+/* Caixa com a proporção exata da foto — os textos são posicionados AQUI,
+   então nunca caem na tarja preta e o flatten bate com o que se vê. */
+.story-editor-stage {
+  position: relative;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 9 / 16;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 .story-editor-photo {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  user-select: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.story-editor-hint {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 8px 14px;
+  border-radius: 999px;
+  pointer-events: none;
 }
 
 .story-editor-layer {
   position: absolute;
   transform: translate(-50%, -50%);
   font-weight: 800;
-  font-size: 20px;
+  font-size: 22px;
   padding: 4px 10px;
   cursor: grab;
   touch-action: none;
   white-space: nowrap;
-  max-width: 80vw;
+  max-width: 88%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.story-editor-layer.dragging {
+  opacity: 0.85;
 }
 
 .story-editor-layer.location {
@@ -3510,51 +3560,58 @@ input[type=range] {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 12px 24px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent);
 }
 
 .story-editor-tools {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   margin-left: auto;
 }
 
-.story-editor-tool-btn {
-  width: 36px;
-  height: 36px;
+.story-editor-icon-btn {
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .story-editor-publish-btn {
-  padding: 8px 18px;
+  padding: 12px 20px;
   font-size: 13px;
   font-weight: 700;
   font-family: 'Unbounded', 'Geist', sans-serif;
   background: var(--primary);
+  border: none;
   color: #fff;
   border-radius: 999px;
   cursor: pointer;
+}
+
+.story-editor-publish-btn:disabled {
+  opacity: 0.6;
 }
 
 .story-editor-composer {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
-  z-index: 4;
+  z-index: 6;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.85);
+  gap: 12px;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: rgba(0, 0, 0, 0.9);
 }
 
 .story-editor-composer-row {
@@ -3565,53 +3622,89 @@ input[type=range] {
 
 .story-editor-composer input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.12);
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.14);
   border: none;
   border-radius: 20px;
-  padding: 10px 16px;
-  font-size: 13px;
+  padding: 12px 16px;
+  font-size: 16px;
   color: #fff;
   outline: none;
 }
 
+.story-editor-composer input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.story-editor-composer-action {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--secondary);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 6px;
+}
+
+.story-editor-composer-action.danger {
+  color: var(--primary-dark);
+}
+
 .story-editor-color-row {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   padding: 0 4px;
 }
 
 .story-editor-color-swatch {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 0;
 }
 
 .story-editor-color-swatch.selected {
   border-color: var(--secondary);
+  transform: scale(1.12);
 }
 
 .story-editor-trash {
   position: absolute;
-  bottom: 90px;
+  bottom: calc(90px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 5;
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 24px;
   transition: transform 0.15s, background 0.15s;
 }
 
 .story-editor-trash.active {
   background: var(--primary);
-  transform: translateX(-50%) scale(1.15);
+  transform: translateX(-50%) scale(1.2);
+}
+
+.story-editor-error {
+  position: absolute;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  left: 16px;
+  right: 16px;
+  z-index: 5;
+  background: rgba(0, 0, 0, 0.75);
+  color: var(--primary-dark);
+  font-size: 12px;
+  text-align: center;
+  padding: 10px 14px;
+  border-radius: 12px;
 }
 
 .saved-dish-item {

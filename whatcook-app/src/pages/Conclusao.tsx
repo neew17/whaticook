@@ -262,6 +262,11 @@ export default function Conclusao() {
           emoji={recipe.emoji}
           imageSrc={dishPhoto ?? recipeImg}
           onClose={() => setShareOpen(false)}
+          onStory={
+            user && dishPhoto
+              ? () => navigate('/story-editor', { state: { imageSrc: dishPhoto, sourceDishId: recipe.id } })
+              : undefined
+          }
         />
       )}
     </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { CheckIcon, SearchIcon } from '../components/icons';
@@ -30,36 +30,15 @@ export default function Categorias() {
     allSelectedEntries,
     selected,
     toggleIngredient,
-    searchByName,
+    selectIngredients,
     tipoPrato,
   } = useAppState();
-  const [nameQuery, setNameQuery] = useState('');
   const [ingredientQuery, setIngredientQuery] = useState('');
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['essenciais']));
-
-  const toggleSection = (key: string) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-
-  const handleSearch = async () => {
-    await runSearch();
-    navigate('/resultados');
-  };
-
-  const handleNameSearch = () => {
-    if (!nameQuery.trim()) return;
-    searchByName(nameQuery);
-    navigate('/resultados');
-  };
+  const didAutoExpand = useRef(false);
 
   const isRelevant = (o: IngredientOption) => isQueryRelevantForTipo(o.query, tipoPrato);
 
-  // Seções montadas a partir da taxonomia, filtrando por relevância doce/salgado e
-  // ocultando categorias que ficariam vazias.
   const sections = useMemo<Section[]>(() => {
     const essenciais = ESSENTIAL_INGREDIENTS.filter(isRelevant);
     const result: Section[] = [];
@@ -78,26 +57,51 @@ export default function Categorias() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tipoPrato]);
 
+  const essentialItems = useMemo(() => ESSENTIAL_INGREDIENTS.filter(isRelevant), [tipoPrato]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Abre "essenciais" + as 3 categorias mais úteis que existirem (em vez de tudo fechado).
+  useEffect(() => {
+    if (didAutoExpand.current || sections.length === 0) return;
+    didAutoExpand.current = true;
+    const priority = ['hortalicas', 'carnes', 'aves', 'laticinios-ovos', 'queijos', 'frutas', 'farinhas-fermentos'];
+    const present = new Set(sections.map((s) => s.key));
+    const pick = priority.filter((k) => present.has(k)).slice(0, 3);
+    setExpanded(new Set(['essenciais', ...pick, ...(pick.length < 3 ? sections.slice(1, 4).map((s) => s.key) : [])]));
+  }, [sections]);
+
+  const toggleSection = (key: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  const handleSearch = async () => {
+    await runSearch();
+    navigate('/resultados');
+  };
+
+  const haveBasics = essentialItems.length > 0 && essentialItems.every((i) => selected[i.query]);
+
   const isIngredientSearching = ingredientQuery.trim().length > 0;
 
   const ingredientSearchResults = useMemo(() => {
     if (!isIngredientSearching) return [];
     const q = normalize(ingredientQuery.trim());
     const pool = [...INGREDIENTS, ...EQUIPAMENTOS].filter(isRelevant);
-    const matches = pool.filter((o) => normalize(o.label).includes(q));
-    return matches.sort((a, b) => {
-      const aSel = Boolean(selected[a.query]);
-      const bSel = Boolean(selected[b.query]);
-      return aSel === bSel ? 0 : aSel ? -1 : 1;
-    });
+    return pool
+      .filter((o) => normalize(o.label).includes(q))
+      .sort((a, b) => Number(Boolean(selected[b.query])) - Number(Boolean(selected[a.query])));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isIngredientSearching, ingredientQuery, selected, tipoPrato]);
 
   const renderCard = (option: IngredientOption) => {
     const isSelected = Boolean(selected[option.query]);
     return (
-      <div
+      <button
         key={option.query}
+        type="button"
         className={`ing-card${isSelected ? ' selected' : ''}`}
         onClick={() => toggleIngredient(option)}
       >
@@ -110,7 +114,7 @@ export default function Categorias() {
           )}
         </div>
         <span>{option.label}</span>
-      </div>
+      </button>
     );
   };
 
@@ -122,7 +126,7 @@ export default function Categorias() {
         <SearchIcon />
         <input
           type="text"
-          placeholder="Pesquise qualquer ingrediente..."
+          placeholder="Buscar ingrediente..."
           value={ingredientQuery}
           onChange={(e) => setIngredientQuery(e.target.value)}
         />
@@ -140,7 +144,19 @@ export default function Categorias() {
         )
       ) : (
         <>
-          <p className="helper-text">Abra as categorias e marque tudo que você tem em casa.</p>
+          <div className="cat-toolbar">
+            <span className="cat-toolbar-hint">Marque tudo que você tem em casa</span>
+            {essentialItems.length > 0 && (
+              <button
+                type="button"
+                className={`cat-basics-btn${haveBasics ? ' on' : ''}`}
+                onClick={() => selectIngredients(essentialItems)}
+                disabled={haveBasics}
+              >
+                {haveBasics ? '✓ Básico marcado' : '+ Tenho o básico'}
+              </button>
+            )}
+          </div>
 
           <div className="ing-sections">
             {sections.map((section) => {
@@ -167,40 +183,31 @@ export default function Categorias() {
               );
             })}
           </div>
-
-          <div className="name-search-label">Procurando alguma receita específica?</div>
-          <div className="search">
-            <SearchIcon />
-            <input
-              type="text"
-              placeholder="Digite o nome da receita..."
-              value={nameQuery}
-              onChange={(e) => setNameQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleNameSearch();
-              }}
-            />
-          </div>
-
-          {allSelectedEntries.length > 0 && (
-            <div className="selected-section">
-              <div className="selected-section-title">Itens selecionados ({allSelectedEntries.length})</div>
-              <div className="selected-chips">
-                {allSelectedEntries.map((option) => (
-                  <div key={option.query} className="selected-chip" onClick={() => toggleIngredient(option)}>
-                    {INGREDIENT_IMAGES[option.query] ? (
-                      <img src={INGREDIENT_IMAGES[option.query]} alt="" />
-                    ) : (
-                      <span>{option.icon}</span>
-                    )}
-                    <span>{option.label}</span>
-                    <span className="selected-chip-remove">×</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </>
+      )}
+
+      {allSelectedEntries.length > 0 && (
+        <div className="selected-section">
+          <div className="selected-section-title">Selecionados ({allSelectedEntries.length})</div>
+          <div className="selected-chips">
+            {allSelectedEntries.map((option) => (
+              <button
+                key={option.query}
+                type="button"
+                className="selected-chip"
+                onClick={() => toggleIngredient(option)}
+              >
+                {INGREDIENT_IMAGES[option.query] ? (
+                  <img src={INGREDIENT_IMAGES[option.query]} alt="" />
+                ) : (
+                  <span>{option.icon}</span>
+                )}
+                <span>{option.label}</span>
+                <span className="selected-chip-remove">×</span>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       <div className="fab-container">
@@ -211,8 +218,8 @@ export default function Categorias() {
           {isSearching
             ? 'Buscando...'
             : totalSelectedCount > 0
-            ? `Buscar receitas (${totalSelectedCount}) ✨`
-            : 'Selecione ingredientes'}
+              ? `Buscar receitas (${totalSelectedCount}) ✨`
+              : 'Selecione ingredientes'}
         </div>
       </div>
     </div>

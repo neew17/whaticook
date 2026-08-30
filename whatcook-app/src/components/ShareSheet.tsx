@@ -6,6 +6,8 @@ interface ShareSheetProps {
   /** Foto do prato (data URL) ou URL pública da receita. */
   imageSrc: string | null;
   onClose: () => void;
+  /** Se presente, mostra "Postar no Story" (só quando há foto do prato + login). */
+  onStory?: () => void;
 }
 
 const CARD_W = 1080;
@@ -87,7 +89,7 @@ async function drawCard(canvas: HTMLCanvasElement, title: string, emoji: string,
   ctx.fillText('?cook', 80 + wWidth, CARD_H - 90);
 }
 
-export default function ShareSheet({ title, emoji, imageSrc, onClose }: ShareSheetProps) {
+export default function ShareSheet({ title, emoji, imageSrc, onClose, onStory }: ShareSheetProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [cardUrl, setCardUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -165,6 +167,11 @@ export default function ShareSheet({ title, emoji, imageSrc, onClose }: ShareShe
         <button type="button" className="cta-secondary" style={{ width: '100%', margin: '8px 0 0' }} onClick={handleCopy}>
           {copied ? 'Link copiado ✓' : '🔗 Copiar link do app'}
         </button>
+        {onStory && (
+          <button type="button" className="cta-secondary" style={{ width: '100%', margin: '8px 0 0' }} onClick={onStory}>
+            📖 Postar no Story
+          </button>
+        )}
         <button type="button" className="sheet-close" onClick={onClose}>
           Fechar
         </button>

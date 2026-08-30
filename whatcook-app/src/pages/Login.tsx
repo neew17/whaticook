@@ -10,7 +10,11 @@ const GOOGLE_AUTH_ENABLED = import.meta.env.VITE_ENABLE_GOOGLE_AUTH === 'true';
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const intent = (location.state as { intent?: AuthIntent } | null)?.intent;
+  const navState = location.state as { intent?: AuthIntent; from?: string } | null;
+  const intent = navState?.intent;
+  // Pra onde voltar depois de entrar. Só existe quando a pessoa veio de um link
+  // compartilhado (receita/prato/perfil) ou de uma ação que exigiu login.
+  const from = navState?.from && navState.from !== '/entrar' ? navState.from : null;
   const { user, signUp, signIn, signInWithGoogle } = useAuth();
   const [mode, setMode] = useState<'signup' | 'signin'>('signup');
   const [name, setName] = useState('');
@@ -21,8 +25,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) navigate('/tipo-prato');
-  }, [user, navigate]);
+    if (user) navigate(from ?? '/tipo-prato', { replace: true });
+  }, [user, navigate, from]);
 
   const handleSubmit = async () => {
     setError(null);
@@ -40,10 +44,8 @@ export default function Login() {
       setError(errMsg);
       return;
     }
-    // Volta pra onde a pessoa estava (a receita, o prato, o perfil) quando o
-    // login foi disparado por uma ação. Sem intent, cai no funil.
-    if (intent) navigate(-1);
-    else navigate('/tipo-prato');
+    // Volta pra receita/prato/perfil de onde a pessoa veio; sem isso, cai no funil.
+    navigate(from ?? '/tipo-prato', { replace: true });
   };
 
   const handleGoogle = async () => {
@@ -59,7 +61,12 @@ export default function Login() {
 
   return (
     <div className="screen">
-      <TopBar title={mode === 'signup' ? 'Criar conta' : 'Entrar'} onBack={() => navigate(-1)} hideAccountIcon />
+      <TopBar
+        title={mode === 'signup' ? 'Criar conta' : 'Entrar'}
+        onBack={from ? () => navigate(from) : undefined}
+        hideBack={!from}
+        hideAccountIcon
+      />
 
       <div className="auth-body">
         {intent && <p className="auth-intent">{AUTH_INTENT_COPY[intent]}</p>}
@@ -124,9 +131,6 @@ export default function Login() {
         )}
         <p className="auth-switch" onClick={() => setMode(mode === 'signup' ? 'signin' : 'signup')}>
           {mode === 'signup' ? 'Já tem conta? Entrar' : 'Não tem conta? Criar agora'}
-        </p>
-        <p className="auth-switch" style={{ color: 'var(--text-muted)' }} onClick={() => navigate(-1)}>
-          Agora não
         </p>
         </div>
       </div>

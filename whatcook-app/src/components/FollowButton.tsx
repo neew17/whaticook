@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 
@@ -10,6 +10,7 @@ interface FollowButtonProps {
 
 export default function FollowButton({ targetUserId, onChange }: FollowButtonProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -37,7 +38,7 @@ export default function FollowButton({ targetUserId, onChange }: FollowButtonPro
 
   const toggleFollow = async () => {
     if (!user) {
-      navigate('/entrar', { state: { intent: 'follow' } });
+      navigate('/entrar', { state: { intent: 'follow', from: location.pathname } });
       return;
     }
     setBusy(true);

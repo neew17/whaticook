@@ -11,15 +11,17 @@ export type AuthIntent =
   | 'like'
   | 'comment'
   | 'create'
+  | 'cook'
   | 'profile';
 
 export const AUTH_INTENT_COPY: Record<AuthIntent, string> = {
-  favorite: 'Entre pra guardar suas receitas favoritas.',
+  favorite: 'Crie sua conta pra guardar suas receitas favoritas.',
   save: 'Crie sua conta pra salvar esse prato no seu perfil.',
-  follow: 'Entre pra seguir outros cozinheiros e acompanhar o que eles fazem.',
-  post: 'Entre pra publicar seu prato e aparecer no feed da comunidade.',
-  like: 'Entre pra curtir os pratos da comunidade.',
-  comment: 'Entre pra comentar e conversar com outros cozinheiros.',
-  create: 'Entre pra criar e publicar sua própria receita.',
+  follow: 'Crie sua conta pra seguir cozinheiros e acompanhar o que eles fazem.',
+  post: 'Crie sua conta pra publicar seu prato no feed da comunidade.',
+  like: 'Crie sua conta pra curtir os pratos da comunidade.',
+  comment: 'Crie sua conta pra comentar e conversar com outros cozinheiros.',
+  create: 'Crie sua conta pra criar e publicar sua própria receita.',
+  cook: 'Crie sua conta grátis pra cozinhar essa receita passo a passo.',
   profile: 'Entre na sua conta.',
 };

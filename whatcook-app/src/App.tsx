@@ -24,6 +24,7 @@ import StoryViewer from './pages/StoryViewer';
 import StoryEditor from './pages/StoryEditor';
 import StoriesExplore from './pages/StoriesExplore';
 import NotFound from './pages/NotFound';
+import RequireAuth from './components/RequireAuth';
 import { playClickSound } from './utils/sound';
 
 const CLICKABLE_SELECTOR =
@@ -34,7 +35,8 @@ const CLICKABLE_SELECTOR =
   '.profile-bio-edit-btn, .profile-feed-tile, .follow-btn, .post-like-btn, .comment-send-btn, ' +
   '.profile-follow-stat, .comment-like-btn, .comment-reply-btn, .story-avatar-item, .story-add-badge, ' +
   '.story-tap-zone, .story-viewer-close, .cooker-profile-story-ring, .story-editor-tool-btn, ' +
-  '.story-editor-publish-btn, .explore-story-row, .story-viewer-viewers-bar, .explore-stories-link';
+  '.story-editor-publish-btn, .explore-story-row, .story-viewer-viewers-bar, .explore-stories-link, ' +
+  '.join-banner-btn';
 
 function App() {
   useEffect(() => {
@@ -50,37 +52,46 @@ function App() {
 
   return (
     <Routes>
+      {/* Públicas: a marca, o login e a recuperação de senha. */}
       <Route path="/" element={<Splash />} />
-      <Route path="/tipo-prato" element={<TipoPrato />} />
-      <Route path="/tempo" element={<Tempo />} />
-      <Route path="/criar-receita" element={<CriarReceita />} />
-      <Route path="/admin/receitas" element={<AdminReceitas />} />
-      <Route path="/categorias" element={<Categorias />} />
-      {/* Rotas antigas de picker por categoria — unificadas na tela de seções */}
-      <Route path="/alimentos" element={<Navigate to="/categorias" replace />} />
-      <Route path="/condimentos" element={<Navigate to="/categorias" replace />} />
-      <Route path="/temperos" element={<Navigate to="/categorias" replace />} />
-      <Route path="/molhos" element={<Navigate to="/categorias" replace />} />
-      <Route path="/equipamentos" element={<Navigate to="/categorias" replace />} />
-      <Route path="/resultados" element={<Resultados />} />
-      <Route path="/salvas" element={<Salvas />} />
-      <Route path="/comunidade" element={<Comunidade />} />
-      <Route path="/receita/:id" element={<RecipeDetail />} />
-      <Route path="/receita/:id/cozinhando/:step" element={<CookingStep />} />
-      <Route path="/receita/:id/concluido" element={<Conclusao />} />
-      {/* /social foi absorvido pelo ShareSheet disparado da Conclusão */}
-      <Route path="/social" element={<Navigate to="/tipo-prato" replace />} />
       <Route path="/entrar" element={<Login />} />
       <Route path="/esqueci-senha" element={<EsqueciSenha />} />
       <Route path="/redefinir-senha" element={<RedefinirSenha />} />
-      <Route path="/perfil" element={<Profile />} />
-      <Route path="/buscar" element={<Search />} />
+
+      {/* Links compartilháveis: mostram uma prévia + CTA "criar conta" para
+          visitantes deslogados (ver JoinBanner nas 3 telas). */}
+      <Route path="/receita/:id" element={<RecipeDetail />} />
       <Route path="/cooker/:id" element={<CookerProfile />} />
-      <Route path="/rede/:id/:type" element={<FollowList />} />
       <Route path="/publicacao/:dishId" element={<PostDetail />} />
-      <Route path="/story/:userId" element={<StoryViewer />} />
-      <Route path="/story-editor" element={<StoryEditor />} />
-      <Route path="/stories" element={<StoriesExplore />} />
+
+      {/* Todo o resto é muro: exige conta (pelo menos o email). */}
+      <Route element={<RequireAuth />}>
+        <Route path="/tipo-prato" element={<TipoPrato />} />
+        <Route path="/tempo" element={<Tempo />} />
+        <Route path="/criar-receita" element={<CriarReceita />} />
+        <Route path="/admin/receitas" element={<AdminReceitas />} />
+        <Route path="/categorias" element={<Categorias />} />
+        {/* Rotas antigas de picker por categoria — unificadas na tela de seções */}
+        <Route path="/alimentos" element={<Navigate to="/categorias" replace />} />
+        <Route path="/condimentos" element={<Navigate to="/categorias" replace />} />
+        <Route path="/temperos" element={<Navigate to="/categorias" replace />} />
+        <Route path="/molhos" element={<Navigate to="/categorias" replace />} />
+        <Route path="/equipamentos" element={<Navigate to="/categorias" replace />} />
+        <Route path="/resultados" element={<Resultados />} />
+        <Route path="/salvas" element={<Salvas />} />
+        <Route path="/comunidade" element={<Comunidade />} />
+        <Route path="/receita/:id/cozinhando/:step" element={<CookingStep />} />
+        <Route path="/receita/:id/concluido" element={<Conclusao />} />
+        {/* /social foi absorvido pelo ShareSheet disparado da Conclusão */}
+        <Route path="/social" element={<Navigate to="/tipo-prato" replace />} />
+        <Route path="/perfil" element={<Profile />} />
+        <Route path="/buscar" element={<Search />} />
+        <Route path="/rede/:id/:type" element={<FollowList />} />
+        <Route path="/story/:userId" element={<StoryViewer />} />
+        <Route path="/story-editor" element={<StoryEditor />} />
+        <Route path="/stories" element={<StoriesExplore />} />
+      </Route>
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import FollowButton from '../components/FollowButton';
+import JoinBanner from '../components/JoinBanner';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { RECIPES } from '../data/recipes';
@@ -208,6 +209,13 @@ export default function CookerProfile() {
 
         {!blockedByMe && cooker.bio && <p className="profile-bio-readonly">{cooker.bio}</p>}
       </div>
+
+      {!user && (
+        <JoinBanner
+          text={`Crie sua conta grátis pra seguir ${cooker.display_name ?? 'esse cozinheiro'} e cozinhar junto com a comunidade.`}
+          intent="follow"
+        />
+      )}
 
       {blockedByMe ? (
         <div className="state-block">

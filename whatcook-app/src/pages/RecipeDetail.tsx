@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BackIcon, CheckIcon, HeartIcon } from '../components/icons';
+import JoinBanner from '../components/JoinBanner';
 import { useAppState } from '../context/AppStateContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -204,10 +205,21 @@ export default function RecipeDetail() {
           ))}
         </div>
       </div>
+      {!user && (
+        <JoinBanner
+          text="Você está vendo uma prévia. Crie sua conta grátis pra cozinhar passo a passo, salvar e comentar."
+          intent="cook"
+        />
+      )}
+
       <div className="fab-container" style={{ paddingBottom: 20 }}>
         <div
           className="fab"
           onClick={() => {
+            if (!user) {
+              navigate('/entrar', { state: { from: `/receita/${recipe.id}`, intent: 'cook' } });
+              return;
+            }
             const resuming = cookingTimer?.recipeId === recipe.id;
             if (!resuming) {
               setCookingTimer({ recipeId: recipe.id, startedAt: Date.now() });
@@ -216,9 +228,11 @@ export default function RecipeDetail() {
             navigate(`/receita/${recipe.id}/cozinhando/${resuming ? cookingStepIndex + 1 : 1}`);
           }}
         >
-          {cookingTimer?.recipeId === recipe.id
-            ? `Continuar cozinhando · passo ${cookingStepIndex + 1} →`
-            : 'Começar a cozinhar →'}
+          {!user
+            ? 'Criar conta pra cozinhar →'
+            : cookingTimer?.recipeId === recipe.id
+              ? `Continuar cozinhando · passo ${cookingStepIndex + 1} →`
+              : 'Começar a cozinhar →'}
         </div>
       </div>
     </div>

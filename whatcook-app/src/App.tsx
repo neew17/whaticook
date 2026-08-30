@@ -12,7 +12,6 @@ import Comunidade from './pages/Comunidade';
 import RecipeDetail from './pages/RecipeDetail';
 import CookingStep from './pages/CookingStep';
 import Conclusao from './pages/Conclusao';
-import Social from './pages/Social';
 import Login from './pages/Login';
 import EsqueciSenha from './pages/EsqueciSenha';
 import RedefinirSenha from './pages/RedefinirSenha';
@@ -69,7 +68,8 @@ function App() {
       <Route path="/receita/:id" element={<RecipeDetail />} />
       <Route path="/receita/:id/cozinhando/:step" element={<CookingStep />} />
       <Route path="/receita/:id/concluido" element={<Conclusao />} />
-      <Route path="/social" element={<Social />} />
+      {/* /social foi absorvido pelo ShareSheet disparado da Conclusão */}
+      <Route path="/social" element={<Navigate to="/tipo-prato" replace />} />
       <Route path="/entrar" element={<Login />} />
       <Route path="/esqueci-senha" element={<EsqueciSenha />} />
       <Route path="/redefinir-senha" element={<RedefinirSenha />} />

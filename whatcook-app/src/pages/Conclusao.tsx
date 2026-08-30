@@ -3,25 +3,23 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAppState } from '../context/AppStateContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
-import AccountBadge from '../components/AccountBadge';
+import ShareSheet from '../components/ShareSheet';
 import { RECIPE_IMAGES } from '../data/recipe-images';
 import type { Difficulty } from '../data/recipes';
 import { fetchDifficultySummary, MIN_RATINGS_FOR_PERCENT, type DifficultySummary } from '../utils/recipeSocial';
+import { saveDishToProfile } from '../utils/saveDish';
+import { getStashedRating, stashRating } from '../utils/ratingStore';
 
 const DIFFICULTY_OPTIONS: Difficulty[] = ['Fácil', 'Médio', 'Difícil'];
 
-function formatDurationDescription(totalSeconds: number): string {
+function durationLabel(totalSeconds: number): string {
   const s = Math.max(0, Math.round(totalSeconds));
-  const minutes = Math.floor(s / 60);
-  const seconds = s % 60;
-  if (minutes === 0) return `Você preparou esse prato em ${seconds} segundos!`;
-  if (minutes < 60) {
-    const secPart = seconds > 0 ? ` e ${seconds} segundo${seconds === 1 ? '' : 's'}` : '';
-    return `Você preparou esse prato em ${minutes} minuto${minutes === 1 ? '' : 's'}${secPart}!`;
-  }
-  const hours = Math.floor(minutes / 60);
-  const remMinutes = minutes % 60;
-  return `Você preparou esse prato em ${hours}h${remMinutes > 0 ? ` ${remMinutes}min` : ''}!`;
+  const m = Math.floor(s / 60);
+  if (m === 0) return `${s} s`;
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  const rem = m % 60;
+  return rem > 0 ? `${h}h ${rem}min` : `${h}h`;
 }
 
 export default function Conclusao() {
@@ -37,45 +35,31 @@ export default function Conclusao() {
   const [cameraState, setCameraState] = useState<'idle' | 'connecting' | 'live' | 'error'>('idle');
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [flash, setFlash] = useState(false);
-  const [difficultyRating, setDifficultyRating] = useState<Difficulty | null>(null);
-  const [ratingSaving, setRatingSaving] = useState(false);
-  const [ratingSaved, setRatingSaved] = useState(false);
-  const [social, setSocial] = useState<DifficultySummary | null>(null);
-  const goToStoryEditor = () => {
-    if (!user) {
-      navigate('/entrar', { state: { intent: 'post' } });
-      return;
-    }
-    if (!dishPhoto) return;
-    navigate('/story-editor', { state: { imageSrc: dishPhoto } });
-  };
 
-  const rateDifficulty = async (difficulty: Difficulty) => {
-    if (!user || !recipe || ratingSaving) return;
-    setDifficultyRating(difficulty);
-    setRatingSaving(true);
-    const { error } = await supabase
-      .from('recipe_difficulty_ratings')
-      .upsert({ user_id: user.id, recipe_id: recipe.id, difficulty }, { onConflict: 'user_id,recipe_id' });
-    setRatingSaving(false);
-    if (!error) {
-      setRatingSaved(true);
-      fetchDifficultySummary(recipe.id).then(setSocial);
-    }
-  };
+  const [rating, setRating] = useState<Difficulty | null>(null);
+  const [ratingSaving, setRatingSaving] = useState(false);
+  const [ratingDone, setRatingDone] = useState(false);
+  const [social, setSocial] = useState<DifficultySummary | null>(null);
+
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     if (recipe) {
       setCompletedDish({ recipeId: recipe.id, title: recipe.titulo });
+      const prev = getStashedRating(recipe.id);
+      if (prev) {
+        setRating(prev);
+        setRatingDone(true);
+      }
     }
   }, [recipe, setCompletedDish]);
 
   const stopCamera = () => {
-    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     setCameraState('idle');
   };
-
   useEffect(() => stopCamera, []);
 
   const startCamera = async () => {
@@ -104,189 +88,182 @@ export default function Conclusao() {
     if (!video || !canvas || video.videoWidth === 0) return;
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height);
     setFlash(true);
     setTimeout(() => setFlash(false), 250);
     setDishPhoto(canvas.toDataURL('image/jpeg', 0.9));
     stopCamera();
   };
 
-  const retake = () => {
-    setDishPhoto(null);
-    startCamera();
+  const rateDifficulty = async (difficulty: Difficulty) => {
+    if (ratingSaving || ratingDone || !recipe) return;
+    setRating(difficulty);
+    if (!user) {
+      stashRating(recipe.id, difficulty);
+      setRatingDone(true);
+      return;
+    }
+    setRatingSaving(true);
+    const { error } = await supabase
+      .from('recipe_difficulty_ratings')
+      .upsert({ user_id: user.id, recipe_id: recipe.id, difficulty }, { onConflict: 'user_id,recipe_id' });
+    setRatingSaving(false);
+    if (!error) {
+      setRatingDone(true);
+      fetchDifficultySummary(recipe.id).then(setSocial);
+    }
   };
 
-  const thumb = recipe && RECIPE_IMAGES[recipe.id] ? <img src={RECIPE_IMAGES[recipe.id].url} alt="" /> : recipe?.emoji;
-  const totalSteps = recipe?.modoPreparo.length ?? 0;
+  const handleSave = async () => {
+    if (!recipe || saveState !== 'idle') return;
+    if (!user) {
+      navigate('/entrar', { state: { intent: 'save' } });
+      return;
+    }
+    setSaveState('saving');
+    const { ok } = await saveDishToProfile({
+      userId: user.id,
+      recipeId: recipe.id,
+      title: recipe.titulo,
+      dishPhoto,
+    });
+    setSaveState(ok ? 'saved' : 'idle');
+  };
+
+  const recipeImg = recipe ? RECIPE_IMAGES[recipe.id]?.url ?? null : null;
 
   return (
-    <div className="screen" style={{ padding: '12px 24px 24px', textAlign: 'center', position: 'relative' }}>
-      <div style={{ position: 'absolute', top: 16, right: 16 }}>
-        <AccountBadge />
-      </div>
-
-      {recipe && (
-        <div className="conclusao-featured-card">
-          <div className="conclusao-featured-thumb">{thumb}</div>
-          <div className="conclusao-featured-info">
-            <span>{recipe.titulo}</span>
-            <span>
-              {cookingDurationSeconds !== null
-                ? `Feito em ${formatMMSSLabel(cookingDurationSeconds)}`
-                : 'Receita concluída'}
-            </span>
-          </div>
-        </div>
-      )}
-
+    <div className="screen conclusao">
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      <div
-        className={`dish-photo-box conclusao-hero-photo${dishPhoto ? ' has-photo' : ''}${cameraState === 'live' || cameraState === 'connecting' ? ' camera-live' : ''}`}
-        onClick={cameraState === 'idle' && !dishPhoto ? startCamera : undefined}
-      >
-        {dishPhoto ? (
-          <>
-            <img src={dishPhoto} alt="Foto do prato pronto" />
-            {flash && <div className="camera-flash" />}
-            <span className="dish-photo-retake" onClick={retake}>
-              🔄 Trocar foto
-            </span>
-          </>
-        ) : cameraState === 'live' || cameraState === 'connecting' ? (
-          <>
-            <video ref={videoRef} autoPlay playsInline muted />
-            {cameraState === 'connecting' && (
-              <div className="camera-connecting-overlay">
-                <div className="spinner" />
-                <span>Iniciando câmera...</span>
-              </div>
-            )}
-            {cameraState === 'live' && (
-              <>
-                <span className="camera-live-badge">
-                  <span className="camera-live-dot" /> Câmera ativa
-                </span>
-                <span className="camera-hint-text">Aponte a câmera para sua obra de arte 🎨</span>
-                <span className="viewfinder-corner tl" />
-                <span className="viewfinder-corner tr" />
-                <span className="viewfinder-corner bl" />
-                <span className="viewfinder-corner br" />
+      <div className="conclusao-body">
+        <h1 className="conclusao-title">Prato finalizado 🎉</h1>
+        {recipe && (
+          <p className="conclusao-sub">
+            Você fez <b>{recipe.titulo}</b>
+            {cookingDurationSeconds !== null ? ` em ${durationLabel(cookingDurationSeconds)}` : ''}.
+          </p>
+        )}
+
+        {/* Foto — compacta. Câmera expande só quando ativa. */}
+        <div className={`conclusao-photo${cameraState === 'live' || cameraState === 'connecting' ? ' live' : ''}`}>
+          {dishPhoto ? (
+            <>
+              <img src={dishPhoto} alt="Foto do prato" />
+              <button type="button" className="conclusao-photo-retake" onClick={() => setDishPhoto(null)}>
+                remover
+              </button>
+            </>
+          ) : cameraState === 'live' || cameraState === 'connecting' ? (
+            <>
+              <video ref={videoRef} autoPlay playsInline muted />
+              {cameraState === 'connecting' && (
+                <div className="camera-connecting-overlay">
+                  <div className="spinner" />
+                </div>
+              )}
+              {cameraState === 'live' && (
                 <div className="camera-shutter-btn" onClick={capturePhoto} aria-label="Capturar foto" />
+              )}
+              {flash && <div className="camera-flash" />}
+            </>
+          ) : (
+            <button type="button" className="conclusao-photo-add" onClick={startCamera}>
+              <span className="conclusao-photo-add-icon">📷</span>
+              <span>Adicionar foto</span>
+              {cameraError && <span className="conclusao-photo-err">{cameraError}</span>}
+            </button>
+          )}
+        </div>
+
+        {/* Avaliação de dificuldade — vale pra anônimo também */}
+        {recipe && (
+          <div className="conclusao-rating">
+            {ratingDone ? (
+              <>
+                <span className="conclusao-rating-label">Valeu pela avaliação</span>
+                {social && social.total >= MIN_RATINGS_FOR_PERCENT && social.top ? (
+                  <p>
+                    {social.topPercent}% acharam {social.top.toLowerCase()}.
+                  </p>
+                ) : (
+                  <p>
+                    {user
+                      ? 'Isso ajuda outros cozinheiros a saber o que esperar.'
+                      : 'Vamos guardar isso e sincronizar quando você criar conta.'}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <span className="conclusao-rating-label">Quão difícil foi pra você?</span>
+                <div className="difficulty-rating-row">
+                  {DIFFICULTY_OPTIONS.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      className={`difficulty-rating-btn${rating === option ? ' selected' : ''}`}
+                      disabled={ratingSaving}
+                      onClick={() => rateDifficulty(option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
               </>
             )}
-            {flash && <div className="camera-flash" />}
-          </>
-        ) : cameraError ? (
-          <>
-            <div className="dish-photo-icon">⚠️</div>
-            <span className="dish-photo-error">{cameraError}</span>
-            <span className="dish-photo-retake" style={{ position: 'static', marginTop: 8 }} onClick={startCamera}>
-              Tentar novamente
-            </span>
-          </>
-        ) : (
-          <>
-            <div className="dish-photo-icon-ring">📷</div>
-            <span>Adicionar foto do prato</span>
-            <span style={{ fontWeight: 400, fontFamily: "'Geist',sans-serif", color: 'var(--text-muted)', fontSize: 12 }}>
-              Opcional — mas rende um bom story
-            </span>
-          </>
+          </div>
         )}
       </div>
 
-      <h2 style={{ fontFamily: "'Unbounded','Geist',sans-serif", fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
-        Prato finalizado 🎉
-      </h2>
-      {recipe && (
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 20 }}>
-          Você fez <b style={{ color: '#fff' }}>{recipe.titulo}</b>.
-        </p>
-      )}
-
-      {cookingDurationSeconds !== null && (
-        <div className="cooking-stats-row">
-          <div className="stat-simple">
-            <span>Tempo</span>
-            <span>{formatMMSSLabel(cookingDurationSeconds)}</span>
-          </div>
-          <div className="stat-simple">
-            <span>Etapas</span>
-            <span>
-              {totalSteps}/{totalSteps}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {cookingDurationSeconds !== null && (
-        <div className="achievement-card">
-          <span className="achievement-card-icon">🏅</span>
-          <div className="achievement-card-text">
-            <span>CONQUISTA REVELADA</span>
-            <span>{formatDurationDescription(cookingDurationSeconds)}</span>
-          </div>
-        </div>
-      )}
-
-      {user && recipe && (
-        <div className="achievement-card" style={{ marginTop: 12, flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
-          {ratingSaved ? (
-            <div className="achievement-card-text" style={{ width: '100%' }}>
-              <span>OBRIGADO!</span>
-              {social && social.total >= MIN_RATINGS_FOR_PERCENT && social.top ? (
-                <span>
-                  Você e mais {social.total - 1}{' '}
-                  {social.total - 1 === 1 ? 'pessoa' : 'pessoas'} avaliaram — {social.topPercent}% acharam{' '}
-                  {social.top.toLowerCase()}.
-                </span>
-              ) : (
-                <span>Sua avaliação ajuda outros cozinheiros a saber o que esperar dessa receita.</span>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="achievement-card-text" style={{ width: '100%' }}>
-                <span>QUÃO DIFÍCIL FOI PRA VOCÊ?</span>
-                <span>Avalie a dificuldade real que você sentiu ao preparar esse prato.</span>
-              </div>
-              <div className="difficulty-rating-row">
-                {DIFFICULTY_OPTIONS.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    className={`difficulty-rating-btn${difficultyRating === option ? ' selected' : ''}`}
-                    disabled={ratingSaving}
-                    onClick={() => rateDifficulty(option)}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {dishPhoto && (
-        <div className="cta-secondary" style={{ width: '100%', margin: '10px 0 0' }} onClick={goToStoryEditor}>
-          📖 Postar no Story
-        </div>
-      )}
-
-      <div className="fab" style={{ width: '100%', marginTop: 10 }} onClick={() => navigate('/social')}>
-        Compartilhar conquista →
+      <div className="conclusao-actions">
+        <button
+          type="button"
+          className={`fab${saveState === 'saved' ? ' disabled' : ''}`}
+          style={{ width: '100%' }}
+          onClick={handleSave}
+        >
+          {saveState === 'saving'
+            ? 'Salvando...'
+            : saveState === 'saved'
+              ? '✓ Salvo em Minhas Receitas'
+              : user
+                ? 'Salvar em Minhas Receitas'
+                : 'Salvar em Minhas Receitas'}
+        </button>
+        {saveState === 'saved' && (
+          <button
+            type="button"
+            className="cta-secondary"
+            style={{ width: '100%', margin: '8px 0 0' }}
+            onClick={() => navigate('/salvas')}
+          >
+            Ver Minhas Receitas
+          </button>
+        )}
+        {saveState !== 'saved' && (
+          <button
+            type="button"
+            className="cta-secondary"
+            style={{ width: '100%', margin: '8px 0 0' }}
+            onClick={() => setShareOpen(true)}
+          >
+            Compartilhar
+          </button>
+        )}
+        <button type="button" className="conclusao-restart" onClick={() => navigate('/tipo-prato')}>
+          Cozinhar outra coisa
+        </button>
       </div>
+
+      {shareOpen && recipe && (
+        <ShareSheet
+          title={recipe.titulo}
+          emoji={recipe.emoji}
+          imageSrc={dishPhoto ?? recipeImg}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
     </div>
   );
-}
-
-function formatMMSSLabel(totalSeconds: number): string {
-  const s = Math.max(0, Math.round(totalSeconds));
-  const minutes = Math.floor(s / 60);
-  const seconds = s % 60;
-  if (minutes === 0) return `${seconds} s`;
-  return `${minutes} min`;
 }

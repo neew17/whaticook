@@ -16,7 +16,7 @@ import iconCookingPot from '../assets/stat-icons/cooking-pot.svg';
 export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { fetchRecipe, setCookingTimer, cookingTimer, cookingStepIndex, selected } = useAppState();
+  const { fetchRecipe, setCookingTimer, cookingTimer, cookingStepIndex, selected, setDishPhoto } = useAppState();
   const { user } = useAuth();
   const [recipe, setRecipe] = useState<LocalRecipe | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -209,7 +209,10 @@ export default function RecipeDetail() {
           className="fab"
           onClick={() => {
             const resuming = cookingTimer?.recipeId === recipe.id;
-            if (!resuming) setCookingTimer({ recipeId: recipe.id, startedAt: Date.now() });
+            if (!resuming) {
+              setCookingTimer({ recipeId: recipe.id, startedAt: Date.now() });
+              setDishPhoto(null);
+            }
             navigate(`/receita/${recipe.id}/cozinhando/${resuming ? cookingStepIndex + 1 : 1}`);
           }}
         >

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
+import { flushPendingRatings } from '../utils/ratingStore';
 
 export interface Profile {
   id: string;
@@ -57,6 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     fetchProfile(user.id);
+    // Sincroniza avaliações feitas enquanto anônimo.
+    flushPendingRatings(user.id);
   }, [user, fetchProfile]);
 
   const refreshProfile = useCallback(async () => {

@@ -20,10 +20,10 @@ for it rather than starting Vite manually.
 
 One-time data-enrichment scripts (not part of the app bundle, run manually with an API key):
 ```bash
-PEXELS_API_KEY=xxx node scripts/fetch-recipe-images.mjs                      # src/data/recipe-images.ts (por recipe id)
+GEMINI_API_KEY=xxx node scripts/fetch-recipe-art.mjs --all                   # src/data/recipe-images.ts + public/recipe-art/ (AI, 1 foto por recipe id)
 GEMINI_API_KEY=xxx node scripts/fetch-ingredient-images.mjs --all --force    # src/data/ingredientImages.ts + public/ingredient-photos/ (por query, fundo branco)
 ```
-`fetch-recipe-images.mjs` rewrites its output file from scratch based on the hardcoded `QUERIES` map inside it — when adding recipes, add an English search query for the new id to that map before rerunning, or the whole file (including previously-fetched recipes) is regenerated but new ids without a query entry get no image.
+`fetch-recipe-art.mjs` has a hardcoded `RECIPES` map (`recipe id -> { s: english subject, t: tipo }`) that must stay 1:1 with the ids in `recipes.ts` (startup coverage warning). It generates one photo per recipe via `gemini-2.5-flash-image` ("nano banana") — plated dish on a neutral surface for doce/salgado, glass on a neutral surface for drink — writes `public/recipe-art/<id>.jpg` and the `RECIPE_IMAGES` lookup (`{ url }`), same export the app already consumed from the retired Pexels `fetch-recipe-images.mjs`. `--all` only fills gaps; `--force` regenerates; `--only=id1,id2` for a subset; `--test` writes one sample. Install `sharp` (`npm i -D sharp`) first so images are downscaled to 640px JPEG (~50 KB) instead of raw ~1 MB. Every screen still falls back to the recipe `emoji` when an id has no entry.
 
 `fetch-ingredient-images.mjs` has a hardcoded `CATEGORIES` map (`query -> english subject`) grouped by the new `CategoryKey`s; it prints a coverage warning on startup if any `query` in `ingredients.ts` lacks a subject. `--force` regenerates existing images (needed after the white-background prompt change). `TIPO_PRATO_IMAGES` / `fetch-tipo-prato-images.mjs` are dead code — `TipoPrato.tsx` uses static jpgs and a CSS gradient for the drink card.
 

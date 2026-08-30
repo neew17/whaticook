@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
+import BottomNav from '../components/BottomNav';
 import { useAppState } from '../context/AppStateContext';
 import type { TipoPrato as TipoPratoValue } from '../data/recipes';
 import imgDoces from '../assets/tipo-prato/doces.jpg';
@@ -16,7 +17,8 @@ export default function TipoPrato() {
     if (selected) return;
     setSelected(tipo);
     setTipoPrato(tipo);
-    setTimeout(() => navigate('/tempo'), 2000);
+    // Só um piscar de confirmação do toque — não uma espera.
+    setTimeout(() => navigate('/tempo'), 260);
   };
 
   const stateClass = (tipo: TipoPratoValue) => {
@@ -26,9 +28,8 @@ export default function TipoPrato() {
 
   return (
     <div className="screen">
-      <TopBar title="O que fazer hoje?" onBack={() => navigate(-1)} />
+      <TopBar title="O que fazer hoje?" hideBack hideAccountIcon />
       <div className="tipo-prato-body">
-        <p className="tipo-prato-subtitle">Escolha o tipo de prato que você quer preparar</p>
         <div className="tipo-prato-stack">
           <div
             className={`tipo-prato-card doce${stateClass('doce')}`}
@@ -67,12 +68,8 @@ export default function TipoPrato() {
             </div>
           </div>
         </div>
-        <div className="pillar-decoration">
-          <span />
-          <span />
-          <span />
-        </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

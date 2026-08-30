@@ -1,41 +1,56 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { playSplashSound } from '../utils/sound';
 import whatcookVoice from '../assets/whatcook-voice.mp3';
+
+// Tempo mínimo só para a marca aparecer — não é uma barreira. Toque pula na hora,
+// e quem já viu a splash nesta sessão vai direto pro funil.
+const MIN_SPLASH_MS = 1200;
+const SESSION_KEY = 'whatcook_splash_seen';
 
 export default function Splash() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
-  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  const doneRef = useRef(false);
 
   useEffect(() => {
-    // toca o quanto antes, no primeiro momento do app
+    let seen = false;
+    try {
+      seen = sessionStorage.getItem(SESSION_KEY) === '1';
+    } catch {
+      /* storage indisponível — trata como primeira vez */
+    }
+
     const voice = new Audio(whatcookVoice);
     voice.volume = 0.2;
+
+    const go = () => {
+      if (doneRef.current) return;
+      doneRef.current = true;
+      voice.pause();
+      try {
+        sessionStorage.setItem(SESSION_KEY, '1');
+      } catch {
+        /* ignore */
+      }
+      navigate('/tipo-prato');
+    };
+
+    if (seen) {
+      go();
+      return;
+    }
+
     voice.play().catch(() => {
-      // navegador bloqueou autoplay sem interação — tenta na primeira interação do usuário
-      const retry = () => {
-        voice.play().catch(() => {});
-        document.removeEventListener('pointerdown', retry);
-      };
-      document.addEventListener('pointerdown', retry, { once: true });
+      /* navegador bloqueou autoplay sem interação — sem áudio, sem drama */
     });
 
-    const timer = setTimeout(() => setMinTimeElapsed(true), 3000);
-    // sincronizado com o início do zoom do logo (55% dos 3s da animação)
-    const soundTimer = setTimeout(() => playSplashSound(), 1650);
+    const timer = setTimeout(go, MIN_SPLASH_MS);
+    document.addEventListener('pointerdown', go);
     return () => {
       clearTimeout(timer);
-      clearTimeout(soundTimer);
+      document.removeEventListener('pointerdown', go);
+      voice.pause();
     };
-  }, []);
-
-  useEffect(() => {
-    if (minTimeElapsed && !loading) {
-      navigate(user ? '/tipo-prato' : '/entrar');
-    }
-  }, [minTimeElapsed, loading, user, navigate]);
+  }, [navigate]);
 
   return (
     <div className="screen splash">

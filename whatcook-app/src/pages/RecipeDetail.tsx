@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BackIcon, HeartIcon } from '../components/icons';
-import AccountBadge from '../components/AccountBadge';
+import { BackIcon, CheckIcon, HeartIcon } from '../components/icons';
 import { useAppState } from '../context/AppStateContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import type { LocalRecipe } from '../data/recipes';
 import { RECIPE_IMAGES } from '../data/recipe-images';
 import { EQUIPAMENTOS } from '../data/ingredients';
+import { fetchDifficultySummary, MIN_RATINGS_FOR_PERCENT, type DifficultySummary } from '../utils/recipeSocial';
 import iconClock from '../assets/stat-icons/clock.svg';
 import iconStar from '../assets/stat-icons/star.svg';
 import iconFlame from '../assets/stat-icons/flame.svg';
@@ -16,20 +16,23 @@ import iconCookingPot from '../assets/stat-icons/cooking-pot.svg';
 export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { fetchRecipe, setCookingTimer } = useAppState();
+  const { fetchRecipe, setCookingTimer, cookingTimer, cookingStepIndex, selected } = useAppState();
   const { user } = useAuth();
   const [recipe, setRecipe] = useState<LocalRecipe | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteBusy, setFavoriteBusy] = useState(false);
+  const [social, setSocial] = useState<DifficultySummary | null>(null);
 
   useEffect(() => {
     if (!id) return;
     setRecipe(null);
     setError(null);
+    setSocial(null);
     fetchRecipe(id)
       .then(setRecipe)
       .catch(() => setError('Não foi possível carregar essa receita.'));
+    fetchDifficultySummary(id).then(setSocial);
   }, [id, fetchRecipe]);
 
   useEffect(() => {
@@ -48,7 +51,7 @@ export default function RecipeDetail() {
 
   const toggleFavorite = async () => {
     if (!user || !id || favoriteBusy) {
-      if (!user) navigate('/entrar');
+      if (!user) navigate('/entrar', { state: { intent: 'favorite' } });
       return;
     }
     setFavoriteBusy(true);
@@ -90,29 +93,35 @@ export default function RecipeDetail() {
     .map((eq) => EQUIPAMENTOS.find((e) => e.query === eq)?.label ?? eq)
     .join(' / ');
 
+  const image = RECIPE_IMAGES[recipe.id];
+  const selectedQueries = new Set(Object.keys(selected));
+  const relevantIngs = recipe.ingredientes.filter((i) => !i.staple);
+  const haveCount = relevantIngs.filter((i) => selectedQueries.has(i.query)).length;
+  const showHaveSummary = Object.keys(selected).length > 0 && relevantIngs.length > 0;
+
   return (
     <div className="screen">
-      <div className="hero">
-        {RECIPE_IMAGES[recipe.id] ? <img src={RECIPE_IMAGES[recipe.id].url} alt={recipe.titulo} /> : recipe.emoji}
-        <div className="hero-right-actions">
-          <div className="fav" onClick={toggleFavorite}>
-            <HeartIcon color={isFavorite ? 'var(--primary)' : '#fff'} />
-          </div>
-          <AccountBadge />
-        </div>
-        <div className="hero-featured-card">
-          <div className="hero-featured-top-row">
-            <div className="back" onClick={() => navigate(-1)}>
-              <BackIcon />
-            </div>
-          </div>
-          <h2>{recipe.titulo}</h2>
-          <span className="hero-meta">
-            {recipe.tempoPreparoMinutos} min · {recipe.dificuldade}
-            {equipmentLabel ? ` · ${equipmentLabel}` : ''}
+      <div className={`hero ${image ? 'has-photo' : 'no-photo'}`}>
+        <button className="hero-nav-btn hero-back" onClick={() => navigate(-1)} aria-label="Voltar">
+          <BackIcon color="#fff" />
+        </button>
+        <button className="hero-nav-btn hero-fav" onClick={toggleFavorite} aria-label="Salvar receita">
+          <HeartIcon color={isFavorite ? 'var(--primary)' : '#fff'} />
+        </button>
+        {image ? (
+          <>
+            <img src={image.url} alt={recipe.titulo} />
+            <h1 className="hero-title">{recipe.titulo}</h1>
+          </>
+        ) : (
+          <span className="hero-emoji" aria-hidden="true">
+            {recipe.emoji}
           </span>
-        </div>
+        )}
       </div>
+
+      {!image && <h1 className="recipe-title-block">{recipe.titulo}</h1>}
+
       <div className="recipe-body">
         <div className="stats-matrix">
           <div className="stat-card">
@@ -153,14 +162,36 @@ export default function RecipeDetail() {
           </div>
         </div>
 
+        {social && social.total > 0 && (
+          <div className="social-proof">
+            <span className="social-proof-icon">🧑‍🍳</span>
+            <p>
+              <b>
+                {social.total} {social.total === 1 ? 'pessoa já fez' : 'pessoas já fizeram'}
+              </b>
+              {social.total >= MIN_RATINGS_FOR_PERCENT && social.top
+                ? ` — ${social.topPercent}% acharam ${social.top.toLowerCase()}`
+                : ''}
+            </p>
+          </div>
+        )}
+
         <div>
           <div className="section-title">Ingredientes</div>
-          {recipe.ingredientes.map((ing, index) => (
-            <div key={ing.query} className="ing-chip">
-              <span className="ing-chip-num">{index + 1}</span>
-              {ing.display}
-            </div>
-          ))}
+          {showHaveSummary && (
+            <p className="ing-have-summary">
+              Você já tem <b>{haveCount}</b> de {relevantIngs.length}
+            </p>
+          )}
+          {recipe.ingredientes.map((ing) => {
+            const have = ing.staple || selectedQueries.has(ing.query);
+            return (
+              <div key={ing.query} className={`ing-chip${have ? ' have' : ''}`}>
+                <span className={`ing-chip-check${have ? ' on' : ''}`}>{have && <CheckIcon />}</span>
+                {ing.display}
+              </div>
+            );
+          })}
         </div>
 
         <div>
@@ -177,11 +208,14 @@ export default function RecipeDetail() {
         <div
           className="fab"
           onClick={() => {
-            setCookingTimer({ recipeId: recipe.id, startedAt: Date.now() });
-            navigate(`/receita/${recipe.id}/cozinhando/1`);
+            const resuming = cookingTimer?.recipeId === recipe.id;
+            if (!resuming) setCookingTimer({ recipeId: recipe.id, startedAt: Date.now() });
+            navigate(`/receita/${recipe.id}/cozinhando/${resuming ? cookingStepIndex + 1 : 1}`);
           }}
         >
-          Começar a cozinhar →
+          {cookingTimer?.recipeId === recipe.id
+            ? `Continuar cozinhando · passo ${cookingStepIndex + 1} →`
+            : 'Começar a cozinhar →'}
         </div>
       </div>
     </div>

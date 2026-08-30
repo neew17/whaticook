@@ -386,6 +386,11 @@ export const EQUIPAMENTOS: IngredientOption[] = [
 /** Todos os itens selecionáveis (ingredientes + equipamentos), lista única. */
 export const ALL_ITEMS: IngredientOption[] = [...INGREDIENTS, ...EQUIPAMENTOS];
 
+/** `query` → rótulo pt-BR curto, para exibir ingredientes que faltam etc. */
+export const LABEL_BY_QUERY: Record<string, string> = Object.fromEntries(
+  ALL_ITEMS.map((i) => [i.query, i.label])
+);
+
 /** Itens marcados como essenciais, na ordem em que aparecem em INGREDIENTS. */
 export const ESSENTIAL_INGREDIENTS: IngredientOption[] = INGREDIENTS.filter((i) => i.essential);
 

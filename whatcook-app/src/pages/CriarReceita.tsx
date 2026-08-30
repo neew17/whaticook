@@ -41,7 +41,7 @@ export default function CriarReceita() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) navigate('/entrar');
+    if (!loading && !user) navigate('/entrar', { state: { intent: 'create' } });
   }, [loading, user, navigate]);
 
   const activeItems = useMemo(() => itemsFor(activeCategory), [activeCategory]);

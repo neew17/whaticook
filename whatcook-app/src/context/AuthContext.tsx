@@ -19,7 +19,7 @@ interface AuthState {
   passwordRecovery: boolean;
   signUp: (email: string, password: string, displayName: string, favoriteDish: string) => Promise<string | null>;
   signIn: (email: string, password: string) => Promise<string | null>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<string | null>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   resetPasswordForEmail: (email: string) => Promise<string | null>;
@@ -78,7 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'google' });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/tipo-prato` },
+    });
+    return error?.message ?? null;
   };
 
   const signOut = async () => {

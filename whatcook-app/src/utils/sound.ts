@@ -38,6 +38,32 @@ export function playClickSound(): void {
   }
 }
 
+/** Alarme do cronômetro de preparo: três toques ascendentes, um pouco insistentes. */
+export function playTimerDoneSound(): void {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const notes = [660, 660, 880];
+    notes.forEach((freq, i) => {
+      const at = now + i * 0.22;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, at);
+      gain.gain.setValueAtTime(0.0001, at);
+      gain.gain.exponentialRampToValueAtTime(0.16, at + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.2);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(at);
+      osc.stop(at + 0.22);
+    });
+  } catch {
+    // áudio indisponível — ignora silenciosamente
+  }
+}
+
 /** Chime de duas notas tocado na splash, sincronizado com o zoom do logo. */
 export function playSplashSound(): void {
   const ctx = getAudioContext();

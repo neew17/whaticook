@@ -1,17 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
+import BottomNav from '../components/BottomNav';
 import StoryBar from '../components/StoryBar';
+import { ShieldIcon, LogoutIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { RECIPES } from '../data/recipes';
 import { RECIPE_IMAGES } from '../data/recipe-images';
-
-const EXAMPLE_FEED_PHOTOS = (() => {
-  const all = Object.values(RECIPE_IMAGES);
-  const shuffled = [...all].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, 9);
-})();
 
 interface SavedDishRow {
   id: string;
@@ -21,30 +17,19 @@ interface SavedDishRow {
   created_at: string;
 }
 
-interface FavoriteRow {
-  recipe_id: string;
-  created_at: string;
-}
-
 export default function Profile() {
   const navigate = useNavigate();
   const { user, profile, loading, signOut, refreshProfile } = useAuth();
-  const [tab, setTab] = useState<'bio' | 'receitas' | 'favoritos'>('bio');
   const [bio, setBio] = useState('');
   const [savingBio, setSavingBio] = useState(false);
   const [bioSaved, setBioSaved] = useState(false);
-  const [isEditingBio, setIsEditingBio] = useState(true);
+  const [isEditingBio, setIsEditingBio] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [savedDishes, setSavedDishes] = useState<SavedDishRow[] | null>(null);
-  const [favorites, setFavorites] = useState<FavoriteRow[] | null>(null);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
-
-  useEffect(() => {
-    if (!loading && !user) navigate('/entrar');
-  }, [user, loading, navigate]);
 
   useEffect(() => {
     setBio(profile?.bio ?? '');
@@ -55,16 +40,10 @@ export default function Profile() {
     if (!user) return;
     supabase
       .from('saved_dishes')
-      .select('*')
+      .select('id, recipe_id, title, photo_url, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .then(({ data }) => setSavedDishes((data as SavedDishRow[]) ?? []));
-    supabase
-      .from('favorite_recipes')
-      .select('recipe_id, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .then(({ data }) => setFavorites((data as FavoriteRow[]) ?? []));
     supabase
       .from('follows')
       .select('follower_id', { count: 'exact', head: true })
@@ -87,18 +66,16 @@ export default function Profile() {
           key: d.id,
           url: d.photo_url ?? RECIPE_IMAGES[d.recipe_id]?.url ?? null,
           emoji: recipe?.emoji ?? '🍽️',
-          dishId: d.id,
+          dishId: d.id as string | undefined,
         };
       });
     }
-    return EXAMPLE_FEED_PHOTOS.map((img, i) => ({ key: `example-${i}`, url: img.url, emoji: '🍽️', dishId: undefined }));
+    return [];
   }, [savedDishes]);
-
-  if (!user) return null;
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !user) return;
     setAvatarError(null);
     setUploadingAvatar(true);
     try {
@@ -116,52 +93,74 @@ export default function Profile() {
       if (updateError) throw updateError;
       await refreshProfile();
     } catch {
-      setAvatarError('Não foi possível atualizar a foto. Confirme que o bucket "avatars" existe no Supabase.');
+      setAvatarError('Não foi possível atualizar a foto agora. Tente de novo em instantes.');
     } finally {
       setUploadingAvatar(false);
     }
   };
 
   const handleSaveBio = async () => {
+    if (!user) return;
     setSavingBio(true);
     const { error } = await supabase.from('profiles').update({ bio }).eq('id', user.id);
     setSavingBio(false);
     if (!error) {
       setBioSaved(true);
       await refreshProfile();
+      setIsEditingBio(false);
       setTimeout(() => setBioSaved(false), 2000);
     }
   };
 
   const handleSignOut = async () => {
+    if (!window.confirm('Sair da sua conta?')) return;
     await signOut();
-    navigate('/entrar');
+    navigate('/tipo-prato');
   };
+
+  if (!loading && !user) {
+    return (
+      <div className="screen">
+        <TopBar title="Perfil" hideBack hideAccountIcon />
+        <div className="state-block" style={{ flex: 1 }}>
+          <p style={{ fontSize: 40 }}>👨‍🍳</p>
+          <p>Crie sua conta pra ter um perfil, seguir outros cozinheiros e postar seus pratos.</p>
+          <button
+            type="button"
+            className="fab"
+            style={{ marginTop: 12 }}
+            onClick={() => navigate('/entrar', { state: { intent: 'profile' } })}
+          >
+            Entrar ou criar conta
+          </button>
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   return (
     <div className="screen">
       <TopBar
-        title="Minha conta"
-        onBack={() => navigate('/tempo')}
+        title="Meu perfil"
+        hideBack
         hideAccountIcon
         rightSlot={
           <>
             {profile?.is_admin && (
-              <div
+              <button
                 className="icon-btn"
                 onClick={() => navigate('/admin/receitas')}
-                role="button"
                 aria-label="Aprovar receitas"
               >
-                🛡️
-              </div>
+                <ShieldIcon />
+              </button>
             )}
-            <div className="icon-btn" onClick={() => navigate('/buscar')} role="button" aria-label="Buscar cookers">
-              🔍
-            </div>
-            <div className="icon-btn" onClick={handleSignOut} role="button" aria-label="Sair">
-              🚪
-            </div>
+            <button className="icon-btn" onClick={handleSignOut} aria-label="Sair da conta">
+              <LogoutIcon />
+            </button>
           </>
         }
       />
@@ -183,7 +182,9 @@ export default function Profile() {
           <span className="profile-avatar-edit">{uploadingAvatar ? '…' : '✏️'}</span>
         </div>
         <div className="profile-name">{profile?.display_name ?? 'Sem nome'}</div>
-        {profile?.favorite_dish && <div className="profile-favorite-dish">🍽️ Prato favorito: {profile.favorite_dish}</div>}
+        {profile?.favorite_dish && (
+          <div className="profile-favorite-dish">🍽️ Prato favorito: {profile.favorite_dish}</div>
+        )}
 
         <div className="profile-follow-stats">
           <div className="profile-follow-stat" onClick={() => navigate(`/rede/${user.id}/seguidores`)}>
@@ -204,52 +205,45 @@ export default function Profile() {
         🔎 Explorar stories de todos os cookers
       </div>
 
-      <div className="tabs">
-        <div className={`tab${tab === 'bio' ? ' active' : ''}`} onClick={() => setTab('bio')}>
-          Bio
-        </div>
-        <div className={`tab${tab === 'receitas' ? ' active' : ''}`} onClick={() => setTab('receitas')}>
-          Receitas Feitas
-        </div>
-        <div className={`tab${tab === 'favoritos' ? ' active' : ''}`} onClick={() => setTab('favoritos')}>
-          Favoritos
-        </div>
-      </div>
+      <div style={{ padding: '8px 20px 20px' }}>
+        <label className="auth-label">Sobre você e sua cozinha</label>
 
-      {tab === 'bio' && (
-        <div style={{ padding: '0 20px 20px' }}>
-          <label className="auth-label">Sobre você e sua cozinha</label>
-
-          {isEditingBio ? (
-            <>
-              <textarea
-                className="profile-bio-textarea"
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Conte um pouco sobre você: seu estilo de cozinha, pratos que mais gosta de fazer, técnicas favoritas..."
-              />
-              <div className="fab" style={{ marginTop: 16 }} onClick={savingBio ? undefined : handleSaveBio}>
-                {savingBio ? 'Salvando...' : bioSaved ? 'Salvo ✓' : 'Salvar bio'}
-              </div>
-            </>
-          ) : (
-            <div className="profile-bio-view">
-              <p>{bio}</p>
-              <div
-                className="profile-bio-edit-btn"
-                onClick={() => setIsEditingBio(true)}
-                role="button"
-                aria-label="Editar bio"
-              >
-                ✏️
-              </div>
+        {isEditingBio ? (
+          <>
+            <textarea
+              className="profile-bio-textarea"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Conte um pouco sobre você: seu estilo de cozinha, pratos que mais gosta de fazer, técnicas favoritas..."
+            />
+            <div className="fab" style={{ marginTop: 16 }} onClick={savingBio ? undefined : handleSaveBio}>
+              {savingBio ? 'Salvando...' : bioSaved ? 'Salvo ✓' : 'Salvar bio'}
             </div>
-          )}
-
-          <div className="profile-feed-header">
-            <span className="profile-feed-title">📸 Feed</span>
-            {feedIsExample && <span className="profile-feed-hint">exemplo — suas fotos aparecerão aqui</span>}
+          </>
+        ) : (
+          <div className="profile-bio-view">
+            <p>{bio}</p>
+            <div
+              className="profile-bio-edit-btn"
+              onClick={() => setIsEditingBio(true)}
+              role="button"
+              aria-label="Editar bio"
+            >
+              ✏️
+            </div>
           </div>
+        )}
+
+        <div className="profile-feed-header">
+          <span className="profile-feed-title">📸 Feed</span>
+          {feedIsExample && <span className="profile-feed-hint">seus pratos aparecem aqui</span>}
+        </div>
+
+        {feedIsExample ? (
+          <div className="profile-feed-empty">
+            <p>Você ainda não postou nenhum prato. Cozinhe uma receita e compartilhe o resultado.</p>
+          </div>
+        ) : (
           <div className="profile-feed-grid">
             {feedItems.map((item, i) => (
               <div
@@ -262,71 +256,14 @@ export default function Profile() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      {tab === 'receitas' &&
-        (savedDishes === null ? (
-          <div className="state-block">
-            <div className="spinner" />
-          </div>
-        ) : savedDishes.length === 0 ? (
-          <div className="state-block">
-            <p>
-              Você ainda não salvou nenhum prato. Finalize uma receita e clique em "Salvar esse prato pronto ao meu
-              perfil"!
-            </p>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '0 20px 20px' }}>
-            {savedDishes.map((d) => (
-              <div key={d.id} className="saved-dish-item" onClick={() => navigate(`/receita/${d.recipe_id}`)}>
-                {d.photo_url ? (
-                  <img className="saved-dish-thumb" src={d.photo_url} alt={d.title} />
-                ) : (
-                  <div className="saved-dish-thumb" />
-                )}
-                <div className="saved-dish-info">
-                  <h4>{d.title}</h4>
-                  <span>{new Date(d.created_at).toLocaleDateString('pt-BR')}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ))}
+        <button type="button" className="profile-contribute-btn" onClick={() => navigate('/criar-receita')}>
+          ✍️ Contribuir com uma receita
+        </button>
+      </div>
 
-      {tab === 'favoritos' &&
-        (favorites === null ? (
-          <div className="state-block">
-            <div className="spinner" />
-          </div>
-        ) : favorites.length === 0 ? (
-          <div className="state-block">
-            <p>Nenhuma receita favoritada ainda. Toque no coração ❤️ em qualquer receita para guardá-la aqui.</p>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '0 20px 20px' }}>
-            {favorites.map((f) => {
-              const recipe = RECIPES.find((r) => r.id === f.recipe_id);
-              const image = RECIPE_IMAGES[f.recipe_id];
-              return (
-                <div key={f.recipe_id} className="saved-dish-item" onClick={() => navigate(`/receita/${f.recipe_id}`)}>
-                  {image ? (
-                    <img className="saved-dish-thumb" src={image.url} alt={recipe?.titulo ?? f.recipe_id} />
-                  ) : (
-                    <div className="saved-dish-thumb" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-                      {recipe?.emoji ?? '🍽️'}
-                    </div>
-                  )}
-                  <div className="saved-dish-info">
-                    <h4>{recipe?.titulo ?? f.recipe_id}</h4>
-                    <span>Favoritada em {new Date(f.created_at).toLocaleDateString('pt-BR')}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+      <BottomNav />
     </div>
   );
 }

@@ -143,7 +143,7 @@ export default function PostDetail() {
 
   const toggleLike = async () => {
     if (!user) {
-      navigate('/entrar');
+      navigate('/entrar', { state: { intent: 'like' } });
       return;
     }
     if (!dishId || likeBusy) return;
@@ -159,7 +159,7 @@ export default function PostDetail() {
 
   const toggleCommentLike = async (comment: CommentRow) => {
     if (!user) {
-      navigate('/entrar');
+      navigate('/entrar', { state: { intent: 'like' } });
       return;
     }
     if (commentLikeBusy) return;
@@ -175,7 +175,7 @@ export default function PostDetail() {
 
   const submitComment = async () => {
     if (!user) {
-      navigate('/entrar');
+      navigate('/entrar', { state: { intent: 'comment' } });
       return;
     }
     if (!dishId || !commentText.trim() || postingComment) return;
@@ -188,7 +188,7 @@ export default function PostDetail() {
 
   const submitReply = async (parentId: string) => {
     if (!user) {
-      navigate('/entrar');
+      navigate('/entrar', { state: { intent: 'comment' } });
       return;
     }
     if (!dishId || !replyText.trim() || postingReply) return;

@@ -79,7 +79,7 @@ export default function StoryEditor() {
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      navigate('/entrar', { replace: true });
+      navigate('/entrar', { replace: true, state: { intent: 'post' } });
       return;
     }
     if (!state?.imageSrc) {

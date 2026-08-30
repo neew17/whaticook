@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabaseClient';
 import AccountBadge from '../components/AccountBadge';
 import { RECIPE_IMAGES } from '../data/recipe-images';
 import type { Difficulty } from '../data/recipes';
+import { fetchDifficultySummary, MIN_RATINGS_FOR_PERCENT, type DifficultySummary } from '../utils/recipeSocial';
 
 const DIFFICULTY_OPTIONS: Difficulty[] = ['Fácil', 'Médio', 'Difícil'];
 
@@ -39,9 +40,10 @@ export default function Conclusao() {
   const [difficultyRating, setDifficultyRating] = useState<Difficulty | null>(null);
   const [ratingSaving, setRatingSaving] = useState(false);
   const [ratingSaved, setRatingSaved] = useState(false);
+  const [social, setSocial] = useState<DifficultySummary | null>(null);
   const goToStoryEditor = () => {
     if (!user) {
-      navigate('/entrar');
+      navigate('/entrar', { state: { intent: 'post' } });
       return;
     }
     if (!dishPhoto) return;
@@ -56,7 +58,10 @@ export default function Conclusao() {
       .from('recipe_difficulty_ratings')
       .upsert({ user_id: user.id, recipe_id: recipe.id, difficulty }, { onConflict: 'user_id,recipe_id' });
     setRatingSaving(false);
-    if (!error) setRatingSaved(true);
+    if (!error) {
+      setRatingSaved(true);
+      fetchDifficultySummary(recipe.id).then(setSocial);
+    }
   };
 
   useEffect(() => {
@@ -126,12 +131,14 @@ export default function Conclusao() {
           <div className="conclusao-featured-thumb">{thumb}</div>
           <div className="conclusao-featured-info">
             <span>{recipe.titulo}</span>
-            <span>Prato finalizado</span>
+            <span>
+              {cookingDurationSeconds !== null
+                ? `Feito em ${formatMMSSLabel(cookingDurationSeconds)}`
+                : 'Receita concluída'}
+            </span>
           </div>
         </div>
       )}
-
-      <div className="conclusao-header-label">Prato pronto</div>
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
@@ -182,21 +189,22 @@ export default function Conclusao() {
         ) : (
           <>
             <div className="dish-photo-icon-ring">📷</div>
-            <span>Tirar Foto do Prato</span>
+            <span>Adicionar foto do prato</span>
             <span style={{ fontWeight: 400, fontFamily: "'Geist',sans-serif", color: 'var(--text-muted)', fontSize: 12 }}>
-              Imortalize sua obra prima gastronômica
+              Opcional — mas rende um bom story
             </span>
           </>
         )}
       </div>
 
       <h2 style={{ fontFamily: "'Unbounded','Geist',sans-serif", fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 6 }}>
-        Prato Finalizado!
+        Prato finalizado 🎉
       </h2>
-      <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 20 }}>
-        Você concluiu {recipe ? <b style={{ color: '#fff' }}>{recipe.titulo}</b> : 'o prato'} com sucesso. O aroma deve
-        estar incrível!
-      </p>
+      {recipe && (
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 20 }}>
+          Você fez <b style={{ color: '#fff' }}>{recipe.titulo}</b>.
+        </p>
+      )}
 
       {cookingDurationSeconds !== null && (
         <div className="cooking-stats-row">
@@ -228,7 +236,15 @@ export default function Conclusao() {
           {ratingSaved ? (
             <div className="achievement-card-text" style={{ width: '100%' }}>
               <span>OBRIGADO!</span>
-              <span>Sua avaliação ajuda outros cozinheiros a saber o que esperar dessa receita.</span>
+              {social && social.total >= MIN_RATINGS_FOR_PERCENT && social.top ? (
+                <span>
+                  Você e mais {social.total - 1}{' '}
+                  {social.total - 1 === 1 ? 'pessoa' : 'pessoas'} avaliaram — {social.topPercent}% acharam{' '}
+                  {social.top.toLowerCase()}.
+                </span>
+              ) : (
+                <span>Sua avaliação ajuda outros cozinheiros a saber o que esperar dessa receita.</span>
+              )}
             </div>
           ) : (
             <>

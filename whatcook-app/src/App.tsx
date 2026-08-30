@@ -7,6 +7,8 @@ import CriarReceita from './pages/CriarReceita';
 import AdminReceitas from './pages/AdminReceitas';
 import Categorias from './pages/Categorias';
 import Resultados from './pages/Resultados';
+import Salvas from './pages/Salvas';
+import Comunidade from './pages/Comunidade';
 import RecipeDetail from './pages/RecipeDetail';
 import CookingStep from './pages/CookingStep';
 import Conclusao from './pages/Conclusao';
@@ -62,6 +64,8 @@ function App() {
       <Route path="/molhos" element={<Navigate to="/categorias" replace />} />
       <Route path="/equipamentos" element={<Navigate to="/categorias" replace />} />
       <Route path="/resultados" element={<Resultados />} />
+      <Route path="/salvas" element={<Salvas />} />
+      <Route path="/comunidade" element={<Comunidade />} />
       <Route path="/receita/:id" element={<RecipeDetail />} />
       <Route path="/receita/:id/cozinhando/:step" element={<CookingStep />} />
       <Route path="/receita/:id/concluido" element={<Conclusao />} />

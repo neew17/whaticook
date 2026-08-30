@@ -48,7 +48,7 @@ export default function Social() {
   const handleSave = async () => {
     if (!completedDish || saved || saving) return;
     if (!user) {
-      navigate('/entrar');
+      navigate('/entrar', { state: { intent: 'save' } });
       return;
     }
     setSaving(true);
@@ -193,12 +193,6 @@ export default function Social() {
           <span>✨</span>
           <span>Nos siga no insta</span>
         </a>
-
-        <div className="pillar-decoration">
-          <span />
-          <span />
-          <span />
-        </div>
 
         <p
           style={{

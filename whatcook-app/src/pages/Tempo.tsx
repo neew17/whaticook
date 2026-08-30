@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { useAppState } from '../context/AppStateContext';
-import { useAuth } from '../context/AuthContext';
 import iconLightning from '../assets/tempo-icons/lightning.png';
 import iconZen from '../assets/tempo-icons/zen.png';
 
@@ -15,20 +14,12 @@ const PRESETS = [
 export default function Tempo() {
   const navigate = useNavigate();
   const { timeMinutes, setTimeMinutes } = useAppState();
-  const { user } = useAuth();
-
-  const handleCreateRecipe = () => {
-    navigate(user ? '/criar-receita' : '/entrar');
-  };
 
   return (
     <div className="screen">
       <TopBar title="Quanto tempo?" onBack={() => navigate('/tipo-prato')} />
-      <p className="helper-text" style={{ textAlign: 'center' }}>
-        Ajuste o tempo ideal para sua jornada culinária.
-      </p>
 
-      <div className="slider-container" style={{ paddingBottom: 24 }}>
+      <div className="slider-container" style={{ paddingTop: 16, paddingBottom: 24 }}>
         <div className="slider-labels">
           <span>5m</span>
           <span>30m</span>
@@ -67,9 +58,6 @@ export default function Tempo() {
 
       <div className="cta-fixed" onClick={() => navigate('/categorias')}>
         Continuar
-      </div>
-      <div className="cta-secondary" onClick={handleCreateRecipe}>
-        Criar minha receita ✍️
       </div>
     </div>
   );

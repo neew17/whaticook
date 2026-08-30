@@ -1,5 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { IngredientOption, CategoryKey } from '../data/ingredients';
+import { LABEL_BY_QUERY } from '../data/ingredients';
 import { RECIPES, type LocalRecipe, type Difficulty, type TipoPrato } from '../data/recipes';
 import { normalize } from '../utils/text';
 import { supabase } from '../lib/supabaseClient';
@@ -41,6 +42,11 @@ function userRecipeToLocal(row: UserRecipeRow): LocalRecipe {
   };
 }
 
+export interface MissingIngredient {
+  query: string;
+  label: string;
+}
+
 export interface RecipeSummary {
   id: string;
   title: string;
@@ -49,7 +55,8 @@ export interface RecipeSummary {
   usedCount: number;
   readyInMinutes: number;
   difficulty: Difficulty;
-  missedIngredients: string[];
+  /** Ingredientes (não-staple) da receita que o usuário não marcou. */
+  missedIngredients: MissingIngredient[];
   /** True when this result came from the "search by name" bar instead of ingredient matching */
   viaSearch?: boolean;
 }
@@ -72,7 +79,7 @@ function toSummary(recipe: LocalRecipe, selectedQueries: Set<string>): RecipeSum
     usedCount,
     readyInMinutes: recipe.tempoPreparoMinutos,
     difficulty: recipe.dificuldade,
-    missedIngredients: missed.map((i) => i.display),
+    missedIngredients: missed.map((i) => ({ query: i.query, label: LABEL_BY_QUERY[i.query] ?? i.query })),
   };
 }
 
@@ -106,6 +113,19 @@ export interface CookingTimer {
   startedAt: number;
 }
 
+/**
+ * Cronômetro de um passo específico ("asse por 12 min"). Um por vez.
+ * `endsAt` vale quando `paused` é false; `remainingSec` vale quando pausado.
+ */
+export interface StepTimer {
+  recipeId: string;
+  stepIndex: number;
+  durationSec: number;
+  endsAt: number;
+  paused: boolean;
+  remainingSec: number;
+}
+
 interface AppState {
   tipoPrato: TipoPrato | null;
   setTipoPrato: (tipo: TipoPrato | null) => void;
@@ -130,25 +150,98 @@ interface AppState {
   setCompletedDish: (dish: CompletedDish | null) => void;
   cookingTimer: CookingTimer | null;
   setCookingTimer: (timer: CookingTimer | null) => void;
+  cookingStepIndex: number;
+  setCookingStepIndex: (index: number) => void;
+  stepTimer: StepTimer | null;
+  setStepTimer: (timer: StepTimer | null) => void;
   cookingDurationSeconds: number | null;
   setCookingDurationSeconds: (seconds: number | null) => void;
 }
 
 const AppStateContext = createContext<AppState | null>(null);
 
+/**
+ * Sessão de busca/cozinha persistida em sessionStorage — sobrevive a reload e
+ * deep-link (Resultados, RecipeDetail, CookingStep, Conclusão deixavam de
+ * funcionar quando o estado era só em memória). Não persiste `dishPhoto` (data
+ * URL grande demais) nem `userRecipes` (refeito do Supabase).
+ */
+const SESSION_KEY = 'whatcook_session';
+
+interface PersistedSession {
+  tipoPrato: TipoPrato | null;
+  timeMinutes: number;
+  selected: SelectedMap;
+  results: RecipeSummary[] | null;
+  lastRecipeTitle: string | null;
+  completedDish: CompletedDish | null;
+  cookingTimer: CookingTimer | null;
+  cookingStepIndex: number;
+  stepTimer: StepTimer | null;
+  cookingDurationSeconds: number | null;
+}
+
+function loadSession(): Partial<PersistedSession> {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    return raw ? (JSON.parse(raw) as Partial<PersistedSession>) : {};
+  } catch {
+    return {};
+  }
+}
+
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [tipoPrato, setTipoPrato] = useState<TipoPrato | null>(null);
-  const [timeMinutes, setTimeMinutes] = useState(30);
-  const [selected, setSelected] = useState<SelectedMap>(EMPTY_SELECTED);
-  const [results, setResults] = useState<RecipeSummary[] | null>(null);
+  const initialRef = useRef<Partial<PersistedSession> | null>(null);
+  if (!initialRef.current) initialRef.current = loadSession();
+  const init: Partial<PersistedSession> = initialRef.current;
+
+  const [tipoPrato, setTipoPrato] = useState<TipoPrato | null>(init.tipoPrato ?? null);
+  const [timeMinutes, setTimeMinutes] = useState(init.timeMinutes ?? 30);
+  const [selected, setSelected] = useState<SelectedMap>(init.selected ?? EMPTY_SELECTED);
+  const [results, setResults] = useState<RecipeSummary[] | null>(init.results ?? null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [lastRecipeTitle, setLastRecipeTitle] = useState<string | null>(null);
+  const [lastRecipeTitle, setLastRecipeTitle] = useState<string | null>(init.lastRecipeTitle ?? null);
   const [dishPhoto, setDishPhoto] = useState<string | null>(null);
-  const [completedDish, setCompletedDish] = useState<CompletedDish | null>(null);
-  const [cookingTimer, setCookingTimer] = useState<CookingTimer | null>(null);
-  const [cookingDurationSeconds, setCookingDurationSeconds] = useState<number | null>(null);
+  const [completedDish, setCompletedDish] = useState<CompletedDish | null>(init.completedDish ?? null);
+  const [cookingTimer, setCookingTimer] = useState<CookingTimer | null>(init.cookingTimer ?? null);
+  const [cookingStepIndex, setCookingStepIndex] = useState(init.cookingStepIndex ?? 0);
+  const [stepTimer, setStepTimer] = useState<StepTimer | null>(init.stepTimer ?? null);
+  const [cookingDurationSeconds, setCookingDurationSeconds] = useState<number | null>(
+    init.cookingDurationSeconds ?? null
+  );
   const [userRecipes, setUserRecipes] = useState<LocalRecipe[]>([]);
+
+  useEffect(() => {
+    const payload: PersistedSession = {
+      tipoPrato,
+      timeMinutes,
+      selected,
+      results,
+      lastRecipeTitle,
+      completedDish,
+      cookingTimer,
+      cookingStepIndex,
+      stepTimer,
+      cookingDurationSeconds,
+    };
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+    } catch {
+      /* quota estourada ou storage bloqueado — segue sem persistir */
+    }
+  }, [
+    tipoPrato,
+    timeMinutes,
+    selected,
+    results,
+    lastRecipeTitle,
+    completedDish,
+    cookingTimer,
+    cookingStepIndex,
+    stepTimer,
+    cookingDurationSeconds,
+  ]);
 
   useEffect(() => {
     supabase
@@ -287,6 +380,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setCompletedDish,
     cookingTimer,
     setCookingTimer,
+    cookingStepIndex,
+    setCookingStepIndex,
+    stepTimer,
+    setStepTimer,
     cookingDurationSeconds,
     setCookingDurationSeconds,
   };

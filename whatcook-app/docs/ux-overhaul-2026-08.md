@@ -138,3 +138,14 @@ npm run dev      # :5173
   `.story-editor-stage` com a proporção exata da foto); `100dvh`, safe-area,
   composer sobe com o teclado (`visualViewport`), alvos 44px, input 16px,
   dica quando vazio. `ShareSheet` ganhou "Postar no Story".
+
+## Rodada 4 — reauditoria #6-10 + limpeza (commit 3e3c5fb)
+
+- NotFound: microcopy de 404 de verdade.
+- Erros de auth traduzidos pra pt-BR (`src/utils/authErrors.ts`, no AuthContext).
+- Feed: post sem foto -> card compacto (emoji + título).
+- Vazios verticais: Login/EsqueciSenha/Tempo/CookingStep centralizam o conteúdo.
+- StoriesExplore navegável anônimo; Comunidade tem link "Ver stories" pro anônimo.
+- "cooker(s)" -> "cozinheiro(s)" em toda a UI.
+- Badge de conta removido dos passos do funil (Tempo/Categorias/Resultados).
+- Limpeza de CSS morto + `playSplashSound` + regra `.admin-recipe-actions` duplicada.

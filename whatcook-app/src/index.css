@@ -2424,35 +2424,6 @@ input[type=range] {
   margin-bottom: 4px;
 }
 
-/* Faixa "crie sua conta" nas telas de link compartilhado (prévia anônima). */
-.join-banner {
-  margin: 12px 20px 16px;
-  padding: 16px;
-  background: var(--primary-light);
-  border: 1.5px solid var(--primary);
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.join-banner p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--text-main);
-}
-.join-banner-btn {
-  align-self: flex-start;
-  padding: 12px 22px;
-  border: none;
-  border-radius: 999px;
-  background: var(--primary);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
 .auth-label {
   display: block;
   font-size: 12px;

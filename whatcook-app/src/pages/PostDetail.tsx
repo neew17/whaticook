@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { HeartIcon } from '../components/icons';
-import JoinBanner from '../components/JoinBanner';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { RECIPES } from '../data/recipes';
@@ -320,24 +319,20 @@ export default function PostDetail() {
         )}
       </div>
 
-      {user ? (
-        <div className="comment-input-bar">
-          <input
-            type="text"
-            placeholder="Escreva um comentário..."
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') submitComment();
-            }}
-          />
-          <div className="comment-send-btn" onClick={postingComment ? undefined : submitComment}>
-            Enviar
-          </div>
+      <div className="comment-input-bar">
+        <input
+          type="text"
+          placeholder="Escreva um comentário..."
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') submitComment();
+          }}
+        />
+        <div className="comment-send-btn" onClick={postingComment ? undefined : submitComment}>
+          Enviar
         </div>
-      ) : (
-        <JoinBanner text="Crie sua conta grátis pra curtir, comentar e cozinhar essa receita." intent="comment" />
-      )}
+      </div>
     </div>
   );
 }

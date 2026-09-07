@@ -1,10 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
+import { flushPendingRatings } from '../utils/ratingStore';
+import { translateAuthError } from '../utils/authErrors';
 
 export interface Profile {
   id: string;
   display_name: string | null;
+  username: string | null;
   avatar_url: string | null;
   favorite_dish: string | null;
   bio: string | null;
@@ -17,9 +20,15 @@ interface AuthState {
   profile: Profile | null;
   loading: boolean;
   passwordRecovery: boolean;
-  signUp: (email: string, password: string, displayName: string, favoriteDish: string) => Promise<string | null>;
+  signUp: (
+    email: string,
+    password: string,
+    displayName: string,
+    username: string,
+    favoriteDish: string
+  ) => Promise<string | null>;
   signIn: (email: string, password: string) => Promise<string | null>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<string | null>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   resetPasswordForEmail: (email: string) => Promise<string | null>;
@@ -57,28 +66,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     fetchProfile(user.id);
+    // Sincroniza avaliações feitas enquanto anônimo.
+    flushPendingRatings(user.id);
   }, [user, fetchProfile]);
 
   const refreshProfile = useCallback(async () => {
     if (user) await fetchProfile(user.id);
   }, [user, fetchProfile]);
 
-  const signUp = async (email: string, password: string, displayName: string, favoriteDish: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    displayName: string,
+    username: string,
+    favoriteDish: string
+  ) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { display_name: displayName, favorite_dish: favoriteDish || null } },
+      options: {
+        data: {
+          display_name: displayName,
+          username: username.toLowerCase(),
+          favorite_dish: favoriteDish || null,
+        },
+      },
     });
-    return error?.message ?? null;
+    return translateAuthError(error?.message);
   };
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return error?.message ?? null;
+    return translateAuthError(error?.message);
   };
 
   const signInWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'google' });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/tipo-prato` },
+    });
+    return translateAuthError(error?.message);
   };
 
   const signOut = async () => {
@@ -89,13 +116,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/redefinir-senha`,
     });
-    return error?.message ?? null;
+    return translateAuthError(error?.message);
   };
 
   const updatePassword = async (newPassword: string) => {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (!error) setPasswordRecovery(false);
-    return error?.message ?? null;
+    return translateAuthError(error?.message);
   };
 
   return (

@@ -1,7 +1,7 @@
 import { RECIPES, type TipoPrato } from '../data/recipes';
 
 function buildRelevanceMap(): Record<TipoPrato, Set<string>> {
-  const map: Record<TipoPrato, Set<string>> = { doce: new Set(), salgado: new Set() };
+  const map: Record<TipoPrato, Set<string>> = { doce: new Set(), salgado: new Set(), drink: new Set() };
   for (const recipe of RECIPES) {
     for (const ingrediente of recipe.ingredientes) {
       map[recipe.tipo].add(ingrediente.query);

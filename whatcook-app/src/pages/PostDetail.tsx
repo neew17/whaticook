@@ -143,7 +143,7 @@ export default function PostDetail() {
 
   const toggleLike = async () => {
     if (!user) {
-      navigate('/entrar');
+      navigate('/entrar', { state: { intent: 'like' } });
       return;
     }
     if (!dishId || likeBusy) return;
@@ -159,7 +159,7 @@ export default function PostDetail() {
 
   const toggleCommentLike = async (comment: CommentRow) => {
     if (!user) {
-      navigate('/entrar');
+      navigate('/entrar', { state: { intent: 'like' } });
       return;
     }
     if (commentLikeBusy) return;
@@ -175,7 +175,7 @@ export default function PostDetail() {
 
   const submitComment = async () => {
     if (!user) {
-      navigate('/entrar');
+      navigate('/entrar', { state: { intent: 'comment' } });
       return;
     }
     if (!dishId || !commentText.trim() || postingComment) return;
@@ -188,7 +188,7 @@ export default function PostDetail() {
 
   const submitReply = async (parentId: string) => {
     if (!user) {
-      navigate('/entrar');
+      navigate('/entrar', { state: { intent: 'comment' } });
       return;
     }
     if (!dishId || !replyText.trim() || postingReply) return;
@@ -230,7 +230,7 @@ export default function PostDetail() {
         {c.author?.avatar_url ? <img src={c.author.avatar_url} alt="" /> : (c.author?.display_name?.[0]?.toUpperCase() ?? '?')}
       </span>
       <div style={{ flex: 1 }}>
-        <b>{c.author?.display_name ?? 'Cooker'}</b>
+        <b>{c.author?.display_name ?? 'Cozinheiro'}</b>
         <p>{c.content}</p>
         <div className="comment-actions">
           <span
@@ -258,7 +258,7 @@ export default function PostDetail() {
             <input
               type="text"
               autoFocus
-              placeholder={`Responder ${c.author?.display_name ?? 'Cooker'}...`}
+              placeholder={`Responder ${c.author?.display_name ?? 'Cozinheiro'}...`}
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               onKeyDown={(e) => {
@@ -297,7 +297,7 @@ export default function PostDetail() {
         <span className="cooker-row-avatar">
           {author?.avatar_url ? <img src={author.avatar_url} alt="" /> : (author?.display_name?.[0]?.toUpperCase() ?? '?')}
         </span>
-        <b>{author?.display_name ?? 'Cooker'}</b>
+        <b>{author?.display_name ?? 'Cozinheiro'}</b>
       </div>
 
       <div className="post-detail-actions">

@@ -48,7 +48,7 @@ export default function FollowList() {
         </div>
       ) : cookers.length === 0 ? (
         <div className="state-block">
-          <p>{isSeguidores ? 'Ainda ninguém segue esse cooker.' : 'Ainda não segue nenhum cooker.'}</p>
+          <p>{isSeguidores ? 'Ainda ninguém segue esse cozinheiro.' : 'Ainda não segue nenhum cozinheiro.'}</p>
         </div>
       ) : (
         <div className="pantry-list" style={{ padding: '0 20px 20px' }}>
@@ -60,7 +60,7 @@ export default function FollowList() {
             >
               <div className="pantry-left">
                 <span className="cooker-row-avatar">
-                  {c.avatar_url ? <img src={c.avatar_url} alt={c.display_name ?? 'Cooker'} /> : (c.display_name?.[0]?.toUpperCase() ?? '?')}
+                  {c.avatar_url ? <img src={c.avatar_url} alt={c.display_name ?? 'Cozinheiro'} /> : (c.display_name?.[0]?.toUpperCase() ?? '?')}
                 </span>
                 {c.display_name ?? 'Sem nome'}
               </div>

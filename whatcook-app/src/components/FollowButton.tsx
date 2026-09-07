@@ -37,7 +37,7 @@ export default function FollowButton({ targetUserId, onChange }: FollowButtonPro
 
   const toggleFollow = async () => {
     if (!user) {
-      navigate('/entrar');
+      navigate('/entrar', { state: { intent: 'follow' } });
       return;
     }
     setBusy(true);

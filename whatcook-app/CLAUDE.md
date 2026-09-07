@@ -20,10 +20,12 @@ for it rather than starting Vite manually.
 
 One-time data-enrichment scripts (not part of the app bundle, run manually with an API key):
 ```bash
-PEXELS_API_KEY=xxx node scripts/fetch-recipe-images.mjs       # regenerates src/data/recipe-images.ts for ALL recipes
-PEXELS_API_KEY=xxx node scripts/fetch-tipo-prato-images.mjs   # regenerates src/data/tipoPratoImages.ts (doce/salgado backgrounds)
+GEMINI_API_KEY=xxx node scripts/fetch-recipe-art.mjs --all                   # src/data/recipe-images.ts + public/recipe-art/ (AI, 1 foto por recipe id)
+GEMINI_API_KEY=xxx node scripts/fetch-ingredient-images.mjs --all --force    # src/data/ingredientImages.ts + public/ingredient-photos/ (por query, fundo branco)
 ```
-`fetch-recipe-images.mjs` rewrites its output file from scratch based on the hardcoded `QUERIES` map inside it — when adding recipes, add an English search query for the new id to that map before rerunning, or the whole file (including previously-fetched recipes) is regenerated but new ids without a query entry get no image.
+`fetch-recipe-art.mjs` has a hardcoded `RECIPES` map (`recipe id -> { s: english subject, t: tipo }`) that must stay 1:1 with the ids in `recipes.ts` (startup coverage warning). It generates one photo per recipe via `gemini-2.5-flash-image` ("nano banana") — plated dish on a neutral surface for doce/salgado, glass on a neutral surface for drink — writes `public/recipe-art/<id>.jpg` and the `RECIPE_IMAGES` lookup (`{ url }`), same export the app already consumed from the retired Pexels `fetch-recipe-images.mjs`. `--all` only fills gaps; `--force` regenerates; `--only=id1,id2` for a subset; `--test` writes one sample. Install `sharp` (`npm i -D sharp`) first so images are downscaled to 640px JPEG (~50 KB) instead of raw ~1 MB. Every screen still falls back to the recipe `emoji` when an id has no entry.
+
+`fetch-ingredient-images.mjs` has a hardcoded `CATEGORIES` map (`query -> english subject`) grouped by the new `CategoryKey`s; it prints a coverage warning on startup if any `query` in `ingredients.ts` lacks a subject. `--force` regenerates existing images (needed after the white-background prompt change). `TIPO_PRATO_IMAGES` / `fetch-tipo-prato-images.mjs` are dead code — `TipoPrato.tsx` uses static jpgs and a CSS gradient for the drink card.
 
 ## Architecture
 
@@ -38,10 +40,14 @@ Linear-ish flow driven by React Router (`src/App.tsx`), state threaded through t
 route params:
 
 ```
-Splash → TipoPrato (doce/salgado) → Tempo (time budget) → Categorias (hub)
-  → Alimentos | Condimentos | Temperos | Molhos | Equipamentos (multi-select pickers)
+Splash → TipoPrato (doce/salgado/drink) → Tempo (time budget) → Categorias (tela única de seções)
   → Resultados (ranked list) → RecipeDetail → CookingStep (paginated) → Conclusao (camera capture) → Social
 ```
+
+`Categorias.tsx` (rota `/categorias`) é uma tela única em acordeão com as 28 categorias de
+ingrediente (`INGREDIENT_CATEGORIES` em `ingredients.ts`) + "Ingredientes essenciais" (itens com
+`essential: true`) + "Equipamentos". As rotas antigas `/alimentos` `/condimentos` `/temperos`
+`/molhos` `/equipamentos` redirecionam para ela. Ver `docs/reforma-ingredientes.md`.
 
 `Splash` and `Login` both redirect based on Supabase auth state (`useAuth().loading`/`user`) — always guard
 navigation effects on `!loading` first, since a premature check before the session restores causes an incorrect
@@ -80,7 +86,7 @@ If you touch this filter, re-verify with a lopsided case (one very common ingred
 that exact scenario caused two prior bugs: staple-less "sal" matching half the database, and an over-strict
 equipment AND-filter returning zero results.
 
-### Local recipe database (`src/data/recipes.ts`, ~4500 lines, 142 recipes)
+### Local recipe database (`src/data/recipes.ts`, ~200 doce + ~200 salgado + 100 drink)
 
 `LocalRecipe` shape: `id, titulo, emoji, tipo (TipoPrato), tempoPreparoMinutos, dificuldade, porcoes, calorias,
 ingredientes (RecipeIngredient[]), modoPreparo (string[]), equipamento (string[])`.
@@ -97,26 +103,28 @@ empty results — verify with the scripted checks below, not by eye, given the f
 (steps should be genuinely granular sub-steps, not padding):
 | tempoPreparoMinutos | steps |
 |---|---|
+| drink (qualquer tempo) | 3 |
 | ≤ 15 | 4 |
 | 16–30 | 10 |
 | 31–60 | 15 |
 | > 60 | 20 |
 
-`tipo` (doce/salgado) and `equipamento` are static per-recipe fields, not inferred at runtime — they were
-originally back-filled by a keyword script over `titulo`/`modoPreparo` (watch for false positives from
-substring matches, e.g. "Bolonhesa" containing "bolo") and should just be set correctly by hand for new recipes.
+`tipo` (`doce` \| `salgado` \| `drink`) and `equipamento` are static per-recipe fields. Drink recipes use
+`staple: true` for `salt`/`water`/`ice`, `equipamento: []` (build in glass), `['blender']` (frozen/batida)
+or `['cocktail shaker']`. Bar items live in `bebidas-com-alcool` / `bebidas-sem-alcool`; each must be used
+by **≥ 2** drink recipes (stronger than the ≥ 1 orphan rule). See `docs/reforma-ingredientes.md`.
 
 ### Ingredient data (`src/data/ingredients.ts`)
 
-`ALIMENTOS_TABS` is the only tabbed structure (sub-categories like "Cortes de Frango", "Peixes e Frutos do Mar");
-`CONDIMENTOS`, `TEMPEROS`, `MOLHOS`, `EQUIPAMENTOS` are flat lists. `CategoryKey` and `CATEGORY_META` drive the
-`Categorias` hub screen and must stay in sync when a category is added. `query` is the only link back to
-`recipes.ts` — `label`/`icon` are display-only and can change freely.
+`INGREDIENTS` is one flat `IngredientOption[]` (192 ingredient items + 38 bar items), each with `category`
+(a `CategoryKey`) and optional `essential`. `EQUIPAMENTOS` is a separate `IngredientOption[]`
+(`category: 'equipamentos'`). `INGREDIENT_CATEGORIES` is the ordered list of ingredient categories the
+`Categorias` screen renders as sections. `query` is the only link back to `recipes.ts` — `label`/`icon`
+are display-only. Helpers: `ingredientsFor(category)`, `ESSENTIAL_INGREDIENTS`, `ALL_ITEMS`.
 
-`src/utils/ingredientRelevance.ts` derives, purely from `RECIPES`, which ingredient/equipment `query` values are
-ever used by a `doce` vs `salgado` recipe. `Alimentos`, `PantryScreen`, and `Categorias` all filter their pickers
-through `isQueryRelevantForTipo()` so that e.g. picking "Doces" hides meat cuts automatically — this is computed,
-not a hand-maintained list, so it stays correct as recipes change.
+`src/utils/ingredientRelevance.ts` derives, purely from `RECIPES`, which `query` values are ever used by a
+`doce` / `salgado` / `drink` recipe. `Categorias` filters its sections through `isQueryRelevantForTipo()` so
+picking a tipo hides irrelevant categories — computed, not hand-maintained.
 
 ### Images
 

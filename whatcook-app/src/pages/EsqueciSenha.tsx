@@ -31,14 +31,14 @@ export default function EsqueciSenha() {
     <div className="screen">
       <TopBar title="Esqueci minha senha" onBack={() => navigate('/entrar')} hideAccountIcon />
 
-      <div style={{ padding: '0 20px 20px' }}>
+      <div className="auth-body">
         {success ? (
           <p className="auth-success">
-            Se esse email existir, enviamos um link de recuperação. Confira sua caixa de entrada (e a de spam).
+            Se esse e-mail existir, enviamos um link de recuperação. Confira sua caixa de entrada (e a de spam).
           </p>
         ) : (
           <>
-            <label className="auth-label">Email</label>
+            <label className="auth-label">E-mail</label>
             <input
               className="auth-input"
               type="email"
@@ -47,20 +47,18 @@ export default function EsqueciSenha() {
               placeholder="seu@email.com"
             />
             {error && <p className="auth-error">{error}</p>}
+
+            <div className="auth-actions">
+              <div className="fab" onClick={loading ? undefined : handleSubmit}>
+                {loading ? 'Enviando...' : 'Enviar link de recuperação'}
+              </div>
+              <p className="auth-switch" onClick={() => navigate('/entrar')}>
+                Voltar para o login
+              </p>
+            </div>
           </>
         )}
       </div>
-
-      {!success && (
-        <div className="fab-container">
-          <div className="fab" onClick={loading ? undefined : handleSubmit}>
-            {loading ? 'Enviando...' : 'Enviar link de recuperação'}
-          </div>
-          <p className="auth-switch" onClick={() => navigate('/entrar')}>
-            Voltar para o login
-          </p>
-        </div>
-      )}
     </div>
   );
 }

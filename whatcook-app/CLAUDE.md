@@ -135,16 +135,19 @@ falls back to the recipe's `emoji` when the id has no entry — preserve that fa
 
 ### Supabase backend (`supabase/`)
 
-`schema.sql` is the base (run once); `migrations/002`–`005` are additive, run manually and in order via the
-Supabase SQL editor — there is no migration CLI/tool wired up, so a new schema change is a new numbered file, not
-an edit to an existing one. RLS is on for every table; several tables were deliberately switched from
-owner-only to public `select` policies as features became social (`saved_dishes` in `005_social.sql` — it started
-as private-only, then had to become the public "feed").
+Schema is now versioned with the **Supabase CLI** — see `supabase/README.md` for the full runbook. A new
+schema change is `supabase migration new <name>` (writes `supabase/migrations/<timestamp>_<name>.sql`), applied
+with `supabase db push` against the linked project (dev first, then prod). Never run SQL in the dashboard SQL
+editor anymore; if you must, `supabase db pull` right after to capture it. The 14 original hand-numbered files
+(`schema.sql` + `002`–`014`) are archived in `supabase/legacy/` as historical reference — do not run them. RLS
+is on for every table; several tables were deliberately switched from owner-only to public `select` policies as
+features became social (`saved_dishes` in `legacy/005_social.sql` — it started as private-only, then had to
+become the public "feed").
 
 Two tables (`storage.buckets` for `recipe-photos`/`avatars`) are *not* reliably created by SQL `insert` — the
 bucket has to be created by hand in the Storage UI first, then only the `storage.objects` policies run via SQL.
 
-`005_social.sql` also adds `find_cooker_by_email`, a `security definer` RPC used instead of exposing an `email`
+`legacy/005_social.sql` also adds `find_cooker_by_email`, a `security definer` RPC used instead of exposing an `email`
 column on `profiles` — it returns a match only on an exact, case-insensitive email hit and excludes the caller's
 own id, so it can't be used to enumerate other users.
 

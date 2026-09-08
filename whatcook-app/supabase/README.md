@@ -41,34 +41,17 @@ Abra-o e compare com `legacy/` para saber o que divergiu — em especial:
 git add supabase && git commit -m "Baseline: schema real de produção via supabase db pull"
 ```
 
-### Passo 2 — corrigir o furo de privilégio (fazer junto)
+### Passo 2 — corrigir o furo de privilégio (P0-1, fazer junto)
 
-Crie a primeira migration de verdade e feche o `profiles.is_admin` editável:
+O SQL já está escrito e revisado em **`supabase/pending/lock_profiles_privileged_columns.sql`**
+(fecha o `profiles.is_admin` / `xp` editáveis pelo cliente). Para transformá-lo em migration:
 
 ```bash
 supabase migration new lock_profiles_privileged_columns
 ```
 
-No arquivo gerado, algo como:
-
-```sql
--- Impede o usuário de escalar o próprio privilégio via PATCH /rest/v1/profiles.
-create or replace function public.prevent_profile_privilege_change()
-returns trigger language plpgsql as $$
-begin
-  if new.is_admin is distinct from old.is_admin
-     or new.xp is distinct from old.xp then
-    raise exception 'campo protegido não pode ser alterado pelo cliente';
-  end if;
-  return new;
-end;
-$$;
-
-drop trigger if exists profiles_no_privilege_change on public.profiles;
-create trigger profiles_no_privilege_change
-  before update on public.profiles
-  for each row execute function public.prevent_profile_privilege_change();
-```
+Cole no arquivo gerado o bloco marcado `-- >>> migration` daquele arquivo, apague o
+`supabase/pending/`, e siga pro `db push` (dev primeiro).
 
 ### Passo 3 — projeto de staging
 

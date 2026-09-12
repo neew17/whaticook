@@ -97,4 +97,9 @@ Para ver o que vai mudar antes: `supabase db diff --linked`.
   painel (Storage → New bucket). A CLI versiona as *policies* de `storage.objects`, não os buckets.
 - `config.toml` traz `major_version = 17` (default de projeto novo). Se for rodar `supabase start`
   local, confira a versão de Postgres do projeto real em Settings → Infrastructure e ajuste.
-- `db pull` / `db push` remotos **não** precisam de Docker. Só `supabase start` (Postgres local) precisa.
+- `db push` remoto **não** precisa de Docker. `db pull` (modo migration, o padrão) **precisa** — ele sobe um
+  shadow database via Docker/Podman pra fazer o diff. Sem Docker instalado (caso desta máquina), use
+  `supabase db pull --declarative --linked` em vez disso: não usa shadow database, escreve um snapshot completo
+  e legível do schema real (uma tabela/função por arquivo) em `supabase/schemas/` — não gera migration nem
+  atualiza o histórico, é só leitura/documentação. Rode de novo depois de qualquer mudança de schema pra manter
+  esse snapshot atual; ele é a "auditoria" do Passo 1 quando o modo migration não é uma opção.

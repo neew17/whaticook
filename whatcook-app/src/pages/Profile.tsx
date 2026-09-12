@@ -122,9 +122,14 @@ export default function Profile() {
     return (
       <div className="screen">
         <TopBar title="Perfil" hideBack hideAccountIcon />
-        <div className="state-block" style={{ flex: 1 }}>
-          <p style={{ fontSize: 40 }}>👨‍🍳</p>
-          <p>Crie sua conta pra ter um perfil, seguir outros cozinheiros e postar seus pratos.</p>
+        <div className="state-block empty-value-block" style={{ flex: 1 }}>
+          <div className="empty-value-preview">
+            <div className="empty-value-stat"><b>🔥 4</b><span>sequência</span></div>
+            <div className="empty-value-stat"><b>27</b><span>receitas feitas</span></div>
+            <div className="empty-value-stat"><b>12</b><span>seguidores</span></div>
+          </div>
+          <p className="empty-value-title">Seu histórico de cozinha, num perfil só seu</p>
+          <p>Crie uma conta para guardar sua sequência de dias cozinhando, acompanhar quem você segue e postar os pratos que você fizer.</p>
           <button
             type="button"
             className="fab"

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BackIcon } from '../components/icons';
+import { BackIcon, CheckIcon } from '../components/icons';
 import CookStepTimer from '../components/CookStepTimer';
 import { useAppState } from '../context/AppStateContext';
 import { useWakeLock } from '../utils/useWakeLock';
@@ -19,9 +19,12 @@ export default function CookingStep() {
     setCookingStepIndex,
     setStepTimer,
     setCookingDurationSeconds,
+    selected,
   } = useAppState();
   const [recipe, setRecipe] = useState<LocalRecipe | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [showIngredients, setShowIngredients] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   useWakeLock(true);
 
@@ -83,6 +86,15 @@ export default function CookingStep() {
   };
   const goToStep = (n: number) => navigate(`/receita/${recipe.id}/cozinhando/${n}`);
 
+  const cancelCooking = () => {
+    setStepTimer(null);
+    setCookingTimer(null);
+    setCookingStepIndex(0);
+    // `replace` para não deixar nenhum passo desta sessão no histórico — sem isso, o botão
+    // "voltar" do navegador/gesto ainda puxava de volta pro modo de cozinhar (bug real reportado).
+    navigate('/tipo-prato', { replace: true });
+  };
+
   const current = total > 0 ? steps[stepIndex] : '';
   const isFirst = stepIndex <= 0;
   const isLast = stepIndex >= total - 1;
@@ -92,7 +104,7 @@ export default function CookingStep() {
     <div className="screen cooking-screen">
       <div className="cooking-top">
         <div className="topbar" style={{ padding: 0 }}>
-          <button className="icon-btn" onClick={() => navigate(`/receita/${recipe.id}`)} aria-label="Sair da receita">
+          <button className="icon-btn" onClick={() => setShowExitConfirm(true)} aria-label="Sair da receita">
             <BackIcon />
           </button>
           <h1>{total > 0 ? `Passo ${stepIndex + 1} de ${total}` : 'Cozinhando'}</h1>
@@ -122,7 +134,7 @@ export default function CookingStep() {
         ) : (
           <>
             <div className="instruction-card">
-              <p className="instruction-text">{current}</p>
+              <p className="instruction-text instruction-text-big">{current}</p>
             </div>
             {stepDuration && (
               <CookStepTimer recipeId={recipe.id} stepIndex={stepIndex} durationSec={stepDuration} />
@@ -130,6 +142,32 @@ export default function CookingStep() {
           </>
         )}
       </div>
+
+      {recipe.ingredientes.length > 0 && (
+        <div className="cooking-ingredients-drawer">
+          <button
+            type="button"
+            className="cooking-ingredients-toggle"
+            onClick={() => setShowIngredients((v) => !v)}
+            aria-expanded={showIngredients}
+          >
+            🧾 Ver ingredientes {showIngredients ? '▾' : '▸'}
+          </button>
+          {showIngredients && (
+            <div className="cooking-ingredients-list">
+              {recipe.ingredientes.map((ing) => {
+                const have = ing.staple || Object.prototype.hasOwnProperty.call(selected, ing.query);
+                return (
+                  <div key={ing.query} className={`ing-chip${have ? ' have' : ''}`}>
+                    <span className={`ing-chip-check${have ? ' on' : ''}`}>{have && <CheckIcon />}</span>
+                    {ing.display}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="cooking-actions">
         {total > 0 && (
@@ -151,6 +189,24 @@ export default function CookingStep() {
           </div>
         )}
       </div>
+
+      {showExitConfirm && (
+        <div className="sheet-overlay" onClick={() => setShowExitConfirm(false)}>
+          <div className="sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="sheet-handle" />
+            <p className="sheet-title">Sair da receita?</p>
+            <p className="shopping-list-subtitle">
+              Você está cozinhando <b>{recipe.titulo}</b>. Se sair agora, o passo a passo é cancelado.
+            </p>
+            <button type="button" className="fab" style={{ width: '100%' }} onClick={() => setShowExitConfirm(false)}>
+              Continuar cozinhando
+            </button>
+            <button type="button" className="sheet-close sheet-close-danger" onClick={cancelCooking}>
+              Cancelar receita e voltar para o início
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

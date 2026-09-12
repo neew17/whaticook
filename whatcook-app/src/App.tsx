@@ -37,7 +37,8 @@ const CLICKABLE_SELECTOR =
   '.profile-bio-edit-btn, .profile-feed-tile, .follow-btn, .post-like-btn, .comment-send-btn, ' +
   '.profile-follow-stat, .comment-like-btn, .comment-reply-btn, .story-avatar-item, .story-add-badge, ' +
   '.story-tap-zone, .story-viewer-close, .cooker-profile-story-ring, .story-editor-tool-btn, ' +
-  '.story-editor-publish-btn, .explore-story-row, .story-viewer-viewers-bar, .explore-stories-link';
+  '.story-editor-publish-btn, .explore-story-row, .story-viewer-viewers-bar, .explore-stories-link, ' +
+  '.cooking-ingredients-toggle';
 
 function App() {
   const location = useLocation();

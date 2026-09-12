@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { flushPendingRatings } from '../utils/ratingStore';
+import { flushLocalFavorites } from '../utils/localFavoritesStore';
 import { translateAuthError } from '../utils/authErrors';
 import { fetchUnreadCount } from '../utils/notifications';
 
@@ -81,8 +82,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     fetchProfile(user.id);
-    // Sincroniza avaliações feitas enquanto anônimo.
+    // Sincroniza avaliações e favoritos feitos enquanto anônimo.
     flushPendingRatings(user.id);
+    flushLocalFavorites(user.id);
     // Proxy de "abriu o app" pro gatilho de dormência/streak em risco — silencioso em
     // erro, uma marcação de presença não pode travar nada.
     supabase.rpc('touch_last_seen').then(() => {});

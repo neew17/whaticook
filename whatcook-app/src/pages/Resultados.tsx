@@ -9,6 +9,13 @@ import { track } from '../utils/analytics';
 import ShoppingListSheet from '../components/ShoppingListSheet';
 
 const DIFFICULTIES: Difficulty[] = ['Fácil', 'Médio', 'Difícil'];
+const DIFFICULTY_RANK: Record<Difficulty, number> = { Fácil: 0, Médio: 1, Difícil: 2 };
+type FarSort = 'missing' | 'time' | 'easy';
+const FAR_SORTS: { key: FarSort; label: string }[] = [
+  { key: 'missing', label: 'Menos ingredientes faltando' },
+  { key: 'time', label: 'Menor tempo' },
+  { key: 'easy', label: 'Mais fácil' },
+];
 const TIME_FILTERS = [
   { label: 'Até 15 min', max: 15 },
   { label: 'Até 30 min', max: 30 },
@@ -73,6 +80,7 @@ export default function Resultados() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [showAllFar, setShowAllFar] = useState(false);
   const [listMode, setListMode] = useState(false);
+  const [farSort, setFarSort] = useState<FarSort>('missing');
   const [selectedForList, setSelectedForList] = useState<Set<string>>(new Set());
   const [shoppingListOpen, setShoppingListOpen] = useState(false);
 
@@ -96,10 +104,16 @@ export default function Resultados() {
       else if (n === 1) one.push(r);
       else far.push(r);
     }
-    // Dentro de "falta 2+", mostra primeiro as que estão mais perto (faltam menos).
-    far.sort((a, b) => a.missedIngredients.length - b.missedIngredients.length);
+    // Dentro de "falta 2+", ordena conforme a preferência escolhida (padrão: mais perto de fazer agora).
+    if (farSort === 'time') {
+      far.sort((a, b) => a.readyInMinutes - b.readyInMinutes);
+    } else if (farSort === 'easy') {
+      far.sort((a, b) => DIFFICULTY_RANK[a.difficulty] - DIFFICULTY_RANK[b.difficulty]);
+    } else {
+      far.sort((a, b) => a.missedIngredients.length - b.missedIngredients.length);
+    }
     return { now, one, far };
-  }, [filtered]);
+  }, [filtered, farSort]);
 
   const open = (id: string) => navigate(`/receita/${id}`);
   const clearFilters = () => {
@@ -323,6 +337,18 @@ export default function Resultados() {
               <p className="result-group-header">
                 Falta 2 ou mais <span>{groups.far.length}</span>
               </p>
+              <div className="results-filter-chips far-sort-chips">
+                {FAR_SORTS.map((s) => (
+                  <button
+                    key={s.key}
+                    type="button"
+                    className={`filter-chip${farSort === s.key ? ' on' : ''}`}
+                    onClick={() => setFarSort(s.key)}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
               <div className="result-list">
                 {(showAllFar ? groups.far : groups.far.slice(0, FAR_PREVIEW)).map((r, i) => (
                   <RecipeRow

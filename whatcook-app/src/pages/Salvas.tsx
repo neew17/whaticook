@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { RECIPES } from '../data/recipes';
 import { RECIPE_IMAGES } from '../data/recipe-images';
+import { listLocalFavorites } from '../utils/localFavoritesStore';
 
 interface SavedDishRow {
   id: string;
@@ -43,6 +44,7 @@ export default function Salvas() {
   }, [user]);
 
   if (!loading && !user) {
+    const localFavorites = listLocalFavorites();
     return (
       <div className="screen">
         <div className="topbar">
@@ -50,18 +52,66 @@ export default function Salvas() {
           <h1>Salvas</h1>
           <div style={{ width: 36 }} />
         </div>
-        <div className="state-block" style={{ flex: 1 }}>
-          <p style={{ fontSize: 40 }}>🔖</p>
-          <p>Entre pra guardar receitas favoritas e os pratos que você já fez.</p>
-          <button
-            type="button"
-            className="fab"
-            style={{ marginTop: 12 }}
-            onClick={() => navigate('/entrar', { state: { intent: 'favorite' } })}
-          >
-            Entrar ou criar conta
-          </button>
-        </div>
+
+        {localFavorites.length > 0 ? (
+          <>
+            <div className="local-favorites-banner">
+              Salvas neste aparelho — crie uma conta para não perder.
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '4px 20px 20px' }}>
+              {localFavorites.map((f) => {
+                const recipe = RECIPES.find((r) => r.id === f.recipe_id);
+                const image = RECIPE_IMAGES[f.recipe_id];
+                return (
+                  <div key={f.recipe_id} className="saved-dish-item" onClick={() => navigate(`/receita/${f.recipe_id}`)}>
+                    {image ? (
+                      <img className="saved-dish-thumb" src={image.url} alt={recipe?.titulo ?? f.recipe_id} />
+                    ) : (
+                      <div
+                        className="saved-dish-thumb"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}
+                      >
+                        {recipe?.emoji ?? '🍽️'}
+                      </div>
+                    )}
+                    <div className="saved-dish-info">
+                      <h4>{recipe?.titulo ?? f.recipe_id}</h4>
+                      <span>Favoritada em {new Date(f.created_at).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="fab-container">
+              <div className="fab" onClick={() => navigate('/entrar', { state: { intent: 'favorite' } })}>
+                Entrar ou criar conta
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="state-block empty-value-block" style={{ flex: 1 }}>
+            <div className="empty-value-chips">
+              <span className="ing-chip have" style={{ margin: 0 }}>
+                <span className="ing-chip-check on" />
+                Sardinha na Panela
+              </span>
+              <span className="ing-chip have" style={{ margin: 0 }}>
+                <span className="ing-chip-check on" />
+                Ovos Mexidos com Tomate
+              </span>
+            </div>
+            <p className="empty-value-title">Nunca mais perca uma receita boa</p>
+            <p>Crie uma conta para favoritar receitas com um toque e ver aqui tudo que você já cozinhou — sem precisar procurar de novo.</p>
+            <button
+              type="button"
+              className="fab"
+              style={{ marginTop: 12 }}
+              onClick={() => navigate('/entrar', { state: { intent: 'favorite' } })}
+            >
+              Entrar ou criar conta
+            </button>
+          </div>
+        )}
         <BottomNav />
       </div>
     );

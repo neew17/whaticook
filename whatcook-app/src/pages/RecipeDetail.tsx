@@ -9,6 +9,7 @@ import type { LocalRecipe } from '../data/recipes';
 import { RECIPE_IMAGES } from '../data/recipe-images';
 import { EQUIPAMENTOS } from '../data/ingredients';
 import { fetchDifficultySummary, MIN_RATINGS_FOR_PERCENT, type DifficultySummary } from '../utils/recipeSocial';
+import { isLocalFavorite, toggleLocalFavorite } from '../utils/localFavoritesStore';
 import iconClock from '../assets/stat-icons/clock.svg';
 import iconStar from '../assets/stat-icons/star.svg';
 import iconFlame from '../assets/stat-icons/flame.svg';
@@ -24,6 +25,7 @@ export default function RecipeDetail() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteBusy, setFavoriteBusy] = useState(false);
   const [pendingUnfavorite, setPendingUnfavorite] = useState(false);
+  const [favoriteToast, setFavoriteToast] = useState<string | null>(null);
   const [social, setSocial] = useState<DifficultySummary | null>(null);
 
   useEffect(() => {
@@ -38,8 +40,9 @@ export default function RecipeDetail() {
   }, [id, fetchRecipe]);
 
   useEffect(() => {
-    if (!user || !id) {
-      setIsFavorite(false);
+    if (!id) return;
+    if (!user) {
+      setIsFavorite(isLocalFavorite(id));
       return;
     }
     supabase
@@ -51,11 +54,23 @@ export default function RecipeDetail() {
       .then(({ data }) => setIsFavorite(!!data));
   }, [user, id]);
 
+  useEffect(() => {
+    if (!favoriteToast) return;
+    const t = setTimeout(() => setFavoriteToast(null), 2500);
+    return () => clearTimeout(t);
+  }, [favoriteToast]);
+
   const toggleFavorite = async () => {
-    if (!user || !id || favoriteBusy) {
-      if (!user) navigate('/entrar', { state: { intent: 'favorite' } });
+    if (!id) return;
+    if (!user) {
+      const nowFavorite = toggleLocalFavorite(id);
+      setIsFavorite(nowFavorite);
+      setFavoriteToast(
+        nowFavorite ? 'Salvo neste aparelho — crie uma conta para não perder' : 'Removido de Favoritas'
+      );
       return;
     }
+    if (favoriteBusy) return;
     if (isFavorite) {
       // Some da tela na hora, mas o delete de verdade só roda se o toast expirar
       // sem "Desfazer" — ver commitUnfavorite/undoUnfavorite abaixo.
@@ -67,6 +82,7 @@ export default function RecipeDetail() {
     await supabase.from('favorite_recipes').insert({ user_id: user.id, recipe_id: id });
     setIsFavorite(true);
     setFavoriteBusy(false);
+    setFavoriteToast('Salvo em Favoritas');
   };
 
   const undoUnfavorite = () => {
@@ -244,6 +260,20 @@ export default function RecipeDetail() {
           onUndo={undoUnfavorite}
           onExpire={commitUnfavorite}
         />
+      )}
+      {favoriteToast && !pendingUnfavorite && (
+        <div className="favorite-toast" role="status">
+          <span>{favoriteToast}</span>
+          {!user && (
+            <button
+              type="button"
+              className="favorite-toast-action"
+              onClick={() => navigate('/entrar', { state: { intent: 'favorite' } })}
+            >
+              Entrar
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

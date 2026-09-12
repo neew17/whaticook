@@ -171,6 +171,19 @@ export default function TipoPrato() {
             </div>
           </div>
         </div>
+
+        <button
+          type="button"
+          className="tipo-prato-skip"
+          onClick={() => {
+            if (selected) return;
+            track('tipo_prato_skipped');
+            setTipoPrato(null);
+            navigate('/categorias');
+          }}
+        >
+          Pular e ver todos os ingredientes →
+        </button>
       </div>
       <BottomNav />
     </div>

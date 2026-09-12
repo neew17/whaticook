@@ -17,7 +17,7 @@ export default function TopBar({ title, onBack, rightSlot, hideAccountIcon, hide
   return (
     <div className="topbar">
       {hideBack ? (
-        <div style={{ width: 36 }} />
+        <div style={{ width: 44 }} />
       ) : (
         <div className="icon-btn" onClick={() => (onBack ? onBack() : navigate(-1))} role="button" aria-label="Voltar">
           <BackIcon />

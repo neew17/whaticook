@@ -593,12 +593,6 @@ input[type=range] {
   justify-content: center;
 }
 
-.tempo-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
 .tempo-card h4 {
   font-family: 'Unbounded', 'Geist', sans-serif;
   font-size: 15px;

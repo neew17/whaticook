@@ -150,3 +150,30 @@ export function CaloriesIcon({ color = 'var(--primary)', size = 18 }: IconProps)
     </svg>
   );
 }
+
+/** Piloto de substituição de emoji funcional por ícone próprio — ver seletor de tempo. */
+export function LightningIcon({ color = 'var(--text-main)', size = 22 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M13 2L4 14h7l-1 8 9-12h-7z" />
+    </svg>
+  );
+}
+
+export function HourglassIcon({ color = 'var(--text-main)', size = 22 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 3h12M6 21h12" />
+      <path d="M7 3c0 5 5 6.5 5 9s-5 4-5 9M17 3c0 5-5 6.5-5 9s5 4 5 9" />
+    </svg>
+  );
+}
+
+export function LeafIcon({ color = 'var(--text-main)', size = 22 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 20c8-1 14-6 15-15-9 1-14 7-15 15z" />
+      <path d="M8 16c2.5-2.5 5-5 8-8" />
+    </svg>
+  );
+}

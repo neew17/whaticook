@@ -1,0 +1,10 @@
+💰 Custos
+
+A auditoria não cobre custos financeiros diretamente, mas várias decisões técnicas nela têm impacto direto em orçamento — vale tratar como tarefas de custo:
+
+ [decisão] Definir se a camada social (feed de comunidade) entra no lançamento — hoje é só um menu de compartilhar; construir um feed real tem custo de infra recorrente
+ Orçar plano do Supabase considerando o volume esperado de usuários no lançamento
+ Decidir o que fazer com as ~72% das receitas sem foto (produzir fotos, gerar via IA, ou manter placeholder) e orçar a opção escolhida
+ Orçar tempo/custo de configurar o Google OAuth (hoje não está configurado)
+ Avaliar se notificação push (item do roadmap "futuro") entra no orçamento inicial ou fica para depois
+ Revisar se há custo de áudio/assets (sons de clique, voz na splash) que valha revisar

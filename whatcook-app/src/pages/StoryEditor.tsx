@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { postStory } from '../utils/stories';
 
-const TEXT_COLORS = ['#ffffff', '#000000', '#FFC72C', '#EA1D2C'];
+const TEXT_COLORS = ['#ffffff', '#000000', '#FFB020', '#EA1D2C'];
 const MAX_OUTPUT_DIMENSION = 1280;
 
 interface TextLayer {

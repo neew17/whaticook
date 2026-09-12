@@ -1,26 +1,33 @@
 :root {
-  --primary: #EA1D2C;
+  /* Paleta de marca — "cozinha de casa, feita com precisão de app premium" (ver direção de
+     redesign da auditoria de UX). --primary é o único vermelho com papel de marca/ação
+     principal; nunca reaproveitado para erro, pra não confundir "erro" com "ação recomendada". */
+  --primary: #EA1D2C;         /* Vermelho what?cook — marca, CTA primário */
   --primary-light: rgba(234, 29, 44, 0.15);
-  --primary-dark: #FF6B76;
-  --secondary: #FFC72C;
+  --primary-dark: #FF6B76;    /* variação clara do vermelho pra texto/link de baixo destaque */
+  --secondary: #FFB020;       /* Âmbar — accent secundário (streak, destaque quente) */
 
   --text-main: #F3EEEC;
   --text-muted: #ADA4A1;
 
-  /* Fundo quase preto, com um fio de calor — não é vinho, não é cinza frio. */
-  --bg-page: #151211;
-  /* Superfície elevada: cards, nav, chips. Um degrau claro de verdade sobre a página. */
-  --bg-gray: #242020;
+  /* Carvão — fundo base. Preto com um fio de calor, não 100% puro (reduz fadiga em telas grandes). */
+  --bg-page: #0D0D0F;
+  /* Grafite — superfície elevada: cards, nav, chips. */
+  --bg-gray: #17181C;
   /* Segundo nível: inputs, cards aninhados, estados pressionados. */
-  --surface-2: #312B2A;
-  --border-color: #3E3735;
+  --surface-2: #1F2024;
+  --border-color: #2B2C31;
 
   /* Paleta semântica — usar estas 3 variáveis (não --primary/--secondary direto) sempre que
      a cor precisar comunicar sucesso, alerta ou erro. --primary continua reservado pra marca/
      ação principal, pra nunca virar sinônimo visual de "erro". */
-  --success: #4CAF7D;
-  --warning: #FFC72C; /* mesmo valor de --secondary — formaliza o uso que já existia ad hoc */
-  --error: #FF6B76;   /* mesmo valor de --primary-dark — formaliza o uso que já existia ad hoc */
+  --success: #35B46A;  /* Verde-tempero — ingrediente em casa, conclusão de passo */
+  --warning: #FFB020;  /* Âmbar — faltam poucos itens, dificuldade média */
+  --error: #C4453B;    /* Vermelho-erro dessaturado — nunca o mesmo tom do CTA primário */
+
+  /* Creme — reservado pro tema claro (não aplicado ainda: o app é dark-first hoje; ligar um
+     tema claro de verdade exige revisar contraste tela a tela, não só trocar esta variável). */
+  --cream: #F4F1EB;
 
   /* Escala tipográfica — telas novas devem escolher um destes tamanhos em vez de um px solto.
      Os valores replicam os tamanhos mais comuns já em uso, então adotar a variável hoje não

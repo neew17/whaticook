@@ -22,7 +22,7 @@ async function drawCard(canvas: HTMLCanvasElement, title: string, emoji: string,
   canvas.height = CARD_H;
 
   // fundo
-  ctx.fillStyle = '#151211';
+  ctx.fillStyle = '#0D0D0F';
   ctx.fillRect(0, 0, CARD_W, CARD_H);
 
   if (imageSrc) {
@@ -82,7 +82,7 @@ async function drawCard(canvas: HTMLCanvasElement, title: string, emoji: string,
 
   // marca
   ctx.font = "700 44px 'Unbounded', system-ui, sans-serif";
-  ctx.fillStyle = '#FFC72C';
+  ctx.fillStyle = '#FFB020';
   ctx.fillText('what', 80, CARD_H - 90);
   const wWidth = ctx.measureText('what').width;
   ctx.fillStyle = '#FFFFFF';

@@ -140,6 +140,7 @@ interface AppState {
   results: RecipeSummary[] | null;
   isSearching: boolean;
   searchError: string | null;
+  possibleRecipeCount: number;
   runSearch: () => Promise<void>;
   searchByName: (query: string) => void;
   getCachedRecipe: (id: string) => LocalRecipe | undefined;
@@ -296,6 +297,24 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [allSelectedEntries]
   );
 
+  /**
+   * Mesmo filtro do `runSearch`, recalculado a cada toggle de ingrediente (sem ordenar,
+   * ninguém vê a lista aqui) — alimenta o contador ao vivo em Categorias, que é o que
+   * transforma a seleção de "aposta às cegas" em negociação com o sistema.
+   */
+  const possibleRecipeCount = useMemo(() => {
+    if (allSelectedQueries.size === 0) return 0;
+    const timeTolerance = timeMinutes >= 120 ? Infinity : timeMinutes + 15;
+    let count = 0;
+    for (const recipe of allRecipes) {
+      if (tipoPrato && recipe.tipo !== tipoPrato) continue;
+      if (!isEquipmentCompatible(recipe, selectedEquipmentQueries)) continue;
+      const summary = toSummary(recipe, allSelectedQueries);
+      if (isMeaningfulMatch(summary) && summary.readyInMinutes <= timeTolerance) count++;
+    }
+    return count;
+  }, [allRecipes, allSelectedQueries, selectedEquipmentQueries, timeMinutes, tipoPrato]);
+
   const runSearch = useCallback(async () => {
     setSearchError(null);
     if (allSelectedQueries.size === 0) {
@@ -380,6 +399,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     results,
     isSearching,
     searchError,
+    possibleRecipeCount,
     runSearch,
     searchByName,
     getCachedRecipe,

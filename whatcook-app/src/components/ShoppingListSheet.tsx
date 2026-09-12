@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { MissingIngredient } from '../context/AppStateContext';
+import SwipeToRemove from './SwipeToRemove';
 
 interface ShoppingListSheetProps {
   items: MissingIngredient[];
@@ -16,9 +17,16 @@ function buildListText(items: MissingIngredient[], recipeCount: number): string 
 }
 
 export default function ShoppingListSheet({ items, recipeCount, onClose }: ShoppingListSheetProps) {
+  // Cópia local: "remover" tira só desta lista de compras (a receita continua precisando
+  // do ingrediente), então não pode mexer no `items` que o pai deriva da seleção.
+  const [list, setList] = useState(items);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const removeItem = (query: string) => {
+    setList((prev) => prev.filter((i) => i.query !== query));
+  };
 
   const toggle = (query: string) => {
     setChecked((prev) => {
@@ -33,7 +41,7 @@ export default function ShoppingListSheet({ items, recipeCount, onClose }: Shopp
     if (busy) return;
     setBusy(true);
     try {
-      const text = buildListText(items, recipeCount);
+      const text = buildListText(list, recipeCount);
       if (typeof navigator.share === 'function') {
         await navigator.share({ text, url: APP_URL });
       } else {
@@ -54,25 +62,35 @@ export default function ShoppingListSheet({ items, recipeCount, onClose }: Shopp
         <div className="sheet-handle" />
         <p className="sheet-title">Lista de compras</p>
         <p className="shopping-list-subtitle">
-          Pra completar {recipeCount} receita{recipeCount === 1 ? '' : 's'} · {items.length} item
-          {items.length === 1 ? '' : 's'}
+          Pra completar {recipeCount} receita{recipeCount === 1 ? '' : 's'} · {list.length} item
+          {list.length === 1 ? '' : 's'}
         </p>
+        {list.length === 0 && list.length !== items.length && (
+          <p className="shopping-list-subtitle">Você removeu todos os itens.</p>
+        )}
 
         <div className="shopping-list-items">
-          {items.map((i) => (
-            <button
-              type="button"
-              key={i.query}
-              className={`shopping-list-item${checked.has(i.query) ? ' checked' : ''}`}
-              onClick={() => toggle(i.query)}
-            >
-              <span className="shopping-list-item-check">{checked.has(i.query) ? '✓' : ''}</span>
-              <span>{i.label}</span>
-            </button>
+          {list.map((i) => (
+            <SwipeToRemove key={i.query} onRemove={() => removeItem(i.query)}>
+              <button
+                type="button"
+                className={`shopping-list-item${checked.has(i.query) ? ' checked' : ''}`}
+                onClick={() => toggle(i.query)}
+              >
+                <span className="shopping-list-item-check">{checked.has(i.query) ? '✓' : ''}</span>
+                <span>{i.label}</span>
+              </button>
+            </SwipeToRemove>
           ))}
         </div>
 
-        <button type="button" className="fab" style={{ width: '100%' }} onClick={handleShare} disabled={busy}>
+        <button
+          type="button"
+          className="fab"
+          style={{ width: '100%' }}
+          onClick={handleShare}
+          disabled={busy || list.length === 0}
+        >
           {busy ? 'Preparando...' : copied ? 'Copiado ✓' : '📤 Compartilhar lista'}
         </button>
         <button type="button" className="sheet-close" onClick={onClose}>

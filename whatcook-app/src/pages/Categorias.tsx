@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { CheckIcon, SearchIcon } from '../components/icons';
 import { useAppState } from '../context/AppStateContext';
+import { useAuth } from '../context/AuthContext';
 import {
   EQUIPAMENTOS,
   ESSENTIAL_INGREDIENTS,
@@ -15,6 +16,7 @@ import { isQueryRelevantForTipo } from '../utils/ingredientRelevance';
 import { INGREDIENT_IMAGES } from '../data/ingredientImages';
 import { track } from '../utils/analytics';
 import { loadLastSelection, saveLastSelection } from '../utils/lastSelection';
+import { recordIngredientHistory } from '../utils/ingredientHistory';
 
 interface Section {
   key: string;
@@ -27,6 +29,7 @@ export default function Categorias() {
   const navigate = useNavigate();
   const {
     totalSelectedCount,
+    possibleRecipeCount,
     runSearch,
     isSearching,
     allSelectedEntries,
@@ -36,9 +39,15 @@ export default function Categorias() {
     tipoPrato,
     timeMinutes,
   } = useAppState();
+  const { user } = useAuth();
   const [ingredientQuery, setIngredientQuery] = useState('');
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(['essenciais']));
-  const didAutoExpand = useRef(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
+  const draggingRef = useRef(false);
 
   // Snapshot pego só no mount: se a tela abriu com seleção vazia (visita nova, não um reload
   // no meio da sessão — esse caso já é restaurado por whatcook_session), oferece repetir a
@@ -68,23 +77,58 @@ export default function Categorias() {
 
   const essentialItems = useMemo(() => ESSENTIAL_INGREDIENTS.filter(isRelevant), [tipoPrato]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Abre "essenciais" + as 3 categorias mais úteis que existirem (em vez de tudo fechado).
+  // Muda de tipoPrato (doce/salgado/drink) troca o conjunto de seções — volta pro início
+  // em vez de deixar o índice antigo apontar pra uma categoria que pode nem existir mais.
   useEffect(() => {
-    if (didAutoExpand.current || sections.length === 0) return;
-    didAutoExpand.current = true;
-    const priority = ['hortalicas', 'carnes', 'aves', 'laticinios-ovos', 'queijos', 'frutas', 'farinhas-fermentos'];
-    const present = new Set(sections.map((s) => s.key));
-    const pick = priority.filter((k) => present.has(k)).slice(0, 3);
-    setExpanded(new Set(['essenciais', ...pick, ...(pick.length < 3 ? sections.slice(1, 4).map((s) => s.key) : [])]));
-  }, [sections]);
+    setActiveIndex(0);
+  }, [tipoPrato]);
 
-  const toggleSection = (key: string) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+  const goToSection = (index: number) => {
+    const clamped = Math.max(0, Math.min(sections.length - 1, index));
+    setActiveIndex(clamped);
+    const key = sections[clamped]?.key;
+    if (key) tabRefs.current.get(key)?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  };
+
+  const handleTrackPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    pointerStart.current = { x: e.clientX, y: e.clientY };
+    draggingRef.current = false;
+  };
+
+  const handleTrackPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (!pointerStart.current) return;
+    const dx = e.clientX - pointerStart.current.x;
+    const dy = e.clientY - pointerStart.current.y;
+    if (!draggingRef.current) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      if (Math.abs(dy) > Math.abs(dx)) {
+        pointerStart.current = null;
+        return;
+      }
+      draggingRef.current = true;
+      setDragging(true);
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+    // Não deixa arrastar pra além da primeira/última categoria — sem "borracha" solta.
+    const atStart = activeIndex === 0 && dx > 0;
+    const atEnd = activeIndex === sections.length - 1 && dx < 0;
+    setDragX(atStart || atEnd ? dx / 3 : dx);
+  };
+
+  const handleTrackPointerEnd = () => {
+    if (!draggingRef.current) {
+      pointerStart.current = null;
+      return;
+    }
+    draggingRef.current = false;
+    setDragging(false);
+    pointerStart.current = null;
+    const width = trackRef.current?.clientWidth || 1;
+    const threshold = width * 0.18;
+    if (dragX < -threshold) goToSection(activeIndex + 1);
+    else if (dragX > threshold) goToSection(activeIndex - 1);
+    setDragX(0);
+  };
 
   const handleSearch = async () => {
     track('search_submitted', {
@@ -93,6 +137,7 @@ export default function Categorias() {
       time_minutes: timeMinutes,
     });
     saveLastSelection(tipoPrato, allSelectedEntries);
+    recordIngredientHistory(tipoPrato, allSelectedEntries, user?.id);
     await runSearch();
     navigate('/resultados');
   };
@@ -203,30 +248,49 @@ export default function Categorias() {
             )}
           </div>
 
-          <div className="ing-sections">
-            {sections.map((section) => {
-              const isOpen = expanded.has(section.key);
-              const selCount = section.items.filter((i) => selected[i.query]).length;
+          <div className="cat-tabs">
+            {sections.map((section, i) => {
+              const selCount = section.items.filter((it) => selected[it.query]).length;
               return (
-                <div className="ing-section" key={section.key}>
-                  <button
-                    type="button"
-                    className={`ing-section-head${isOpen ? ' open' : ''}`}
-                    onClick={() => toggleSection(section.key)}
-                  >
-                    <span className="ing-section-icon">{section.icon}</span>
-                    <span className="ing-section-label">{section.label}</span>
-                    {selCount > 0 && <span className="ing-section-count">{selCount}</span>}
-                    <span className="ing-section-chevron">{isOpen ? '−' : '+'}</span>
-                  </button>
-                  {isOpen && (
-                    <div className="ing-grid" style={{ padding: '4px 4px 12px' }}>
-                      {section.items.map(renderCard)}
-                    </div>
-                  )}
-                </div>
+                <button
+                  key={section.key}
+                  type="button"
+                  ref={(el) => {
+                    if (el) tabRefs.current.set(section.key, el);
+                    else tabRefs.current.delete(section.key);
+                  }}
+                  className={`cat-tab${i === activeIndex ? ' active' : ''}`}
+                  onClick={() => goToSection(i)}
+                >
+                  <span className="cat-tab-icon">{section.icon}</span>
+                  <span className="cat-tab-label">{section.label}</span>
+                  {selCount > 0 && <span className="cat-tab-count">{selCount}</span>}
+                </button>
               );
             })}
+          </div>
+
+          <div
+            className="cat-pager"
+            ref={trackRef}
+            onPointerDown={handleTrackPointerDown}
+            onPointerMove={handleTrackPointerMove}
+            onPointerUp={handleTrackPointerEnd}
+            onPointerCancel={handleTrackPointerEnd}
+          >
+            <div
+              className={`cat-pager-track${dragging ? ' dragging' : ''}`}
+              style={{
+                transform: `translateX(calc(${(-activeIndex * 100) / sections.length}% + ${dragX}px))`,
+                width: `${sections.length * 100}%`,
+              }}
+            >
+              {sections.map((section) => (
+                <div className="cat-pager-page" key={section.key} style={{ width: `${100 / sections.length}%` }}>
+                  <div className="ing-grid">{section.items.map(renderCard)}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </>
       )}
@@ -256,15 +320,36 @@ export default function Categorias() {
       )}
 
       <div className="fab-container">
+        {totalSelectedCount > 0 && (
+          <div className={`recipe-counter${possibleRecipeCount > 0 && possibleRecipeCount <= 2 ? ' low' : ''}`}>
+            <span key={possibleRecipeCount} className="recipe-counter-num">
+              {possibleRecipeCount}
+            </span>
+            <span className="recipe-counter-label">
+              {possibleRecipeCount === 0
+                ? 'nenhuma receita ainda — adicione mais ingredientes'
+                : possibleRecipeCount === 1
+                  ? 'receita possível'
+                  : possibleRecipeCount <= 2
+                    ? 'receitas possíveis — que tal mais um item?'
+                    : 'receitas possíveis'}
+            </span>
+          </div>
+        )}
         <div
           className={`fab${totalSelectedCount === 0 || isSearching ? ' disabled' : ''}`}
           onClick={totalSelectedCount > 0 && !isSearching ? handleSearch : undefined}
         >
-          {isSearching
-            ? 'Buscando...'
-            : totalSelectedCount > 0
-              ? `Buscar receitas (${totalSelectedCount}) ✨`
-              : 'Selecione ingredientes'}
+          {isSearching ? (
+            <span className="fab-loading">
+              <span className="fab-spinner" />
+              Buscando...
+            </span>
+          ) : totalSelectedCount > 0 ? (
+            `Ver ${possibleRecipeCount > 0 ? possibleRecipeCount : ''} receita${possibleRecipeCount === 1 ? '' : 's'} ✨`
+          ) : (
+            'Selecione ingredientes'
+          )}
         </div>
       </div>
     </div>

@@ -11,6 +11,7 @@ import { saveDishToProfile } from '../utils/saveDish';
 import { getStashedRating, stashRating } from '../utils/ratingStore';
 import { track } from '../utils/analytics';
 import { bumpCookingStreak } from '../utils/streak';
+import StreakBadge from '../components/StreakBadge';
 
 const DIFFICULTY_OPTIONS: Difficulty[] = ['Fácil', 'Médio', 'Difícil'];
 
@@ -157,11 +158,7 @@ export default function Conclusao() {
             {cookingDurationSeconds !== null ? ` em ${durationLabel(cookingDurationSeconds)}` : ''}.
           </p>
         )}
-        {streak !== null && streak > 0 && (
-          <p className="conclusao-streak">
-            {streak === 1 ? '🔥 Você começou uma sequência hoje' : `🔥 ${streak} dias seguidos cozinhando`}
-          </p>
-        )}
+        {streak !== null && streak > 0 && <StreakBadge streak={streak} />}
 
         {/* Foto — compacta. Câmera expande só quando ativa. */}
         <div className={`conclusao-photo${cameraState === 'live' || cameraState === 'connecting' ? ' live' : ''}`}>

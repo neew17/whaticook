@@ -16,6 +16,18 @@
   --border-color: #3E3735;
   --success: #4CAF7D;
 
+  /* Motion system — vocabulário único de duração/curva (ver docs da auditoria de UX).
+     Nada de novo acima de --motion-reward: é o teto pra qualquer animação do app,
+     exceto o momento de recompensa do streak/conclusão de receita. */
+  --motion-instant: 120ms;  /* confirmação de toque (chip, botão) */
+  --motion-fast: 150ms;     /* troca de estado de um controle (ex: CTA -> loading) */
+  --motion-base: 180ms;     /* toast/contador entrando, saída rápida */
+  --motion-standard: 220ms; /* transição de tela, entrada de card */
+  --motion-generous: 300ms; /* ação positiva de baixa frequência (favoritar) */
+  --motion-reward: 400ms;   /* clímax do loop de hábito (streak, conclusão) */
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+
   color-scheme: dark;
 }
 
@@ -255,6 +267,152 @@ input[type=range] {
   }
 }
 
+/* Tela de valor — única vez por dispositivo, entre Splash e TipoPrato */
+.value-intro {
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: var(--bg-page);
+  cursor: pointer;
+}
+
+.value-intro-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 0 32px;
+  text-align: center;
+}
+
+.value-intro-headline {
+  font-family: 'Unbounded', 'Geist', sans-serif;
+  font-size: 22px;
+  line-height: 1.4;
+  color: var(--text-main);
+  animation: value-intro-rise 420ms ease-out both;
+}
+
+.value-intro-headline b {
+  color: var(--primary-dark);
+}
+
+.value-intro-icons {
+  display: flex;
+  gap: 14px;
+}
+
+.value-intro-icon {
+  font-size: 30px;
+  opacity: 0;
+  animation: value-intro-icon-pop 420ms cubic-bezier(0.34, 1.3, 0.64, 1) both;
+}
+
+.value-intro-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  animation: value-intro-rise 420ms ease-out 700ms both;
+}
+
+@keyframes value-intro-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes value-intro-icon-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .value-intro-headline,
+  .value-intro-icon,
+  .value-intro-hint {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* Undo toast — genérico pra qualquer ação reversível (ver components/UndoToast.tsx) */
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border-color);
+  border-radius: 999px;
+  padding: 12px 12px 12px 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 50;
+  font-size: 13px;
+  color: var(--text-main);
+  animation: undo-toast-in var(--motion-base) ease-out;
+  max-width: calc(100% - 40px);
+}
+
+.undo-toast-btn {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--primary);
+  border: none;
+  color: #fff;
+  font-family: 'Unbounded', 'Geist', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@keyframes undo-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Favoritar — ação positiva de baixa frequência, pico de feedback maior que um toque comum */
+.hero-fav-pop {
+  display: inline-flex;
+  animation: hero-fav-pop var(--motion-generous) var(--ease-spring);
+}
+
+@keyframes hero-fav-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-fav-pop {
+    animation: none;
+  }
+}
+
 /* Top bar */
 .topbar {
   display: flex;
@@ -442,7 +600,7 @@ input[type=range] {
   font-size: 22px;
   position: relative;
   overflow: hidden;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  transition: box-shadow var(--motion-instant) ease, transform var(--motion-instant) var(--ease-spring);
 }
 
 .tile-icon-box img {
@@ -553,6 +711,10 @@ input[type=range] {
 
 .ing-card:active .tile-icon-box {
   transform: scale(0.94);
+}
+
+.ing-card {
+  transition: background var(--motion-instant) ease, border-color var(--motion-instant) ease;
 }
 
 .ing-card.selected {
@@ -671,6 +833,65 @@ input[type=range] {
   pointer-events: none;
 }
 
+.fab-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.fab-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: spin 0.7s linear infinite;
+}
+
+/* Contador ao vivo de receitas possíveis — recalculado a cada toque de ingrediente,
+   pra transformar a seleção de "aposta às cegas" em negociação com o sistema. */
+.recipe-counter {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 6px 10px;
+  transition: color 0.15s ease;
+}
+
+.recipe-counter-num {
+  font-family: 'Unbounded', 'Geist', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--success);
+  font-variant-numeric: tabular-nums;
+  animation: recipe-counter-pop var(--motion-base) ease-out;
+}
+
+.recipe-counter.low .recipe-counter-num {
+  color: var(--secondary);
+}
+
+.recipe-counter-label {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.recipe-counter.low .recipe-counter-label {
+  color: var(--secondary);
+}
+
+@keyframes recipe-counter-pop {
+  from {
+    transform: scale(1.25);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* Category list (Categorias hub — full-width photo cards) */
 .category-list {
   display: grid;
@@ -771,6 +992,88 @@ input[type=range] {
   cursor: pointer;
 }
 
+/* Home adaptativa (TipoPrato) — reconhece quem já visitou antes, em vez de mostrar
+   a mesma tela pra novato e recorrente. Recorrente (D1-D7) oferece retomar direto;
+   dormente (D30+) usa um convite sem culpa, sem exibir perda de streak. */
+.welcome-back-banner {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--primary);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: result-card-in var(--motion-standard) ease-out backwards;
+}
+
+.welcome-back-banner.dormant {
+  border-color: var(--secondary);
+}
+
+.welcome-back-text {
+  font-size: 13px;
+  color: var(--text-main);
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.welcome-back-streak {
+  font-size: 12px;
+  color: var(--secondary);
+  font-weight: 600;
+}
+
+.welcome-back-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.welcome-back-resume {
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--primary);
+  border: none;
+  color: #fff;
+  font-family: 'Unbounded', 'Geist', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.welcome-back-banner.dormant .welcome-back-resume {
+  background: var(--secondary);
+  color: #1a1512;
+}
+
+.welcome-back-dismiss {
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Reengajamento por ingrediente parado — versão possível hoje (sem push real ainda),
+   ver utils/ingredientHistory.ts. Mesmo layout do welcome-back, tom mais neutro. */
+.stale-ingredient-banner {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-main);
+  line-height: 1.45;
+  animation: result-card-in var(--motion-standard) ease-out backwards;
+}
+
 /* Ingredientes — seções em acordeão (tela única de categorias) */
 .cat-toolbar {
   display: flex;
@@ -804,74 +1107,82 @@ input[type=range] {
   color: var(--text-muted);
 }
 
-.ing-sections {
+/* Categorias — faixa de abas (uma por categoria) + trilho paginado com swipe entre elas.
+   Trade-off deliberado: perde a visão "várias categorias abertas ao mesmo tempo" do
+   acordeão antigo, em troca do gesto de navegação horizontal (ver auditoria de motion). */
+.cat-tabs {
   display: flex;
-  flex-direction: column;
   gap: 8px;
-  padding: 4px 16px 8px;
+  padding: 4px 16px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.ing-section {
-  border: 1.5px solid var(--border-color);
-  border-radius: 14px;
-  background: var(--bg-gray);
-  overflow: hidden;
+.cat-tabs::-webkit-scrollbar {
+  display: none;
 }
 
-.ing-section-head {
-  width: 100%;
+.cat-tab {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 13px 14px;
-  cursor: pointer;
+  gap: 6px;
+  padding: 9px 13px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-gray);
   font-family: 'Unbounded', 'Geist', sans-serif;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--motion-instant) ease, border-color var(--motion-instant) ease, color var(--motion-instant) ease;
+}
+
+.cat-tab.active {
+  background: var(--primary-light);
+  border-color: var(--primary);
   color: var(--text-main);
-  text-align: left;
 }
 
-.ing-section-head.open {
-  border-bottom: 1.5px solid var(--border-color);
+.cat-tab-icon {
+  font-size: 14px;
 }
 
-.ing-section-icon {
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-.ing-section-label {
-  flex: 1;
-  line-height: 1.2;
-}
-
-.ing-section-count {
-  flex-shrink: 0;
+.cat-tab-count {
   background: var(--primary);
   color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
+  font-size: 10px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
   border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.ing-section-chevron {
-  flex-shrink: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-muted);
-  width: 16px;
-  text-align: center;
+.cat-pager {
+  overflow: hidden;
+  touch-action: pan-y;
 }
 
-.ing-section .ing-grid {
+.cat-pager-track {
+  display: flex;
+  transition: transform var(--motion-standard) var(--ease-standard);
+}
+
+.cat-pager-track.dragging {
+  transition: none;
+}
+
+.cat-pager-page {
+  flex-shrink: 0;
+}
+
+.cat-pager-page .ing-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 4px 16px 12px;
 }
 
 .category-count {
@@ -1236,6 +1547,26 @@ input[type=range] {
   border: 1.5px solid var(--border-color);
   text-align: left;
   width: 100%;
+  animation: result-card-in var(--motion-standard) ease-out backwards;
+}
+
+/* Cards reais entram em cascata no lugar do skeleton — mantém a leitura de posição
+   em vez de um crossfade abrupto (o `animationDelay` por item vem do enterIndex). */
+@keyframes result-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result-card {
+    animation: none;
+  }
 }
 
 .result-card.featured {
@@ -2262,11 +2593,95 @@ input[type=range] {
 
 .conclusao-sub b { color: var(--text-main); }
 
-.conclusao-streak {
-  font-size: 13px;
-  color: var(--primary-dark);
+/* Clímax do loop de hábito — ring de progresso + count-up, o único momento
+   "generoso" do motion system (400ms ease-in-out, ver StreakBadge.tsx). */
+.streak-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: -4px 0 0;
+}
+
+.streak-badge-num {
+  font-family: 'Unbounded', 'Geist', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  fill: var(--text-main);
+}
+
+.streak-badge-label {
+  font-size: 11.5px;
+  color: var(--text-muted);
   font-weight: 600;
-  margin: -8px 0 0;
+}
+
+/* Swipe-to-remove — ver components/SwipeToRemove.tsx */
+.swipe-to-remove {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.swipe-to-remove-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 20px;
+  font-family: 'Unbounded', 'Geist', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.swipe-to-remove-content {
+  position: relative;
+  background: var(--bg-gray);
+  touch-action: pan-y;
+  transition: transform var(--motion-fast) ease-out;
+}
+
+.swipe-to-remove-content.dragging {
+  transition: none;
+}
+
+.swipe-to-remove-content.removing {
+  transition: transform var(--motion-standard) ease-in;
+}
+
+/* Opt-in de push — fundação, ver utils/pushNotifications.ts */
+.push-optin-banner {
+  margin: 0 20px 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.push-optin-banner span {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.push-optin-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--primary);
+  border: none;
+  color: #fff;
+  font-family: 'Unbounded', 'Geist', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 /* Foto — compacta por padrão, expande com a câmera ativa */

@@ -83,6 +83,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchProfile(user.id);
     // Sincroniza avaliações feitas enquanto anônimo.
     flushPendingRatings(user.id);
+    // Proxy de "abriu o app" pro gatilho de dormência/streak em risco — silencioso em
+    // erro, uma marcação de presença não pode travar nada.
+    supabase.rpc('touch_last_seen').then(() => {});
   }, [user, fetchProfile]);
 
   useEffect(() => {

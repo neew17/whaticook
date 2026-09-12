@@ -22,18 +22,22 @@ function RecipeRow({
   selectable,
   checked,
   onToggleSelect,
+  enterIndex,
 }: {
   r: RecipeSummary;
   onOpen: () => void;
   selectable?: boolean;
   checked?: boolean;
   onToggleSelect?: () => void;
+  /** Posição na lista, usada só pra escalonar a entrada (stagger) — não afeta lógica. */
+  enterIndex?: number;
 }) {
   const img = RECIPE_IMAGES[r.id];
   return (
     <button
       type="button"
       className={`result-card${checked ? ' list-selected' : ''}`}
+      style={enterIndex !== undefined ? { animationDelay: `${Math.min(enterIndex, 10) * 35}ms` } : undefined}
       onClick={selectable ? onToggleSelect : onOpen}
     >
       <div className="result-thumb">{img ? <img src={img.url} alt="" /> : r.emoji}</div>
@@ -274,8 +278,8 @@ export default function Resultados() {
         </div>
       ) : viaSearch ? (
         <div className="result-list">
-          {filtered.map((r) => (
-            <RecipeRow key={r.id} r={r} onOpen={() => open(r.id)} />
+          {filtered.map((r, i) => (
+            <RecipeRow key={r.id} r={r} onOpen={() => open(r.id)} enterIndex={i} />
           ))}
         </div>
       ) : (
@@ -286,8 +290,8 @@ export default function Resultados() {
                 Dá pra fazer agora <span>{groups.now.length}</span>
               </p>
               <div className="result-list">
-                {groups.now.map((r) => (
-                  <RecipeRow key={r.id} r={r} onOpen={() => open(r.id)} />
+                {groups.now.map((r, i) => (
+                  <RecipeRow key={r.id} r={r} onOpen={() => open(r.id)} enterIndex={i} />
                 ))}
               </div>
             </div>
@@ -299,7 +303,7 @@ export default function Resultados() {
                 Falta 1 ingrediente <span>{groups.one.length}</span>
               </p>
               <div className="result-list">
-                {groups.one.map((r) => (
+                {groups.one.map((r, i) => (
                   <RecipeRow
                     key={r.id}
                     r={r}
@@ -307,6 +311,7 @@ export default function Resultados() {
                     selectable={listMode}
                     checked={selectedForList.has(r.id)}
                     onToggleSelect={() => toggleForList(r.id)}
+                    enterIndex={i}
                   />
                 ))}
               </div>
@@ -319,7 +324,7 @@ export default function Resultados() {
                 Falta 2 ou mais <span>{groups.far.length}</span>
               </p>
               <div className="result-list">
-                {(showAllFar ? groups.far : groups.far.slice(0, FAR_PREVIEW)).map((r) => (
+                {(showAllFar ? groups.far : groups.far.slice(0, FAR_PREVIEW)).map((r, i) => (
                   <RecipeRow
                     key={r.id}
                     r={r}
@@ -327,6 +332,7 @@ export default function Resultados() {
                     selectable={listMode}
                     checked={selectedForList.has(r.id)}
                     onToggleSelect={() => toggleForList(r.id)}
+                    enterIndex={i}
                   />
                 ))}
               </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BackIcon, CheckIcon, HeartIcon } from '../components/icons';
+import UndoToast from '../components/UndoToast';
 import { useAppState } from '../context/AppStateContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -22,6 +23,7 @@ export default function RecipeDetail() {
   const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteBusy, setFavoriteBusy] = useState(false);
+  const [pendingUnfavorite, setPendingUnfavorite] = useState(false);
   const [social, setSocial] = useState<DifficultySummary | null>(null);
 
   useEffect(() => {
@@ -54,15 +56,28 @@ export default function RecipeDetail() {
       if (!user) navigate('/entrar', { state: { intent: 'favorite' } });
       return;
     }
-    setFavoriteBusy(true);
     if (isFavorite) {
-      await supabase.from('favorite_recipes').delete().eq('user_id', user.id).eq('recipe_id', id);
+      // Some da tela na hora, mas o delete de verdade só roda se o toast expirar
+      // sem "Desfazer" — ver commitUnfavorite/undoUnfavorite abaixo.
       setIsFavorite(false);
-    } else {
-      await supabase.from('favorite_recipes').insert({ user_id: user.id, recipe_id: id });
-      setIsFavorite(true);
+      setPendingUnfavorite(true);
+      return;
     }
+    setFavoriteBusy(true);
+    await supabase.from('favorite_recipes').insert({ user_id: user.id, recipe_id: id });
+    setIsFavorite(true);
     setFavoriteBusy(false);
+  };
+
+  const undoUnfavorite = () => {
+    setPendingUnfavorite(false);
+    setIsFavorite(true);
+  };
+
+  const commitUnfavorite = async () => {
+    setPendingUnfavorite(false);
+    if (!user || !id) return;
+    await supabase.from('favorite_recipes').delete().eq('user_id', user.id).eq('recipe_id', id);
   };
 
   if (error) {
@@ -106,7 +121,9 @@ export default function RecipeDetail() {
           <BackIcon color="#fff" />
         </button>
         <button className="hero-nav-btn hero-fav" onClick={toggleFavorite} aria-label="Salvar receita">
-          <HeartIcon color={isFavorite ? 'var(--primary)' : '#fff'} />
+          <span key={String(isFavorite)} className={isFavorite ? 'hero-fav-pop' : undefined}>
+            <HeartIcon color={isFavorite ? 'var(--primary)' : '#fff'} />
+          </span>
         </button>
         {image ? (
           <>
@@ -221,6 +238,13 @@ export default function RecipeDetail() {
             : 'Começar a cozinhar →'}
         </div>
       </div>
+      {pendingUnfavorite && (
+        <UndoToast
+          message="Removido dos favoritos"
+          onUndo={undoUnfavorite}
+          onExpire={commitUnfavorite}
+        />
+      )}
     </div>
   );
 }

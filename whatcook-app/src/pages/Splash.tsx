@@ -6,6 +6,9 @@ import whatcookVoice from '../assets/whatcook-voice.mp3';
 // e quem já viu a splash nesta sessão vai direto pro funil.
 const MIN_SPLASH_MS = 1200;
 const SESSION_KEY = 'whatcook_splash_seen';
+// Diferente do SESSION_KEY (por sessão): fica no localStorage porque a tela de valor
+// só deve aparecer uma vez na vida do dispositivo, não uma vez por sessão.
+const VALUE_INTRO_KEY = 'whatcook_value_intro_seen';
 
 export default function Splash() {
   const navigate = useNavigate();
@@ -26,12 +29,14 @@ export default function Splash() {
       if (doneRef.current) return;
       doneRef.current = true;
       voice.pause();
+      let sawValueIntro = false;
       try {
         sessionStorage.setItem(SESSION_KEY, '1');
+        sawValueIntro = localStorage.getItem(VALUE_INTRO_KEY) === '1';
       } catch {
         /* ignore */
       }
-      navigate('/tipo-prato');
+      navigate(sawValueIntro ? '/tipo-prato' : '/bem-vindo');
     };
 
     if (seen) {

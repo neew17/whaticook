@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Splash from './pages/Splash';
+import ValueIntro from './pages/ValueIntro';
 import TipoPrato from './pages/TipoPrato';
 import Tempo from './pages/Tempo';
 import CriarReceita from './pages/CriarReceita';
@@ -61,6 +62,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Splash />} />
+      <Route path="/bem-vindo" element={<ValueIntro />} />
       <Route path="/tipo-prato" element={<TipoPrato />} />
       <Route path="/tempo" element={<Tempo />} />
       <Route path="/criar-receita" element={<CriarReceita />} />

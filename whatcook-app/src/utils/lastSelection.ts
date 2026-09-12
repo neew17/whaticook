@@ -33,6 +33,30 @@ export interface LastSelection {
   savedAt: number;
 }
 
+export interface LastVisitMeta {
+  tipoPrato: TipoPrato;
+  entryCount: number;
+  savedAt: number;
+}
+
+/**
+ * Igual a `loadLastSelection`, mas sem exigir o `tipoPrato` da visita atual — usado
+ * pela Home (TipoPrato.tsx) pra saber SE existe uma visita anterior e há quanto tempo,
+ * antes mesmo do usuário escolher doce/salgado/drink de novo. Só metadados, não resolve
+ * os ingredientes (isso fica pra `loadLastSelection` quando o tipo for conhecido).
+ */
+export function getLastVisitMeta(): LastVisitMeta | null {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredSelection;
+    if (!parsed.tipoPrato || parsed.queries.length === 0) return null;
+    return { tipoPrato: parsed.tipoPrato, entryCount: parsed.queries.length, savedAt: parsed.savedAt };
+  } catch {
+    return null;
+  }
+}
+
 export function loadLastSelection(tipoPrato: TipoPrato | null): LastSelection | null {
   if (!tipoPrato) return null;
   try {

@@ -12,5 +12,9 @@ export default defineConfig({
   plugins: [react(), ...(USE_HTTPS ? [basicSsl()] : [])],
   server: {
     host: true,
+    // Túnel temporário (trycloudflare) pra testar em celular de verdade — Vite bloqueia
+    // Host headers desconhecidos por padrão. Domínio muda a cada túnel novo, mas o
+    // sufixo é sempre o mesmo.
+    allowedHosts: ['.trycloudflare.com'],
   },
 })

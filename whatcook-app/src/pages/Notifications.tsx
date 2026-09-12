@@ -5,6 +5,8 @@ import { HeartIcon, CommunityIcon, UserIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { fetchNotifications, markAllRead, type NotificationRow, type NotificationType } from '../utils/notifications';
+import { getPushPermission, subscribeToPush } from '../utils/pushNotifications';
+import { track } from '../utils/analytics';
 
 interface ActorInfo {
   display_name: string | null;
@@ -36,6 +38,8 @@ export default function Notifications() {
   const { user, refreshUnreadCount } = useAuth();
   const [rows, setRows] = useState<NotificationRow[] | null>(null);
   const [actors, setActors] = useState<Map<string, ActorInfo>>(new Map());
+  const [pushPermission, setPushPermission] = useState(getPushPermission());
+  const [pushBusy, setPushBusy] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -51,6 +55,15 @@ export default function Notifications() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  const activatePush = async () => {
+    if (!user || pushBusy) return;
+    setPushBusy(true);
+    const ok = await subscribeToPush(user.id);
+    setPushBusy(false);
+    setPushPermission(getPushPermission());
+    track('push_opt_in', { ok });
+  };
 
   const openNotification = (n: NotificationRow) => {
     if (n.type === 'follow' && n.actor_id) {
@@ -74,6 +87,21 @@ export default function Notifications() {
   return (
     <div className="screen">
       <TopBar title="Notificações" onBack={() => navigate(-1)} />
+
+      {(pushPermission === 'default' || pushPermission === 'denied') && (
+        <div className="push-optin-banner">
+          <span>
+            {pushPermission === 'denied'
+              ? 'Notificações bloqueadas nas configurações do navegador.'
+              : 'Ative notificações pra saber quando alguém curtir ou seguir você.'}
+          </span>
+          {pushPermission === 'default' && (
+            <button type="button" className="push-optin-btn" onClick={activatePush} disabled={pushBusy}>
+              {pushBusy ? 'Ativando...' : 'Ativar'}
+            </button>
+          )}
+        </div>
+      )}
 
       {rows === null ? (
         <div className="state-block">

@@ -1227,7 +1227,8 @@ input[type=range] {
 }
 
 .cat-tab-icon {
-  font-size: 14px;
+  display: flex;
+  align-items: center;
 }
 
 .cat-tab-count {

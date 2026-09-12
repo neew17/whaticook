@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { CheckIcon, SearchIcon } from '../components/icons';
+import { CategoryIcon } from '../components/categoryIcons';
 import { useAppState } from '../context/AppStateContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -262,7 +263,13 @@ export default function Categorias() {
                   className={`cat-tab${i === activeIndex ? ' active' : ''}`}
                   onClick={() => goToSection(i)}
                 >
-                  <span className="cat-tab-icon">{section.icon}</span>
+                  <span className="cat-tab-icon">
+                    <CategoryIcon
+                      categoryKey={section.key}
+                      color={i === activeIndex ? 'var(--primary)' : 'var(--text-muted)'}
+                      size={15}
+                    />
+                  </span>
                   <span className="cat-tab-label">{section.label}</span>
                   {selCount > 0 && <span className="cat-tab-count">{selCount}</span>}
                 </button>

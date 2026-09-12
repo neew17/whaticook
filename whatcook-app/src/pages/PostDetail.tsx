@@ -243,7 +243,7 @@ export default function PostDetail() {
             onClick={() => toggleCommentLike(c)}
           >
             <HeartIcon color={c.isLiked ? 'var(--primary)' : 'var(--text-main)'} size={13} />
-            {c.likeCount > 0 && <span>{c.likeCount}</span>}
+            {c.likeCount > 1 && <span>{c.likeCount}</span>}
           </span>
           {!isReply && (
             <span

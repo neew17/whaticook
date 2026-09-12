@@ -275,7 +275,9 @@ export default function Comunidade() {
                 onClick={() => toggleLike(d)}
               >
                 <HeartIcon color={d.likedByMe ? 'var(--primary)' : 'currentColor'} size={18} />
-                {d.likeCount > 0 && <span>{d.likeCount}</span>}
+                {/* Contagens muito baixas (1) comunicam "ninguém usa isso" mais do que prova social —
+                    só mostra o número a partir de 2 curtidas; com 0 ou 1, o coração já basta. */}
+                {d.likeCount > 1 && <span>{d.likeCount}</span>}
               </button>
             );
 

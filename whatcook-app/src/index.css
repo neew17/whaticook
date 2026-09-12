@@ -7,16 +7,17 @@
   --primary-dark: #FF6B76;    /* variação clara do vermelho pra texto/link de baixo destaque */
   --secondary: #FFB020;       /* Âmbar — accent secundário (streak, destaque quente) */
 
-  --text-main: #F3EEEC;
-  --text-muted: #ADA4A1;
+  --text-main: #1B1815;
+  --text-muted: #7A736C;
 
-  /* Carvão — fundo base. Preto com um fio de calor, não 100% puro (reduz fadiga em telas grandes). */
-  --bg-page: #0D0D0F;
-  /* Grafite — superfície elevada: cards, nav, chips. */
-  --bg-gray: #17181C;
+  /* Creme — fundo base do tema claro. */
+  --cream: #F4F1EB;
+  --bg-page: var(--cream);
+  /* Superfície elevada: cards, nav, chips — branco de verdade, um degrau claro sobre o creme. */
+  --bg-gray: #FFFFFF;
   /* Segundo nível: inputs, cards aninhados, estados pressionados. */
-  --surface-2: #1F2024;
-  --border-color: #2B2C31;
+  --surface-2: #EAE4D8;
+  --border-color: #DEDACE;
 
   /* Paleta semântica — usar estas 3 variáveis (não --primary/--secondary direto) sempre que
      a cor precisar comunicar sucesso, alerta ou erro. --primary continua reservado pra marca/
@@ -24,10 +25,6 @@
   --success: #35B46A;  /* Verde-tempero — ingrediente em casa, conclusão de passo */
   --warning: #FFB020;  /* Âmbar — faltam poucos itens, dificuldade média */
   --error: #C4453B;    /* Vermelho-erro dessaturado — nunca o mesmo tom do CTA primário */
-
-  /* Creme — reservado pro tema claro (não aplicado ainda: o app é dark-first hoje; ligar um
-     tema claro de verdade exige revisar contraste tela a tela, não só trocar esta variável). */
-  --cream: #F4F1EB;
 
   /* Escala tipográfica — telas novas devem escolher um destes tamanhos em vez de um px solto.
      Os valores replicam os tamanhos mais comuns já em uso, então adotar a variável hoje não
@@ -52,7 +49,7 @@
   --ease-standard: cubic-bezier(0.2, 0.8, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 * {
@@ -1182,7 +1179,7 @@ input[type=range] {
   border-radius: 999px;
   background: var(--primary-light);
   border: 1.5px solid var(--primary);
-  color: #fff;
+  color: var(--primary);
   font-family: 'Unbounded', 'Geist', sans-serif;
   font-size: 11px;
   font-weight: 700;
@@ -1907,7 +1904,7 @@ input[type=range] {
   font-family: 'Unbounded', 'Geist', sans-serif;
   font-size: 13px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .social-proof {
@@ -2019,14 +2016,14 @@ input[type=range] {
 
 .step p {
   font-size: 13px;
-  color: #fff;
+  color: var(--text-main);
   line-height: 1.4;
 }
 
 /* Cooking (full screen step) */
 .cooking-screen {
   background: var(--bg-page);
-  color: #fff;
+  color: var(--text-main);
   justify-content: flex-start;
   min-height: 100vh;
 }
@@ -2079,7 +2076,7 @@ input[type=range] {
   font-family: 'Unbounded', 'Geist', sans-serif;
   font-size: 12px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2160,7 +2157,7 @@ input[type=range] {
   font-family: 'Unbounded', 'Geist', sans-serif;
   font-size: 38px;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-main);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2183,7 +2180,7 @@ input[type=range] {
   font-size: var(--text-lg);
   font-weight: 500;
   line-height: 1.6;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .cooking-body p.instruction-text-big {
@@ -2238,7 +2235,7 @@ input[type=range] {
   width: 100%;
   background: var(--primary-light);
   border: 1.5px solid var(--primary);
-  color: #fff;
+  color: var(--primary);
   border-radius: 16px;
   padding: 16px;
   font-family: 'Unbounded', 'Geist', sans-serif;
@@ -2919,7 +2916,7 @@ input[type=range] {
 .conclusao-photo-err {
   font-family: 'Geist', sans-serif;
   font-weight: 400;
-  color: var(--primary-dark);
+  color: var(--error);
   font-size: 10px;
   padding: 0 12px;
 }
@@ -3305,10 +3302,10 @@ input[type=range] {
   margin-top: 2px;
 }
 .auth-username-hint.good {
-  color: var(--primary-dark, var(--primary));
+  color: var(--success);
 }
 .auth-username-hint.bad {
-  color: var(--primary-dark);
+  color: var(--error);
 }
 
 .auth-password-field .auth-input {
@@ -4399,7 +4396,7 @@ input[type=range] {
   right: 16px;
   z-index: 5;
   background: rgba(0, 0, 0, 0.75);
-  color: var(--primary-dark);
+  color: var(--error);
   font-size: 12px;
   text-align: center;
   padding: 10px 14px;
@@ -4452,7 +4449,7 @@ input[type=range] {
   font-family: 'Unbounded', 'Geist', sans-serif;
   font-size: 15px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-main);
   margin-bottom: 2px;
 }
 
@@ -4494,7 +4491,7 @@ input[type=range] {
   border-radius: 999px;
   padding: 5px 10px;
   font-size: 11px;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .admin-recipe-steps {
@@ -4503,7 +4500,7 @@ input[type=range] {
   gap: 6px;
   padding-left: 18px;
   font-size: 13px;
-  color: #fff;
+  color: var(--text-main);
   line-height: 1.4;
 }
 

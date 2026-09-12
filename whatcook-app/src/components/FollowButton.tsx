@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { notify } from '../utils/notifications';
 
 interface FollowButtonProps {
   targetUserId: string;
@@ -47,6 +48,7 @@ export default function FollowButton({ targetUserId, onChange }: FollowButtonPro
       onChange?.(false);
     } else {
       await supabase.from('follows').insert({ follower_id: user.id, following_id: targetUserId });
+      notify(targetUserId, user.id, 'follow');
       setIsFollowing(true);
       onChange?.(true);
     }

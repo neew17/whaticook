@@ -92,7 +92,9 @@ equipment AND-filter returning zero results.
 ingredientes (RecipeIngredient[]), modoPreparo (string[]), equipamento (string[])`.
 
 Two invariants enforced across the whole file (violate them and ingredient/equipment pickers silently produce
-empty results — verify with the scripted checks below, not by eye, given the file's size):
+empty results — verify with `npm run check:ingredients` (`scripts/check-ingredient-integrity.ts`), not by eye,
+given the file's size — it checks both invariants below plus the ≥2-drink-recipes bar-item rule and duplicate
+`query` values):
 - Every `RecipeIngredient.query` must exactly match an `IngredientOption.query` in `ingredients.ts`, and every
   `equipamento` entry must match an `EQUIPAMENTOS` query. No fuzzy/partial matching exists anywhere.
 - Every *selectable* ingredient/equipment option must be used by **at least one** recipe — an "orphan" option

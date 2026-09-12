@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import StoryBar from '../components/StoryBar';
-import { HeartIcon, SearchIcon } from '../components/icons';
+import { BellIcon, HeartIcon, SearchIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { getBlockedByMeIds, getWhoBlockedMeIds } from '../utils/blocks';
@@ -27,7 +27,7 @@ const PAGE_SIZE = 12;
 
 export default function Comunidade() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, unreadNotifications } = useAuth();
   const [tab, setTab] = useState<FeedTab>('todos');
   const [dishes, setDishes] = useState<FeedDish[] | null>(null);
   const [page, setPage] = useState(0);
@@ -211,11 +211,24 @@ export default function Comunidade() {
   return (
     <div className="screen">
       <div className="topbar">
-        <div style={{ width: 36 }} />
+        <div style={{ width: 88 }} />
         <h1>Comunidade</h1>
-        <button className="icon-btn" onClick={() => navigate('/buscar')} aria-label="Buscar cozinheiros">
-          <SearchIcon />
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {user && (
+            <button
+              type="button"
+              className="icon-btn notification-bell-btn"
+              onClick={() => navigate('/notificacoes')}
+              aria-label="Notificações"
+            >
+              <BellIcon />
+              {unreadNotifications > 0 && <span className="notification-badge" />}
+            </button>
+          )}
+          <button className="icon-btn" onClick={() => navigate('/buscar')} aria-label="Buscar cozinheiros">
+            <SearchIcon />
+          </button>
+        </div>
       </div>
 
       <div className="tabs">

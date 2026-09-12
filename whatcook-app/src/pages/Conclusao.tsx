@@ -9,6 +9,8 @@ import type { Difficulty } from '../data/recipes';
 import { fetchDifficultySummary, MIN_RATINGS_FOR_PERCENT, type DifficultySummary } from '../utils/recipeSocial';
 import { saveDishToProfile } from '../utils/saveDish';
 import { getStashedRating, stashRating } from '../utils/ratingStore';
+import { track } from '../utils/analytics';
+import { bumpCookingStreak } from '../utils/streak';
 
 const DIFFICULTY_OPTIONS: Difficulty[] = ['Fácil', 'Médio', 'Difícil'];
 
@@ -43,17 +45,28 @@ export default function Conclusao() {
 
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [shareOpen, setShareOpen] = useState(false);
+  const [streak, setStreak] = useState<number | null>(null);
 
   useEffect(() => {
     if (recipe) {
       setCompletedDish({ recipeId: recipe.id, title: recipe.titulo });
+      track('recipe_completed', {
+        recipe_id: recipe.id,
+        duration_seconds: cookingDurationSeconds,
+      });
       const prev = getStashedRating(recipe.id);
       if (prev) {
         setRating(prev);
         setRatingDone(true);
       }
+      if (user) {
+        bumpCookingStreak().then((result) => {
+          if (result) setStreak(result.current_streak);
+        });
+      }
     }
-  }, [recipe, setCompletedDish]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipe, setCompletedDish, user]);
 
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -142,6 +155,11 @@ export default function Conclusao() {
           <p className="conclusao-sub">
             Você fez <b>{recipe.titulo}</b>
             {cookingDurationSeconds !== null ? ` em ${durationLabel(cookingDurationSeconds)}` : ''}.
+          </p>
+        )}
+        {streak !== null && streak > 0 && (
+          <p className="conclusao-streak">
+            {streak === 1 ? '🔥 Você começou uma sequência hoje' : `🔥 ${streak} dias seguidos cozinhando`}
           </p>
         )}
 

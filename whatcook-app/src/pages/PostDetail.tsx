@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { RECIPES } from '../data/recipes';
 import { RECIPE_IMAGES } from '../data/recipe-images';
+import { notify } from '../utils/notifications';
 
 interface DishRow {
   id: string;
@@ -152,6 +153,7 @@ export default function PostDetail() {
       await supabase.from('dish_likes').delete().eq('user_id', user.id).eq('dish_id', dishId);
     } else {
       await supabase.from('dish_likes').insert({ user_id: user.id, dish_id: dishId });
+      if (dish) notify(dish.user_id, user.id, 'like_dish', { dishId });
     }
     refreshLikes();
     setLikeBusy(false);
@@ -168,6 +170,7 @@ export default function PostDetail() {
       await supabase.from('comment_likes').delete().eq('user_id', user.id).eq('comment_id', comment.id);
     } else {
       await supabase.from('comment_likes').insert({ user_id: user.id, comment_id: comment.id });
+      if (dishId) notify(comment.user_id, user.id, 'like_comment', { dishId, commentId: comment.id });
     }
     refreshComments();
     setCommentLikeBusy(null);
@@ -181,12 +184,13 @@ export default function PostDetail() {
     if (!dishId || !commentText.trim() || postingComment) return;
     setPostingComment(true);
     await supabase.from('dish_comments').insert({ dish_id: dishId, user_id: user.id, content: commentText.trim() });
+    if (dish) notify(dish.user_id, user.id, 'comment', { dishId });
     setCommentText('');
     refreshComments();
     setPostingComment(false);
   };
 
-  const submitReply = async (parentId: string) => {
+  const submitReply = async (parent: CommentRow) => {
     if (!user) {
       navigate('/entrar', { state: { intent: 'comment' } });
       return;
@@ -195,7 +199,8 @@ export default function PostDetail() {
     setPostingReply(true);
     await supabase
       .from('dish_comments')
-      .insert({ dish_id: dishId, user_id: user.id, content: replyText.trim(), parent_comment_id: parentId });
+      .insert({ dish_id: dishId, user_id: user.id, content: replyText.trim(), parent_comment_id: parent.id });
+    notify(parent.user_id, user.id, 'comment_reply', { dishId, commentId: parent.id });
     setReplyText('');
     setReplyingTo(null);
     refreshComments();
@@ -262,10 +267,10 @@ export default function PostDetail() {
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') submitReply(c.id);
+                if (e.key === 'Enter') submitReply(c);
               }}
             />
-            <div className="comment-send-btn" onClick={postingReply ? undefined : () => submitReply(c.id)}>
+            <div className="comment-send-btn" onClick={postingReply ? undefined : () => submitReply(c)}>
               Enviar
             </div>
           </div>

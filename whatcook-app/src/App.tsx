@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Splash from './pages/Splash';
 import TipoPrato from './pages/TipoPrato';
 import Tempo from './pages/Tempo';
@@ -20,11 +20,13 @@ import CookerProfile from './pages/CookerProfile';
 import Search from './pages/Search';
 import FollowList from './pages/FollowList';
 import PostDetail from './pages/PostDetail';
+import Notifications from './pages/Notifications';
 import StoryViewer from './pages/StoryViewer';
 import StoryEditor from './pages/StoryEditor';
 import StoriesExplore from './pages/StoriesExplore';
 import NotFound from './pages/NotFound';
 import { playClickSound } from './utils/sound';
+import { trackPageview } from './utils/analytics';
 
 const CLICKABLE_SELECTOR =
   'button, .fab, .cta-fixed, .cta-secondary, .tempo-card, .class-card, .ing-card, .pantry-item, .tab, ' +
@@ -37,6 +39,9 @@ const CLICKABLE_SELECTOR =
   '.story-editor-publish-btn, .explore-story-row, .story-viewer-viewers-bar, .explore-stories-link';
 
 function App() {
+  const location = useLocation();
+  const previousPath = useRef<string | null>(null);
+
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
@@ -47,6 +52,11 @@ function App() {
     document.addEventListener('click', handleClick, true);
     return () => document.removeEventListener('click', handleClick, true);
   }, []);
+
+  useEffect(() => {
+    trackPageview(location.pathname, previousPath.current);
+    previousPath.current = location.pathname;
+  }, [location.pathname]);
 
   return (
     <Routes>
@@ -78,6 +88,7 @@ function App() {
       <Route path="/cooker/:id" element={<CookerProfile />} />
       <Route path="/rede/:id/:type" element={<FollowList />} />
       <Route path="/publicacao/:dishId" element={<PostDetail />} />
+      <Route path="/notificacoes" element={<Notifications />} />
       <Route path="/story/:userId" element={<StoryViewer />} />
       <Route path="/story-editor" element={<StoryEditor />} />
       <Route path="/stories" element={<StoriesExplore />} />

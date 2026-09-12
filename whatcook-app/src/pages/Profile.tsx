@@ -196,6 +196,10 @@ export default function Profile() {
             <b>{followingCount}</b>
             <span>Seguindo</span>
           </div>
+          <div className="profile-follow-stat no-click">
+            <b>🔥 {profile?.current_streak ?? 0}</b>
+            <span>Sequência</span>
+          </div>
         </div>
 
         {avatarError && <p className="auth-error">{avatarError}</p>}

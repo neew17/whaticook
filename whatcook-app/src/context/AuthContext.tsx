@@ -3,6 +3,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { flushPendingRatings } from '../utils/ratingStore';
 import { translateAuthError } from '../utils/authErrors';
+import { fetchUnreadCount } from '../utils/notifications';
 
 export interface Profile {
   id: string;
@@ -13,6 +14,8 @@ export interface Profile {
   bio: string | null;
   xp: number;
   is_admin: boolean;
+  current_streak: number;
+  last_cooked_at: string | null;
 }
 
 interface AuthState {
@@ -20,6 +23,8 @@ interface AuthState {
   profile: Profile | null;
   loading: boolean;
   passwordRecovery: boolean;
+  unreadNotifications: number;
+  refreshUnreadCount: () => Promise<void>;
   signUp: (
     email: string,
     password: string,
@@ -42,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [passwordRecovery, setPasswordRecovery] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -60,15 +66,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile((data as Profile) ?? null);
   }, []);
 
+  const refreshUnreadCount = useCallback(async () => {
+    if (!user) {
+      setUnreadNotifications(0);
+      return;
+    }
+    setUnreadNotifications(await fetchUnreadCount(user.id));
+  }, [user]);
+
   useEffect(() => {
     if (!user) {
       setProfile(null);
+      setUnreadNotifications(0);
       return;
     }
     fetchProfile(user.id);
     // Sincroniza avaliações feitas enquanto anônimo.
     flushPendingRatings(user.id);
   }, [user, fetchProfile]);
+
+  useEffect(() => {
+    refreshUnreadCount();
+  }, [refreshUnreadCount]);
 
   const refreshProfile = useCallback(async () => {
     if (user) await fetchProfile(user.id);
@@ -132,6 +151,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         loading,
         passwordRecovery,
+        unreadNotifications,
+        refreshUnreadCount,
         signUp,
         signIn,
         signInWithGoogle,

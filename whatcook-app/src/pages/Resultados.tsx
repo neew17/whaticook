@@ -2,9 +2,11 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { FilterIcon, MenuIcon } from '../components/icons';
-import { useAppState, type RecipeSummary } from '../context/AppStateContext';
+import { useAppState, type MissingIngredient, type RecipeSummary } from '../context/AppStateContext';
 import { RECIPE_IMAGES } from '../data/recipe-images';
 import type { Difficulty } from '../data/recipes';
+import { track } from '../utils/analytics';
+import ShoppingListSheet from '../components/ShoppingListSheet';
 
 const DIFFICULTIES: Difficulty[] = ['Fácil', 'Médio', 'Difícil'];
 const TIME_FILTERS = [
@@ -14,10 +16,26 @@ const TIME_FILTERS = [
 ];
 const FAR_PREVIEW = 6;
 
-function RecipeRow({ r, onOpen }: { r: RecipeSummary; onOpen: () => void }) {
+function RecipeRow({
+  r,
+  onOpen,
+  selectable,
+  checked,
+  onToggleSelect,
+}: {
+  r: RecipeSummary;
+  onOpen: () => void;
+  selectable?: boolean;
+  checked?: boolean;
+  onToggleSelect?: () => void;
+}) {
   const img = RECIPE_IMAGES[r.id];
   return (
-    <button type="button" className="result-card" onClick={onOpen}>
+    <button
+      type="button"
+      className={`result-card${checked ? ' list-selected' : ''}`}
+      onClick={selectable ? onToggleSelect : onOpen}
+    >
       <div className="result-thumb">{img ? <img src={img.url} alt="" /> : r.emoji}</div>
       <div className="result-info">
         <h4>{r.title}</h4>
@@ -38,6 +56,7 @@ function RecipeRow({ r, onOpen }: { r: RecipeSummary; onOpen: () => void }) {
           </div>
         )}
       </div>
+      {selectable && <div className={`result-select-check${checked ? ' checked' : ''}`}>{checked ? '✓' : ''}</div>}
     </button>
   );
 }
@@ -49,6 +68,9 @@ export default function Resultados() {
   const [maxTime, setMaxTime] = useState<number | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [showAllFar, setShowAllFar] = useState(false);
+  const [listMode, setListMode] = useState(false);
+  const [selectedForList, setSelectedForList] = useState<Set<string>>(new Set());
+  const [shoppingListOpen, setShoppingListOpen] = useState(false);
 
   const viaSearch = Boolean(results && results.length > 0 && results[0].viaSearch);
   const hasFilters = difficulty !== null || maxTime !== null;
@@ -79,6 +101,37 @@ export default function Resultados() {
   const clearFilters = () => {
     setDifficulty(null);
     setMaxTime(null);
+  };
+
+  const toggleForList = (id: string) => {
+    setSelectedForList((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const exitListMode = () => {
+    setListMode(false);
+    setSelectedForList(new Set());
+  };
+
+  const shoppingItems = useMemo(() => {
+    const byQuery = new Map<string, MissingIngredient>();
+    for (const r of filtered) {
+      if (!selectedForList.has(r.id)) continue;
+      for (const m of r.missedIngredients) byQuery.set(m.query, m);
+    }
+    return Array.from(byQuery.values());
+  }, [filtered, selectedForList]);
+
+  const openShoppingList = () => {
+    track('shopping_list_generated', {
+      recipe_count: selectedForList.size,
+      item_count: shoppingItems.length,
+    });
+    setShoppingListOpen(true);
   };
 
   const backToPicker = (
@@ -195,6 +248,23 @@ export default function Resultados() {
         </div>
       )}
 
+      {!viaSearch && (groups.one.length > 0 || groups.far.length > 0) && (
+        <div className="shopping-toggle-row">
+          {listMode ? (
+            <>
+              <span className="shopping-toggle-hint">Toque nas receitas que você vai fazer</span>
+              <button type="button" className="shopping-toggle-cancel" onClick={exitListMode}>
+                Cancelar
+              </button>
+            </>
+          ) : (
+            <button type="button" className="shopping-toggle-btn" onClick={() => setListMode(true)}>
+              🛒 Gerar lista de compras
+            </button>
+          )}
+        </div>
+      )}
+
       {filtered.length === 0 ? (
         <div className="state-block">
           <p>Nenhuma receita com esses filtros.</p>
@@ -230,7 +300,14 @@ export default function Resultados() {
               </p>
               <div className="result-list">
                 {groups.one.map((r) => (
-                  <RecipeRow key={r.id} r={r} onOpen={() => open(r.id)} />
+                  <RecipeRow
+                    key={r.id}
+                    r={r}
+                    onOpen={() => open(r.id)}
+                    selectable={listMode}
+                    checked={selectedForList.has(r.id)}
+                    onToggleSelect={() => toggleForList(r.id)}
+                  />
                 ))}
               </div>
             </div>
@@ -243,7 +320,14 @@ export default function Resultados() {
               </p>
               <div className="result-list">
                 {(showAllFar ? groups.far : groups.far.slice(0, FAR_PREVIEW)).map((r) => (
-                  <RecipeRow key={r.id} r={r} onOpen={() => open(r.id)} />
+                  <RecipeRow
+                    key={r.id}
+                    r={r}
+                    onOpen={() => open(r.id)}
+                    selectable={listMode}
+                    checked={selectedForList.has(r.id)}
+                    onToggleSelect={() => toggleForList(r.id)}
+                  />
                 ))}
               </div>
               {!showAllFar && groups.far.length > FAR_PREVIEW && (
@@ -254,6 +338,22 @@ export default function Resultados() {
             </div>
           )}
         </>
+      )}
+
+      {listMode && selectedForList.size > 0 && (
+        <div className="fab-container">
+          <div className="fab" onClick={openShoppingList}>
+            Gerar lista de compras ({selectedForList.size} {selectedForList.size === 1 ? 'receita' : 'receitas'})
+          </div>
+        </div>
+      )}
+
+      {shoppingListOpen && (
+        <ShoppingListSheet
+          items={shoppingItems}
+          recipeCount={selectedForList.size}
+          onClose={() => setShoppingListOpen(false)}
+        />
       )}
     </div>
   );

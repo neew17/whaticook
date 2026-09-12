@@ -13,6 +13,8 @@ import {
 import { normalize } from '../utils/text';
 import { isQueryRelevantForTipo } from '../utils/ingredientRelevance';
 import { INGREDIENT_IMAGES } from '../data/ingredientImages';
+import { track } from '../utils/analytics';
+import { loadLastSelection, saveLastSelection } from '../utils/lastSelection';
 
 interface Section {
   key: string;
@@ -32,10 +34,17 @@ export default function Categorias() {
     toggleIngredient,
     selectIngredients,
     tipoPrato,
+    timeMinutes,
   } = useAppState();
   const [ingredientQuery, setIngredientQuery] = useState('');
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['essenciais']));
   const didAutoExpand = useRef(false);
+
+  // Snapshot pego só no mount: se a tela abriu com seleção vazia (visita nova, não um reload
+  // no meio da sessão — esse caso já é restaurado por whatcook_session), oferece repetir a
+  // última busca de ingredientes salva pra esse mesmo tipoPrato.
+  const [lastSelection] = useState(() => (totalSelectedCount === 0 ? loadLastSelection(tipoPrato) : null));
+  const [lastSelectionDismissed, setLastSelectionDismissed] = useState(false);
 
   const isRelevant = (o: IngredientOption) => isQueryRelevantForTipo(o.query, tipoPrato);
 
@@ -78,8 +87,21 @@ export default function Categorias() {
     });
 
   const handleSearch = async () => {
+    track('search_submitted', {
+      ingredient_count: totalSelectedCount,
+      tipo: tipoPrato,
+      time_minutes: timeMinutes,
+    });
+    saveLastSelection(tipoPrato, allSelectedEntries);
     await runSearch();
     navigate('/resultados');
+  };
+
+  const useLastSelection = () => {
+    if (!lastSelection) return;
+    track('last_selection_used', { tipo: tipoPrato, count: lastSelection.entries.length });
+    selectIngredients(lastSelection.entries);
+    setLastSelectionDismissed(true);
   };
 
   const haveBasics = essentialItems.length > 0 && essentialItems.every((i) => selected[i.query]);
@@ -132,6 +154,26 @@ export default function Categorias() {
         />
       </div>
 
+      {lastSelection && !lastSelectionDismissed && !isIngredientSearching && (
+        <div className="last-selection-banner">
+          <span>
+            Usar os mesmos <b>{lastSelection.entries.length} ingredientes</b> de última vez?
+          </span>
+          <div className="last-selection-actions">
+            <button type="button" className="last-selection-use" onClick={useLastSelection}>
+              Usar
+            </button>
+            <button
+              type="button"
+              className="last-selection-dismiss"
+              onClick={() => setLastSelectionDismissed(true)}
+            >
+              Ignorar
+            </button>
+          </div>
+        </div>
+      )}
+
       {isIngredientSearching ? (
         ingredientSearchResults.length === 0 ? (
           <div className="state-block">
@@ -150,7 +192,10 @@ export default function Categorias() {
               <button
                 type="button"
                 className={`cat-basics-btn${haveBasics ? ' on' : ''}`}
-                onClick={() => selectIngredients(essentialItems)}
+                onClick={() => {
+                  track('basics_button_used', { tipo: tipoPrato });
+                  selectIngredients(essentialItems);
+                }}
                 disabled={haveBasics}
               >
                 {haveBasics ? '✓ Básico marcado' : '+ Tenho o básico'}

@@ -41,17 +41,12 @@ Abra-o e compare com `legacy/` para saber o que divergiu — em especial:
 git add supabase && git commit -m "Baseline: schema real de produção via supabase db pull"
 ```
 
-### Passo 2 — corrigir o furo de privilégio (P0-1, fazer junto)
+### Passo 2 — corrigir o furo de privilégio (P0-1) — ✅ feito
 
-O SQL já está escrito e revisado em **`supabase/pending/lock_profiles_privileged_columns.sql`**
-(fecha o `profiles.is_admin` / `xp` editáveis pelo cliente). Para transformá-lo em migration:
-
-```bash
-supabase migration new lock_profiles_privileged_columns
-```
-
-Cole no arquivo gerado o bloco marcado `-- >>> migration` daquele arquivo, apague o
-`supabase/pending/`, e siga pro `db push` (dev primeiro).
+Aplicado em `migrations/20260911130000_profiles_streak_and_privilege_lock.sql` (o antigo
+`supabase/pending/lock_profiles_privileged_columns.sql` foi apagado — o conteúdo virou essa
+migration, já rodada em produção). Trava `is_admin`/`xp`/`current_streak`/`last_cooked_at`
+contra PATCH direto do cliente via trigger `trg_profiles_privileged_columns`.
 
 ### Passo 3 — projeto de staging
 

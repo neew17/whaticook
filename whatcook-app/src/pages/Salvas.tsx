@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
+import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { RECIPES } from '../data/recipes';
@@ -83,9 +84,9 @@ export default function Salvas() {
               })}
             </div>
             <div className="fab-container">
-              <div className="fab" onClick={() => navigate('/entrar', { state: { intent: 'favorite' } })}>
+              <Button onClick={() => navigate('/entrar', { state: { intent: 'favorite' } })}>
                 Entrar ou criar conta
-              </div>
+              </Button>
             </div>
           </>
         ) : (
@@ -102,14 +103,9 @@ export default function Salvas() {
             </div>
             <p className="empty-value-title">Nunca mais perca uma receita boa</p>
             <p>Crie uma conta para favoritar receitas com um toque e ver aqui tudo que você já cozinhou — sem precisar procurar de novo.</p>
-            <button
-              type="button"
-              className="fab"
-              style={{ marginTop: 12 }}
-              onClick={() => navigate('/entrar', { state: { intent: 'favorite' } })}
-            >
+            <Button style={{ marginTop: 12 }} onClick={() => navigate('/entrar', { state: { intent: 'favorite' } })}>
               Entrar ou criar conta
-            </button>
+            </Button>
           </div>
         )}
         <BottomNav />

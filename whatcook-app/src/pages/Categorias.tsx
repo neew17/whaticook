@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { CheckIcon, SearchIcon } from '../components/icons';
 import { CategoryIcon } from '../components/categoryIcons';
+import Button from '../components/Button';
 import { useAppState } from '../context/AppStateContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -343,21 +344,19 @@ export default function Categorias() {
             </span>
           </div>
         )}
-        <div
-          className={`fab${totalSelectedCount === 0 || isSearching ? ' disabled' : ''}`}
-          onClick={totalSelectedCount > 0 && !isSearching ? handleSearch : undefined}
+        <Button
+          disabled={totalSelectedCount === 0 || isSearching}
+          loading={isSearching}
+          onClick={handleSearch}
         >
           {isSearching ? (
-            <span className="fab-loading">
-              <span className="fab-spinner" />
-              Buscando...
-            </span>
+            'Buscando...'
           ) : totalSelectedCount > 0 ? (
             `Ver ${possibleRecipeCount > 0 ? possibleRecipeCount : ''} receita${possibleRecipeCount === 1 ? '' : 's'} ✨`
           ) : (
             'Selecione ingredientes'
           )}
-        </div>
+        </Button>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import BottomNav from '../components/BottomNav';
 import StoryBar from '../components/StoryBar';
+import Button from '../components/Button';
 import { ShieldIcon, LogoutIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -130,14 +131,9 @@ export default function Profile() {
           </div>
           <p className="empty-value-title">Seu histórico de cozinha, num perfil só seu</p>
           <p>Crie uma conta para guardar sua sequência de dias cozinhando, acompanhar quem você segue e postar os pratos que você fizer.</p>
-          <button
-            type="button"
-            className="fab"
-            style={{ marginTop: 12 }}
-            onClick={() => navigate('/entrar', { state: { intent: 'profile' } })}
-          >
+          <Button style={{ marginTop: 12 }} onClick={() => navigate('/entrar', { state: { intent: 'profile' } })}>
             Entrar ou criar conta
-          </button>
+          </Button>
         </div>
         <BottomNav />
       </div>
@@ -226,9 +222,9 @@ export default function Profile() {
               onChange={(e) => setBio(e.target.value)}
               placeholder="Conte um pouco sobre você: seu estilo de cozinha, pratos que mais gosta de fazer, técnicas favoritas..."
             />
-            <div className="fab" style={{ marginTop: 16 }} onClick={savingBio ? undefined : handleSaveBio}>
+            <Button style={{ marginTop: 16 }} disabled={savingBio} onClick={handleSaveBio}>
               {savingBio ? 'Salvando...' : bioSaved ? 'Salvo ✓' : 'Salvar bio'}
-            </div>
+            </Button>
           </>
         ) : (
           <div className="profile-bio-view">

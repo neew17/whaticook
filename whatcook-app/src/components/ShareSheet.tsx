@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import Button from './Button';
 
 interface ShareSheetProps {
   title: string;
@@ -161,9 +162,9 @@ export default function ShareSheet({ title, emoji, imageSrc, onClose, onStory }:
         </div>
         <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-        <button type="button" className="fab" style={{ width: '100%' }} onClick={handleShare} disabled={busy}>
+        <Button style={{ width: '100%' }} onClick={handleShare} disabled={busy}>
           {busy ? 'Preparando...' : '📤 Compartilhar'}
-        </button>
+        </Button>
         <button type="button" className="cta-secondary" style={{ width: '100%', margin: '8px 0 0' }} onClick={handleCopy}>
           {copied ? 'Link copiado ✓' : '🔗 Copiar link do app'}
         </button>

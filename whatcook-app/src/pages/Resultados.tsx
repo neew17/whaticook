@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
+import Button from '../components/Button';
 import { FilterIcon, MenuIcon } from '../components/icons';
 import { useAppState, type MissingIngredient, type RecipeSummary } from '../context/AppStateContext';
 import { RECIPE_IMAGES } from '../data/recipe-images';
@@ -47,7 +48,13 @@ function RecipeRow({
       style={enterIndex !== undefined ? { animationDelay: `${Math.min(enterIndex, 10) * 35}ms` } : undefined}
       onClick={selectable ? onToggleSelect : onOpen}
     >
-      <div className="result-thumb">{img ? <img src={img.url} alt="" /> : r.emoji}</div>
+      <div className="result-photo">
+        {img ? <img src={img.url} alt="" /> : <span className="result-photo-emoji">{r.emoji}</span>}
+        <span className="result-match-badge">{r.matchPercent}%</span>
+        {selectable && (
+          <div className={`result-select-check${checked ? ' checked' : ''}`}>{checked ? '✓' : ''}</div>
+        )}
+      </div>
       <div className="result-info">
         <h4>{r.title}</h4>
         <p>
@@ -67,7 +74,6 @@ function RecipeRow({
           </div>
         )}
       </div>
-      {selectable && <div className={`result-select-check${checked ? ' checked' : ''}`}>{checked ? '✓' : ''}</div>}
     </button>
   );
 }
@@ -182,9 +188,9 @@ export default function Resultados() {
         <TopBar title="Receitas" onBack={() => navigate("/categorias")} rightSlot={backToPicker} hideAccountIcon />
         <div className="state-block">
           <p>{searchError}</p>
-          <div className="fab" style={{ marginTop: 12 }} onClick={() => navigate('/categorias')}>
+          <Button style={{ marginTop: 12 }} onClick={() => navigate('/categorias')}>
             Ajustar ingredientes
-          </div>
+          </Button>
         </div>
       </div>
     );
@@ -196,9 +202,9 @@ export default function Resultados() {
         <TopBar title="Receitas" onBack={() => navigate("/categorias")} rightSlot={backToPicker} hideAccountIcon />
         <div className="state-block">
           <p>Nenhuma receita encontrada com esses ingredientes e tempo. Tente ajustar as escolhas.</p>
-          <div className="fab" style={{ marginTop: 12 }} onClick={() => navigate('/categorias')}>
+          <Button style={{ marginTop: 12 }} onClick={() => navigate('/categorias')}>
             Ajustar ingredientes
-          </div>
+          </Button>
         </div>
       </div>
     );
@@ -286,9 +292,9 @@ export default function Resultados() {
       {filtered.length === 0 ? (
         <div className="state-block">
           <p>Nenhuma receita com esses filtros.</p>
-          <button type="button" className="fab" style={{ marginTop: 12 }} onClick={clearFilters}>
+          <Button style={{ marginTop: 12 }} onClick={clearFilters}>
             Limpar filtros
-          </button>
+          </Button>
         </div>
       ) : viaSearch ? (
         <div className="result-list">
@@ -374,9 +380,9 @@ export default function Resultados() {
 
       {listMode && selectedForList.size > 0 && (
         <div className="fab-container">
-          <div className="fab" onClick={openShoppingList}>
+          <Button onClick={openShoppingList}>
             Gerar lista de compras ({selectedForList.size} {selectedForList.size === 1 ? 'receita' : 'receitas'})
-          </div>
+          </Button>
         </div>
       )}
 

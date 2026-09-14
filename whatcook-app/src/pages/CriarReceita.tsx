@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
+import Button from '../components/Button';
 import { CheckIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { useAppState } from '../context/AppStateContext';
@@ -121,9 +122,9 @@ export default function CriarReceita() {
           Sua receita <b style={{ color: '#fff' }}>{title}</b> foi enviada para revisão. Assim que for aprovada, ela
           passa a aparecer nas buscas de todo mundo.
         </p>
-        <div className="fab" style={{ width: '100%' }} onClick={() => navigate('/tempo')}>
+        <Button style={{ width: '100%' }} onClick={() => navigate('/tempo')}>
           Voltar
-        </div>
+        </Button>
       </div>
     );
   }
@@ -260,9 +261,9 @@ export default function CriarReceita() {
       )}
 
       <div className="fab-container">
-        <div className={`fab${submitting ? ' disabled' : ''}`} onClick={submitting ? undefined : handleSubmit}>
+        <Button disabled={submitting} onClick={handleSubmit}>
           {submitting ? 'Enviando...' : 'Enviar receita para revisão →'}
-        </div>
+        </Button>
       </div>
     </div>
   );

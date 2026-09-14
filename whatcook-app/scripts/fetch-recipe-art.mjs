@@ -292,6 +292,7 @@ const RECIPES = {
   "vitamina-coco-banana": { s: "banana coconut smoothie", t: "doce" },
   "pudim-abacaxi": { s: "pineapple pudding", t: "doce" },
   "limonada-suica": { s: "brazilian lemonade", t: "doce" },
+  "limonada-suica-drink": { s: "brazilian lemonade cocktail", t: "drink" },
   "geladinho-de-morango-iogurte": { s: "strawberry yogurt popsicle", t: "doce" },
   "suspiro-forno": { s: "baked meringue kisses", t: "doce" },
   "bolo-pudim-caseiro": { s: "flan cake magic", t: "doce" },

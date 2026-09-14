@@ -184,14 +184,6 @@ input[type=range] {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.tipo-prato-card.salgado {
-  border-color: var(--primary);
-}
-
-.tipo-prato-card.drink {
-  border-color: #3AA5C4;
-}
-
 .tipo-prato-card.drink .tipo-prato-accent-bar {
   background: #3AA5C4;
 }
@@ -216,10 +208,13 @@ input[type=range] {
   object-fit: cover;
 }
 
+/* Gradiente em vez de camada chapada — mantém a foto viva no topo (onde não tem texto)
+   e escurece só a faixa de baixo, o suficiente pra qualquer foto (clara ou escura) deixar
+   o título branco legível ali (ver auditoria visual). */
 .tipo-prato-photo-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(13, 7, 8, 0.55);
+  background: linear-gradient(180deg, rgba(13, 7, 8, 0.05) 0%, rgba(13, 7, 8, 0.65) 65%, rgba(13, 7, 8, 0.78) 100%);
 }
 
 .tipo-prato-accent-bar {
@@ -289,8 +284,13 @@ input[type=range] {
   60% {
     opacity: 1;
   }
-  100% {
+  80% {
     transform: translateY(0) scale(1.12);
+  }
+  100% {
+    /* Bug: o estado final ficava em scale(1.12) — a logo nunca voltava ao tamanho normal
+       depois da entrada. O overshoot de 112% agora é só um ponto intermediário (80%). */
+    transform: translateY(0) scale(1);
     opacity: 1;
   }
 }
@@ -561,18 +561,21 @@ input[type=range] {
   align-items: center;
   gap: 16px;
   background: var(--bg-gray);
-  border: 2px solid var(--border-color);
+  border: none;
+  /* Sombra em vez de borda — sobre o fundo creme (--bg-page), uma borda de 1-2px tende a
+     "sumir" em telas com brilho alto; sombra garante elevação legível sempre (ver auditoria). */
+  box-shadow: 0 1px 3px rgba(27, 24, 21, 0.06);
   border-radius: 20px;
   padding: 20px 18px;
   cursor: pointer;
   text-align: left;
   width: 100%;
-  transition: opacity 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .tempo-card.selected {
   background: var(--primary-light);
-  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary);
 }
 
 .tempo-card.dimmed {
@@ -783,22 +786,20 @@ input[type=range] {
   border-color: var(--primary);
 }
 
+/* Selecionado comunica com só 2 sinais agora: o check (.check, canto superior) + a borda/fundo
+   do card acima — o anel inset e o escurecimento da foto foram removidos por serem redundantes
+   com o check já visível (ver auditoria visual). O scale continua como feedback de toque. */
 .ing-card.selected .tile-icon-box {
   transform: scale(1.04);
-  box-shadow: inset 0 0 0 2px var(--primary);
-}
-
-.ing-card.selected .tile-icon-box::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.22);
 }
 
 .ing-card span {
-  font-family: 'Unbounded', 'Geist', sans-serif;
+  /* Geist (corpo), não Unbounded (display) — Unbounded fica reservada pra títulos e números
+     de destaque; um rótulo de 11px repetido dezenas de vezes na grade não deveria usar a
+     fonte de marca (ver auditoria visual). */
+  font-family: 'Geist', sans-serif;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-main);
   text-align: center;
   line-height: 1.25;
@@ -1078,7 +1079,9 @@ input[type=range] {
   padding: 14px 16px;
   border-radius: 16px;
   background: var(--surface-2);
-  border: 1.5px solid var(--primary);
+  /* Vermelho de marca em tinta fraca, não sólido — o banner é uma sugestão, não a ação
+     principal da tela (isso é o CTA "Ver X receitas" mais abaixo). Ver auditoria visual. */
+  border: 1.5px solid rgba(234, 29, 44, 0.28);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1086,7 +1089,7 @@ input[type=range] {
 }
 
 .welcome-back-banner.dormant {
-  border-color: var(--secondary);
+  border-color: rgba(255, 176, 32, 0.35);
 }
 
 .welcome-back-text {
@@ -1610,8 +1613,12 @@ input[type=range] {
 }
 
 .filter-chip.on {
-  background: var(--primary);
-  border-color: var(--primary);
+  /* Preto/texto escuro, não vermelho de marca — o vermelho fica reservado pro CTA e pro
+     badge de match, senão um filtro ativo compete visualmente com a informação por card
+     (ver auditoria visual). Aplicado a todo filtro do app (Resultados: tempo/dificuldade/
+     ordenação de "falta 2+"), não só um caso isolado. */
+  background: var(--text-main);
+  border-color: var(--text-main);
   color: #fff;
 }
 
@@ -1628,11 +1635,11 @@ input[type=range] {
 
 .result-card {
   display: flex;
-  gap: 16px;
+  flex-direction: column;
+  gap: 10px;
   background: var(--bg-gray);
   border-radius: 20px;
-  padding: 12px;
-  align-items: center;
+  padding: 10px;
   position: relative;
   cursor: pointer;
   border: 1.5px solid var(--border-color);
@@ -1694,6 +1701,47 @@ input[type=range] {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Foto em destaque (16:10) — a decisão de "vou cozinhar isso" é majoritariamente visual,
+   então a foto ganha peso de hierarquia sobre o card, com o match% sobreposto no canto. */
+.result-photo {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #FFD8B0, #FF7A3D);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.result-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.result-photo-emoji {
+  font-size: 40px;
+}
+
+/* Números que comparam entre cards (match%) usam tabular-nums em vez de uma fonte mono
+   dedicada — mesma sensação de precisão, sem o custo de carregar uma terceira família tipográfica. */
+.result-match-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--primary);
+  color: #fff;
+  font-family: 'Unbounded', 'Geist', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 4px 9px;
+  border-radius: 999px;
+  line-height: 1;
 }
 
 .result-info h4 {
@@ -1860,7 +1908,8 @@ input[type=range] {
 .stat-card {
   width: calc(50% - 4px);
   background: var(--bg-gray);
-  border: 1.5px solid var(--border-color);
+  border: none;
+  box-shadow: 0 1px 2px rgba(27, 24, 21, 0.05);
   border-radius: 16px;
   padding: 12px;
   display: flex;
@@ -2034,8 +2083,12 @@ input[type=range] {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--primary-light);
-  border: 1.5px solid var(--secondary);
+  /* Neutro — é um lembrete de contexto ("você está cozinhando X"), não uma ação nem um
+     alerta, então não precisa de nenhuma cor de marca (antes misturava rosa + âmbar sem
+     relação semântica entre si; ver auditoria visual). */
+  background: var(--surface-2);
+  border: none;
+  box-shadow: 0 1px 2px rgba(27, 24, 21, 0.05);
   border-radius: 20px;
   padding: 10px 12px;
   height: 64px;
@@ -2110,7 +2163,8 @@ input[type=range] {
   position: relative;
   height: 220px;
   background: var(--bg-gray);
-  border: 2px solid var(--border-color);
+  border: none;
+  box-shadow: 0 1px 3px rgba(27, 24, 21, 0.06);
   border-radius: 28px;
   display: flex;
   align-items: center;
@@ -2163,7 +2217,8 @@ input[type=range] {
 
 .instruction-card {
   background: var(--bg-gray);
-  border: 2px solid var(--border-color);
+  border: none;
+  box-shadow: 0 1px 3px rgba(27, 24, 21, 0.06);
   border-radius: 28px;
   padding: 24px;
   display: flex;
@@ -2392,7 +2447,8 @@ input[type=range] {
 
 .feed-card {
   background: var(--bg-gray);
-  border: 1.5px solid var(--border-color);
+  border: none;
+  box-shadow: 0 1px 3px rgba(27, 24, 21, 0.06);
   border-radius: 18px;
   overflow: hidden;
 }
@@ -2626,7 +2682,8 @@ input[type=range] {
   align-items: center;
   gap: 4px;
   background: var(--bg-gray);
-  border: 1.5px solid var(--border-color);
+  border: none;
+  box-shadow: 0 1px 2px rgba(27, 24, 21, 0.05);
   border-radius: 14px;
   padding: 12px 16px;
   min-width: 76px;
@@ -2871,7 +2928,8 @@ input[type=range] {
   overflow: hidden;
   position: relative;
   background: var(--bg-gray);
-  border: 1.5px solid var(--border-color);
+  border: none;
+  box-shadow: 0 1px 3px rgba(27, 24, 21, 0.06);
 }
 
 .conclusao-photo.live {

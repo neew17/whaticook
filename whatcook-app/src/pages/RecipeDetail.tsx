@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BackIcon, CheckIcon, HeartIcon } from '../components/icons';
 import UndoToast from '../components/UndoToast';
+import Button from '../components/Button';
 import { useAppState } from '../context/AppStateContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -101,9 +102,9 @@ export default function RecipeDetail() {
       <div className="screen">
         <div className="state-block">
           <p>{error}</p>
-          <div className="fab" style={{ marginTop: 12 }} onClick={() => navigate(-1)}>
+          <Button style={{ marginTop: 12 }} onClick={() => navigate(-1)}>
             Voltar
-          </div>
+          </Button>
         </div>
       </div>
     );
@@ -238,8 +239,7 @@ export default function RecipeDetail() {
         </div>
       </div>
       <div className="fab-container" style={{ paddingBottom: 20 }}>
-        <div
-          className="fab"
+        <Button
           onClick={() => {
             const resuming = cookingTimer?.recipeId === recipe.id;
             if (!resuming) {
@@ -252,7 +252,7 @@ export default function RecipeDetail() {
           {cookingTimer?.recipeId === recipe.id
             ? `Continuar cozinhando · passo ${cookingStepIndex + 1} →`
             : 'Começar a cozinhar →'}
-        </div>
+        </Button>
       </div>
       {pendingUnfavorite && (
         <UndoToast

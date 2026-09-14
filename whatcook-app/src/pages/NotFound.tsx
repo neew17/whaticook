@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
+import Button from '../components/Button';
 
 export default function NotFound() {
   const navigate = useNavigate();
@@ -11,9 +12,9 @@ export default function NotFound() {
       <div className="state-block" style={{ flex: 1 }}>
         <p style={{ fontSize: 40 }}>🔍</p>
         <p>Não encontramos essa página. Ela pode ter mudado de lugar ou o link está quebrado.</p>
-        <button type="button" className="fab" style={{ marginTop: 12 }} onClick={() => navigate('/tipo-prato')}>
+        <Button style={{ marginTop: 12 }} onClick={() => navigate('/tipo-prato')}>
           Ir para o início
-        </button>
+        </Button>
       </div>
     </div>
   );

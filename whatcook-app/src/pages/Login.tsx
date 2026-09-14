@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
+import Button from '../components/Button';
 import { GoogleGlyph } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { AUTH_INTENT_COPY, type AuthIntent } from '../utils/authIntent';
@@ -180,12 +181,9 @@ export default function Login() {
         {error && <p className="auth-error">{error}</p>}
 
         <div className="auth-actions">
-        <div
-          className={`fab${loading || blockSubmit ? ' disabled' : ''}`}
-          onClick={loading || blockSubmit ? undefined : handleSubmit}
-        >
+        <Button disabled={loading || blockSubmit} onClick={handleSubmit}>
           {loading ? 'Aguarde...' : mode === 'signup' ? 'Criar conta' : 'Entrar'}
-        </div>
+        </Button>
         {GOOGLE_AUTH_ENABLED && (
           <>
             <div className="auth-divider">

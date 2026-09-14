@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
+import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
 
 const RECOVERY_CHECK_TIMEOUT_MS = 2500;
@@ -65,9 +66,9 @@ export default function RedefinirSenha() {
           <p className="auth-error">Link inválido ou expirado, solicite um novo.</p>
         </div>
         <div className="fab-container">
-          <div className="fab" onClick={() => navigate('/esqueci-senha')}>
+          <Button onClick={() => navigate('/esqueci-senha')}>
             Solicitar novo link
-          </div>
+          </Button>
         </div>
       </div>
     );
@@ -107,9 +108,9 @@ export default function RedefinirSenha() {
 
       {!success && (
         <div className="fab-container">
-          <div className="fab" onClick={submitting ? undefined : handleSubmit}>
+          <Button disabled={submitting} onClick={handleSubmit}>
             {submitting ? 'Salvando...' : 'Salvar nova senha'}
-          </div>
+          </Button>
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BackIcon, CheckIcon } from '../components/icons';
 import CookStepTimer from '../components/CookStepTimer';
+import Button from '../components/Button';
 import { useAppState } from '../context/AppStateContext';
 import { useWakeLock } from '../utils/useWakeLock';
 import { parseStepDuration, formatDuration } from '../utils/stepDuration';
@@ -198,9 +199,9 @@ export default function CookingStep() {
             <p className="shopping-list-subtitle">
               Você está cozinhando <b>{recipe.titulo}</b>. Se sair agora, o passo a passo é cancelado.
             </p>
-            <button type="button" className="fab" style={{ width: '100%' }} onClick={() => setShowExitConfirm(false)}>
+            <Button style={{ width: '100%' }} onClick={() => setShowExitConfirm(false)}>
               Continuar cozinhando
-            </button>
+            </Button>
             <button type="button" className="sheet-close sheet-close-danger" onClick={cancelCooking}>
               Cancelar receita e voltar para o início
             </button>

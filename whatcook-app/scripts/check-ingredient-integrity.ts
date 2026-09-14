@@ -91,6 +91,63 @@ for (const i of ALL_ITEMS) {
   }
 }
 
+// 5. `id` de receita duplicado — colide lookups (getCachedRecipe, fetchRecipe, imagens) silenciosamente,
+//    já causou um bug real (duas receitas distintas de "Limonada Suíça" compartilhando o mesmo id).
+const recipeIdOwner = new Map<string, string>();
+for (const recipe of RECIPES) {
+  const prevTitle = recipeIdOwner.get(recipe.id);
+  if (prevTitle) {
+    fail(`Id de receita duplicado "${recipe.id}": usado por "${prevTitle}" e por "${recipe.titulo}"`);
+  } else {
+    recipeIdOwner.set(recipe.id, recipe.titulo);
+  }
+}
+
+// 6. Contagem de passos deve seguir a régua fixa por tempoPreparoMinutos (docs/reforma-ingredientes.md
+//    e CLAUDE.md) — passos genuinamente granulares, não padding. Regra nunca foi automatizada antes,
+//    então isto só avisa (não falha o build) até confirmarmos que o banco inteiro já obedece a régua.
+function expectedStepRange(recipe: (typeof RECIPES)[number]): [number, number] {
+  if (recipe.tipo === 'drink') return [3, 3];
+  const t = recipe.tempoPreparoMinutos;
+  if (t <= 15) return [4, 4];
+  if (t <= 30) return [10, 10];
+  if (t <= 60) return [15, 15];
+  return [20, 20];
+}
+for (const recipe of RECIPES) {
+  const [min, max] = expectedStepRange(recipe);
+  const n = recipe.modoPreparo.length;
+  if (n < min || n > max) {
+    warn(
+      `Receita "${recipe.id}" (${recipe.tempoPreparoMinutos}min, tipo ${recipe.tipo}): ${n} passo(s), régua espera ${min}`
+    );
+  }
+}
+
+// 7. Consistência forno/equipamento: se o preparo menciona forno mas 'oven' não está listado
+//    (ou vice-versa), o equipamento mostrado ao usuário não bate com o que a receita realmente pede.
+//    Só a palavra "forno" (substantivo) — "asse"/"assado" são genéricos demais (airfryer também "assa").
+const OVEN_KEYWORDS = /\bforno\b/i;
+for (const recipe of RECIPES) {
+  const mentionsOven = recipe.modoPreparo.some((step) => OVEN_KEYWORDS.test(step));
+  const hasOvenEquip = recipe.equipamento.includes('oven');
+  if (mentionsOven && !hasOvenEquip) {
+    warn(`Receita "${recipe.id}": modo de preparo menciona forno, mas "oven" não está em equipamento`);
+  } else if (hasOvenEquip && !mentionsOven) {
+    warn(`Receita "${recipe.id}": lista "oven" como equipamento, mas nenhum passo menciona forno`);
+  }
+}
+
+// 8. Drink com equipamento de forno/fogão é bandeira quase certa de erro de tipo/técnica.
+const STOVE_OVEN = new Set(['oven', 'stove']);
+for (const recipe of RECIPES) {
+  if (recipe.tipo !== 'drink') continue;
+  const bad = recipe.equipamento.filter((e) => STOVE_OVEN.has(e));
+  if (bad.length > 0) {
+    warn(`Receita "${recipe.id}" (drink) lista equipamento incomum pra bebida: ${bad.join(', ')}`);
+  }
+}
+
 console.log('');
 console.log(`Ingredientes: ${INGREDIENTS.length} · Equipamentos: ${EQUIPAMENTOS.length} · Receitas: ${RECIPES.length}`);
 console.log(`${errors} erro(s), ${warnings} aviso(s).`);

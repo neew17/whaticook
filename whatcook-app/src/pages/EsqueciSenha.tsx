@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/TopBar';
+import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
 
 export default function EsqueciSenha() {
@@ -49,9 +50,9 @@ export default function EsqueciSenha() {
             {error && <p className="auth-error">{error}</p>}
 
             <div className="auth-actions">
-              <div className="fab" onClick={loading ? undefined : handleSubmit}>
+              <Button disabled={loading} onClick={handleSubmit}>
                 {loading ? 'Enviando...' : 'Enviar link de recuperação'}
-              </div>
+              </Button>
               <p className="auth-switch" onClick={() => navigate('/entrar')}>
                 Voltar para o login
               </p>

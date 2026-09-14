@@ -4,6 +4,7 @@ import { useAppState } from '../context/AppStateContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import ShareSheet from '../components/ShareSheet';
+import Button from '../components/Button';
 import { RECIPE_IMAGES } from '../data/recipe-images';
 import type { Difficulty } from '../data/recipes';
 import { fetchDifficultySummary, MIN_RATINGS_FOR_PERCENT, type DifficultySummary } from '../utils/recipeSocial';
@@ -232,12 +233,7 @@ export default function Conclusao() {
       </div>
 
       <div className="conclusao-actions">
-        <button
-          type="button"
-          className={`fab${saveState === 'saved' ? ' disabled' : ''}`}
-          style={{ width: '100%' }}
-          onClick={handleSave}
-        >
+        <Button style={{ width: '100%' }} disabled={saveState === 'saved'} onClick={handleSave}>
           {saveState === 'saving'
             ? 'Salvando...'
             : saveState === 'saved'
@@ -245,7 +241,7 @@ export default function Conclusao() {
               : user
                 ? 'Salvar em Minhas Receitas'
                 : 'Salvar em Minhas Receitas'}
-        </button>
+        </Button>
         {saveState === 'saved' && (
           <button
             type="button"

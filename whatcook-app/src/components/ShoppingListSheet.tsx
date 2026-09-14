@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { MissingIngredient } from '../context/AppStateContext';
 import SwipeToRemove from './SwipeToRemove';
+import Button from './Button';
 
 interface ShoppingListSheetProps {
   items: MissingIngredient[];
@@ -84,15 +85,9 @@ export default function ShoppingListSheet({ items, recipeCount, onClose }: Shopp
           ))}
         </div>
 
-        <button
-          type="button"
-          className="fab"
-          style={{ width: '100%' }}
-          onClick={handleShare}
-          disabled={busy || list.length === 0}
-        >
+        <Button style={{ width: '100%' }} onClick={handleShare} disabled={busy || list.length === 0}>
           {busy ? 'Preparando...' : copied ? 'Copiado ✓' : '📤 Compartilhar lista'}
-        </button>
+        </Button>
         <button type="button" className="sheet-close" onClick={onClose}>
           Fechar
         </button>

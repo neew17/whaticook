@@ -13535,7 +13535,7 @@ export const RECIPES: LocalRecipe[] = [
     ],
   },
   {
-    id: 'limonada-suica',
+    id: 'limonada-suica-drink',
     titulo: 'Limonada Suíça',
     emoji: '🍋',
     tipo: 'drink',

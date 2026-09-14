@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import StoryBar from '../components/StoryBar';
+import Button from '../components/Button';
 import { BellIcon, HeartIcon, SearchIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -162,14 +163,9 @@ export default function Comunidade() {
         <div className="state-block" style={{ flex: 1 }}>
           <p style={{ fontSize: 40 }}>👥</p>
           <p>Entre pra seguir cozinheiros e montar seu feed.</p>
-          <button
-            type="button"
-            className="fab"
-            style={{ marginTop: 12 }}
-            onClick={() => navigate('/entrar', { state: { intent: 'follow' } })}
-          >
+          <Button style={{ marginTop: 12 }} onClick={() => navigate('/entrar', { state: { intent: 'follow' } })}>
             Entrar ou criar conta
-          </button>
+          </Button>
         </div>
       );
     }
@@ -178,9 +174,9 @@ export default function Comunidade() {
         <div className="state-block" style={{ flex: 1 }}>
           <p style={{ fontSize: 40 }}>🧑‍🍳</p>
           <p>Você ainda não segue ninguém. Encontre cozinheiros pra montar seu feed.</p>
-          <button type="button" className="fab" style={{ marginTop: 12 }} onClick={() => navigate('/buscar')}>
+          <Button style={{ marginTop: 12 }} onClick={() => navigate('/buscar')}>
             Descobrir cozinheiros
-          </button>
+          </Button>
           <button
             type="button"
             className="cta-secondary"
